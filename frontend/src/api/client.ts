@@ -8,5 +8,6 @@ export { client };
 export {
   createProjectProjectsPost,
   listProjectsRouteProjectsGet,
+  readProjectProjectsProjectIdGet,
 } from './generated/sdk.gen';
-export type { ProjectRead } from './generated/types.gen';
+export type { ProjectDetailRead, ProjectRead, ProjectStatus } from './generated/types.gen';

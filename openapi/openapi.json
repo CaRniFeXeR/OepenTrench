@@ -530,6 +530,18 @@
             "maxLength": 500,
             "minLength": 1,
             "title": "Name"
+          },
+          "region": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 128
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region"
           }
         },
         "type": "object",
@@ -553,6 +565,43 @@
             "format": "date-time",
             "title": "Created At"
           },
+          "region": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "photo_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Count"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ProjectStatus"
+          },
           "assets": {
             "items": {
               "$ref": "#/components/schemas/ProjectAssetRead"
@@ -566,6 +615,10 @@
           "id",
           "name",
           "created_at",
+          "region",
+          "updated_at",
+          "photo_count",
+          "status",
           "assets"
         ],
         "title": "ProjectDetailRead"
@@ -584,15 +637,65 @@
             "type": "string",
             "format": "date-time",
             "title": "Created At"
+          },
+          "region": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "photo_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Count"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ProjectStatus"
           }
         },
         "type": "object",
         "required": [
           "id",
           "name",
-          "created_at"
+          "created_at",
+          "region",
+          "updated_at",
+          "photo_count",
+          "status"
         ],
         "title": "ProjectRead"
+      },
+      "ProjectStatus": {
+        "type": "string",
+        "enum": [
+          "draft",
+          "analysing",
+          "complete"
+        ],
+        "title": "ProjectStatus"
       },
       "ValidationError": {
         "properties": {

@@ -56,7 +56,7 @@ export function CreateProjectCard({ onCreated }: CreateProjectCardProps) {
         className="flex min-h-[160px] flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-5 text-slate-600 transition hover:border-slate-400 hover:bg-slate-100 hover:text-slate-800"
       >
         <span className="text-3xl font-light leading-none text-slate-400">+</span>
-        <span className="mt-2 text-sm font-medium">New project</span>
+        <span className="mt-2 text-sm font-medium">Add New Project</span>
       </button>
 
       {open && (

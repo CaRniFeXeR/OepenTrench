@@ -110,6 +110,10 @@ export type ProjectCreate = {
      * Name
      */
     name: string;
+    /**
+     * Region
+     */
+    region?: string | null;
 };
 
 /**
@@ -128,6 +132,19 @@ export type ProjectDetailRead = {
      * Created At
      */
     created_at: string;
+    /**
+     * Region
+     */
+    region: string | null;
+    /**
+     * Updated At
+     */
+    updated_at: string | null;
+    /**
+     * Photo Count
+     */
+    photo_count: number | null;
+    status: ProjectStatus;
     /**
      * Assets
      */
@@ -150,7 +167,25 @@ export type ProjectRead = {
      * Created At
      */
     created_at: string;
+    /**
+     * Region
+     */
+    region: string | null;
+    /**
+     * Updated At
+     */
+    updated_at: string | null;
+    /**
+     * Photo Count
+     */
+    photo_count: number | null;
+    status: ProjectStatus;
 };
+
+/**
+ * ProjectStatus
+ */
+export type ProjectStatus = 'draft' | 'analysing' | 'complete';
 
 /**
  * ValidationError
