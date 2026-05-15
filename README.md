@@ -121,6 +121,21 @@ uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
 
 SQLite is stored at `data/oepentrench_api.db` by default. Set **`OEPENTRENCH_SQLITE_PATH`** to override the database file path.
 
+### Frontend (Vite + React)
+
+After the API is running, start the dashboard from `frontend/`:
+
+```bash
+# Re-export OpenAPI when backend routes change
+python scripts/export_openapi.py
+
+cd frontend
+npm install
+npm run dev
+```
+
+The dev server runs at http://localhost:5173 and proxies `/projects` and `/health` to the API on port 8000. The TypeScript client is generated from `openapi/openapi.json` via `@hey-api/openapi-ts` (`npm run generate:api`).
+
 ### Planned layout
 
 ```text

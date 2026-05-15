@@ -65,6 +65,10 @@ db.sqlite3-journal
 data/oepentrench_api.db
 data/oepentrench_api.db-journal
 
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
 # Flask stuff:
 instance/
 .webassets-cache
