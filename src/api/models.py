@@ -29,10 +29,20 @@ class AssetKind(str, Enum):
     geojson = "geojson"
 
 
+class ProjectStatus(str, Enum):
+    draft = "draft"
+    analysing = "analysing"
+    complete = "complete"
+
+
 class Project(SQLModel, table=True):
     id: str = Field(primary_key=True, max_length=64)
     name: str = Field(max_length=500, index=True)
     created_at: datetime
+    region: str | None = Field(default=None, max_length=128)
+    updated_at: datetime | None = Field(default=None)
+    photo_count: int | None = Field(default=None)
+    status: ProjectStatus = Field(default=ProjectStatus.draft)
 
 
 class ProjectAsset(SQLModel, table=True):
@@ -46,12 +56,17 @@ class ProjectAsset(SQLModel, table=True):
 
 class ProjectCreate(SQLModel):
     name: str = Field(max_length=500, min_length=1)
+    region: str | None = Field(default=None, max_length=128)
 
 
 class ProjectRead(SQLModel):
     id: str
     name: str
     created_at: datetime
+    region: str | None
+    updated_at: datetime | None
+    photo_count: int | None
+    status: ProjectStatus
 
 
 class ProjectAssetRead(SQLModel):
@@ -67,4 +82,8 @@ class ProjectDetailRead(SQLModel):
     id: str
     name: str
     created_at: datetime
+    region: str | None
+    updated_at: datetime | None
+    photo_count: int | None
+    status: ProjectStatus
     assets: list[ProjectAssetRead]

@@ -35,7 +35,7 @@ def create_project(
     payload: ProjectCreate,
     session: Annotated[Session, Depends(get_session)],
 ) -> ProjectRead:
-    project = project_service.create_project(session, name=payload.name)
+    project = project_service.create_project(session, name=payload.name, region=payload.region)
     return ProjectRead.model_validate(project)
 
 
@@ -65,6 +65,10 @@ def read_project(
         id=project.id,
         name=project.name,
         created_at=project.created_at,
+        region=project.region,
+        updated_at=project.updated_at,
+        photo_count=project.photo_count,
+        status=project.status,
         assets=reads,
     )
 

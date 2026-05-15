@@ -9,8 +9,16 @@ from src.api.ids import new_nanoid
 from src.api.models import Project, ProjectAsset
 
 
-def create_project(session: Session, *, name: str) -> Project:
-    project = Project(id=new_nanoid(), name=name.strip(), created_at=utc_now())
+def create_project(session: Session, *, name: str, region: str | None = None) -> Project:
+    region_norm = region.strip() if region else None
+    if region_norm == "":
+        region_norm = None
+    project = Project(
+        id=new_nanoid(),
+        name=name.strip(),
+        created_at=utc_now(),
+        region=region_norm,
+    )
     session.add(project)
     session.commit()
     session.refresh(project)
