@@ -5,19 +5,7 @@ import {
   readProjectProjectsProjectIdGet,
   type ProjectDetailRead,
 } from '../api/client';
-
-function statusLabel(status: ProjectDetailRead['status']): string {
-  switch (status) {
-    case 'draft':
-      return 'Draft';
-    case 'analysing':
-      return 'Analysing';
-    case 'complete':
-      return 'Complete';
-    default:
-      return status;
-  }
-}
+import { ProjectUploadPanel } from '../components/project-upload/ProjectUploadPanel';
 
 export function ProjectDetailPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -49,7 +37,9 @@ export function ProjectDetailPage() {
   }, [projectId]);
 
   useEffect(() => {
-    void load();
+    queueMicrotask(() => {
+      void load();
+    });
   }, [load]);
 
   return (
@@ -73,17 +63,7 @@ export function ProjectDetailPage() {
           </div>
         )}
         {!loading && !error && project && (
-          <>
-            <div className="mb-6">
-              <h1 className="text-2xl font-semibold text-slate-900">{project.name}</h1>
-              <p className="mt-1 text-sm text-slate-500">
-                {project.region ?? 'Region not set'} · {statusLabel(project.status)}
-              </p>
-            </div>
-            <section className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-500">
-              Upload panel (photos & GeoJSON) will live here.
-            </section>
-          </>
+          <ProjectUploadPanel project={project} onRefresh={load} />
         )}
       </main>
     </div>

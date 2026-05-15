@@ -1,6 +1,10 @@
-import type { ReactNode } from 'react';
+import {
+  forwardRef,
+  type ForwardedRef,
+  type ReactNode,
+} from 'react';
 
-import Map from 'react-map-gl/maplibre';
+import Map, { type MapRef } from 'react-map-gl/maplibre';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
 
@@ -22,17 +26,21 @@ export type MapViewProps = {
   children?: ReactNode;
 };
 
-export function MapView({
-  className,
-  height = 500,
-  longitude = AUSTRIA_VIEW.longitude,
-  latitude = AUSTRIA_VIEW.latitude,
-  zoom = AUSTRIA_VIEW.zoom,
-  children,
-}: MapViewProps) {
+export const MapView = forwardRef(function MapView(
+  {
+    className,
+    height = 500,
+    longitude = AUSTRIA_VIEW.longitude,
+    latitude = AUSTRIA_VIEW.latitude,
+    zoom = AUSTRIA_VIEW.zoom,
+    children,
+  }: MapViewProps,
+  ref: ForwardedRef<MapRef | null>,
+) {
   return (
     <div className={className}>
       <Map
+        ref={ref}
         initialViewState={{
           longitude,
           latitude,
@@ -45,4 +53,4 @@ export function MapView({
       </Map>
     </div>
   );
-}
+});

@@ -9,5 +9,7 @@ export {
   createProjectProjectsPost,
   listProjectsRouteProjectsGet,
   readProjectProjectsProjectIdGet,
+  uploadProjectGeojsonProjectsProjectIdGeojsonPost,
+  uploadProjectImageProjectsProjectIdImagesPost,
 } from './generated/sdk.gen';
 export type { ProjectDetailRead, ProjectRead, ProjectStatus } from './generated/types.gen';
