@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "oepentrench"
+version = "0.1.0"
+description = "AI-powered QC for fiber trench construction documentation (APG Hackathon 2026)"
+readme = "README.md"
+requires-python = ">=3.9,<3.13"
+license = { text = "TBD" }
+authors = [{ name = "OepenTrench team" }]
+
+dependencies = [
+    # image + EXIF
+    "pillow>=11.0,<12",
+    "exifread>=3.0,<4",
+    "piexif>=1.1,<2",
+    "imagehash>=4.3,<5",
+    # numerics / dataframes
+    "numpy>=1.26,<3",
+    "pandas>=2.2,<3",
+    "pyarrow>=15,<22",
+    # geo
+    "shapely>=2.0,<3",
+    "geopandas>=1.0,<2",
+    "pyproj>=3.6,<4",
+    "folium>=0.17,<1",
+    # plotting
+    "matplotlib>=3.8,<4",
+    "seaborn>=0.13,<1",
+    # progress
+    "tqdm>=4.66,<5",
+]
+
+[project.optional-dependencies]
+notebooks = [
+    "jupyterlab>=4.2,<5",
+    "ipykernel>=6.29,<7",
+    "ipywidgets>=8.1,<9",
+    "nbformat>=5.10,<6",
+    "nbconvert>=7.16,<8",
+]
+dev = [
+    "ruff>=0.5,<1",
+    "pytest>=8,<9",
+]
+
+[tool.setuptools.packages.find]
+include = ["src*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
