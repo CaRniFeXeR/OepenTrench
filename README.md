@@ -111,6 +111,16 @@ We may emphasize one or more of these, depending on what we ship at the hackatho
 
 Early-stage hackathon repo. Implementation (ingest, geo-matching, models, map UI) will land here as we build during the event.
 
+### Backend (FastAPI)
+
+After installing dependencies (e.g. `uv sync`), run the API from the repo root:
+
+```bash
+uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+SQLite is stored at `data/oepentrench_api.db` by default. Set **`OEPENTRENCH_SQLITE_PATH`** to override the database file path.
+
 ### Planned layout
 
 ```text
