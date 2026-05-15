@@ -1,59 +1,167 @@
-# UX Specification: Screen 1 — Project Dashboard 
+# UX Specification: Screen 1 — Project Dashboard
 
-Context for UI Engineer:
+## Context for UI Engineer
 
-This is the landing page of the application. It serves as an overview of all trench documentation projects managed by öGIG. The primary goal is to allow users to quickly find existing projects, check their high-level status, and initiate the creation of new projects via a modal popup.
+This is the landing page of the application. It serves as an overview of all trench documentation projects managed by öGIG.
 
-## 1. Page Layout & Structure (Screen 1)
+The primary goal is to allow users to:
+
+- Quickly find existing projects
+
+- Check their high-level status
+
+- Initiate the creation of new projects via a modal popup
+
+---
+
+# 1. Page Layout & Structure (Screen 1)
 
 The page is a clean, grid-based dashboard.
 
-[1.Top](http://1.Top) Navigation Bar: App logo (öGIG), user profile, and global search.
+## 1.1 Top Navigation Bar
 
-[2.Page](http://2.Page) Header: Title ("Trench Quality Projects") and filtering/sorting controls.
+Contains:
 
-3.Project Grid: A responsive grid displaying project cards and the "Add New" action tile.
+- App logo `öGIG`)
 
-## 2. UI Elements: Project Cards
+- User profile
+
+- Global search
+
+---
+
+## 1.2 Page Header
+
+Contains:
+
+- Page title: **"Trench Quality Projects"**
+
+- Filtering controls
+
+- Sorting controls
+
+---
+
+## 1.3 Project Grid
+
+A responsive grid displaying:
+
+- Existing project cards
+
+- The **"Add New"** action tile
+
+---
+
+# 2. UI Elements: Project Cards
 
 Each existing project is represented as a clickable card.
 
-Card Content:
+## Card Content
 
-•Project Name: Prominent title (e.g., "Graz-Waltendorf Phase 1").
+### Project Name
 
-•Region/State: Subtitle indicating location (e.g., "Styria").
+Prominent title.
 
-•Date: Creation or last modified date.
+Example:
 
-•Photo Count: A small badge or text indicating the volume of data (e.g., "847 Photos").
+- `Graz-Waltendorf Phase 1`
 
-•Status Indicator: A visual tag showing the current state of the project:
+---
 
-•Draft (Grey) — Upload incomplete.
+### Region / State
 
-•Analysing (Blue/Animated) — AI processing in progress.
+Subtitle indicating location.
 
-•Complete (Green) — Map view ready for review.
+Example:
 
-Interaction:
+- `Styria`
 
-•Clicking anywhere on a completed project card navigates the user directly to Screen 3 (Map View).
+---
 
-•Clicking on a draft project navigates to Screen 2 (File Upload) to resume progress.
+### Date
 
-## 3. UI Elements: "Add New" Action Tile
+Displays:
+
+- Creation date
+
+  **or**
+
+- Last modified date
+
+---
+
+### Photo Count
+
+A small badge or text indicator showing the volume of uploaded data.
+
+Example:
+
+- `847 Photos`
+
+---
+
+### Status Indicator
+
+Visual tag showing the current project state.
+
+#### Draft
+
+- Color: Grey
+
+- Meaning: Upload incomplete
+
+#### Analysing
+
+- Color: Blue
+
+- State: Animated
+
+- Meaning: AI processing in progress
+
+#### Complete
+
+- Color: Green
+
+- Meaning: Map view ready for review
+
+---
+
+## Interaction Behaviour
+
+### Completed Project
+
+Clicking anywhere on a completed project card navigates the user directly to:
+
+- **Screen 3 — Map View**
+
+---
+
+### Draft Project
+
+Clicking on a draft project navigates the user to:
+
+- **Screen 2 — File Upload**
+
+This allows the user to resume progress.
+
+---
+
+# 3. UI Elements: "Add New" Action Tile
 
 Positioned as the first card in the grid (top-left) to ensure high visibility.
 
-Design:
+---
 
-•A card with a dashed or distinct border.
+## Design
 
-•A large, centered "+" icon.
+The tile should include:
 
-•Text: "Add New Project".
+- A dashed or visually distinct border
 
-Interaction:
+- A large centered `+` icon
 
-•Clicking this tile does not navigate to a new page. Instead, it triggers Screen 1.2 (Add Project file).
+- Text label:
+
+```text
+
+Add New Project
