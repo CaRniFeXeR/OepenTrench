@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import Map from 'react-map-gl/maplibre';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -17,6 +19,7 @@ export type MapViewProps = {
   longitude?: number;
   latitude?: number;
   zoom?: number;
+  children?: ReactNode;
 };
 
 export function MapView({
@@ -25,6 +28,7 @@ export function MapView({
   longitude = AUSTRIA_VIEW.longitude,
   latitude = AUSTRIA_VIEW.latitude,
   zoom = AUSTRIA_VIEW.zoom,
+  children,
 }: MapViewProps) {
   return (
     <div className={className}>
@@ -36,7 +40,9 @@ export function MapView({
         }}
         style={{ width: '100%', height }}
         mapStyle={DEFAULT_STYLE}
-      />
+      >
+        {children}
+      </Map>
     </div>
   );
 }
