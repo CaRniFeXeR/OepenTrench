@@ -76,6 +76,85 @@ export type ItemRead = {
 };
 
 /**
+ * PhotoAnalysisRead
+ */
+export type PhotoAnalysisRead = {
+    /**
+     * Asset Id
+     */
+    asset_id: string;
+    /**
+     * Is In Domain
+     */
+    is_in_domain: boolean;
+    /**
+     * Has White Paper
+     */
+    has_white_paper: boolean;
+    /**
+     * Has Ruler
+     */
+    has_ruler: boolean;
+    /**
+     * Estimated Depth
+     */
+    estimated_depth: number | null;
+    /**
+     * Has Duct
+     */
+    has_duct: boolean;
+    /**
+     * Estimate Number Of Ducts
+     */
+    estimate_number_of_ducts: number | null;
+    /**
+     * Has Gdpr Problems
+     */
+    has_gdpr_problems: boolean;
+    /**
+     * Is Duplicated
+     */
+    is_duplicated: boolean;
+    category: PhotoDocumentationCategory | null;
+    /**
+     * Has Sand Bedding
+     */
+    has_sand_bedding: boolean;
+    /**
+     * Has Pipe End Seal
+     */
+    has_pipe_end_seal: boolean;
+    /**
+     * Gps Matches Route
+     */
+    gps_matches_route: boolean;
+    /**
+     * Date Valid
+     */
+    date_valid: boolean;
+    /**
+     * Is False Call
+     */
+    is_false_call: boolean;
+    reviewer_override_category: PhotoDocumentationCategory | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+};
+
+/**
+ * PhotoDocumentationCategory
+ *
+ * Per-photo documentation quality (map node/segment rollup), not workflow status.
+ */
+export type PhotoDocumentationCategory = 'green' | 'yellow' | 'red';
+
+/**
  * ProjectAssetRead
  */
 export type ProjectAssetRead = {
@@ -100,6 +179,7 @@ export type ProjectAssetRead = {
      * Created At
      */
     created_at: string;
+    analysis?: PhotoAnalysisRead | null;
 };
 
 /**
@@ -114,6 +194,10 @@ export type ProjectCreate = {
      * Region
      */
     region?: string | null;
+    /**
+     * Project Date
+     */
+    project_date?: string | null;
 };
 
 /**
@@ -145,6 +229,10 @@ export type ProjectDetailRead = {
      */
     photo_count: number | null;
     status: ProjectStatus;
+    /**
+     * Project Date
+     */
+    project_date: string | null;
     /**
      * Assets
      */
@@ -180,6 +268,10 @@ export type ProjectRead = {
      */
     photo_count: number | null;
     status: ProjectStatus;
+    /**
+     * Project Date
+     */
+    project_date: string | null;
 };
 
 /**

@@ -1,0 +1,33 @@
+---
+description: FastAPI layout for src/api — thin routes, services, helpers
+globs: src/api/**/*.py
+alwaysApply: false
+---
+
+# API layer (`src/api`)
+
+## Routing
+
+- **One router module per file** under `src/api/routes/`. Each file exposes a single `APIRouter` (or a small, cohesive set of endpoints that belong together). Register routers in `main.py` via `include_router`.
+- Name files by resource or concern (`health.py`, `projects.py`, …), not by dumping unrelated routes into one module.
+
+## Helpers
+
+- Put **small, reusable, non-business utilities** in `src/api/helpers/` (e.g. pagination, time formatting). Keep helpers free of domain rules when possible; if logic grows domain-heavy, move it to `services/`.
+
+## Routes vs services
+
+- **Routes** handle HTTP only: path/query/body parsing, dependencies, status codes, mapping to/from Pydantic models. Avoid business rules, heavy branching, and direct database orchestration in route handlers.
+- **Services** (`src/api/services/`) own **domain logic**: orchestration, validation rules, transactions, calling DB/helpers as needed.
+
+```python
+# Prefer in a route handler:
+result = await project_service.create_project(db, payload)
+
+# Avoid in a route handler:
+# multi-step DB writes, complex conditionals, or rules that belong in a service
+```
+
+## Imports
+
+- Use absolute imports from the package root (e.g. `from src.api.services...`), not relative imports between modules.

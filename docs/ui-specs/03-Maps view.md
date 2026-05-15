@@ -62,6 +62,12 @@ Three stacked color blocks showing:
 - **YELLOW — Partial:** [X%] of total route length
 - **RED — Missing:** [X%] of total route length
 
+### 2.3.1 Workflow status vs segment colours
+
+Card / project **workflow** states (**Draft**, **Analysing**, **Complete**) describe upload and pipeline progress. **Green / Yellow / Red** trench segments describe **documentation quality** only: they aggregate from **per-photo** analysis (**`PhotoAnalysis.category`**: `green` \| `yellow` \| `red`) and related rules — not from `ProjectStatus`. Keep both concepts separate in APIs and legend copy.
+
+The bottom and right summary percentages can be computed as **rollups** of those per-photo categories (**length-weighted** when trench geometry and segment lengths are available).
+
 ### 2.4 Interaction to Enter Level 2
 
 Clicking on any trench segment line or cluster on the map triggers the transition to Level 2 (Trench Detail). The map smoothly zooms into the selected trench area and the side panel slides in from the right. See [03.1 — Trench Detail](./03.1-trenchimageview.md).

@@ -119,3 +119,12 @@ A status indicator sits next to the buttons: "Ready to analyse ✓" or "Missing 
 - **Reusable Components:** The progress bar, drag-and-drop zones, and map preview panel should all be built as reusable components.
 - **EXIF Parsing:** Ensure the frontend or a lightweight backend service can parse EXIF data quickly during the upload stream to power the real-time metadata validation UI.
 - **State Management:** The "Save & Analyse" button and the map preview clickable state are both strictly dependent on the presence of a valid GeoJSON file. Ensure this dependency is clearly mapped in the state logic.
+
+## 5. Data model (backend alignment)
+
+These notes keep Screen 2 in sync with the API / persistence layer (see `Project`, `ProjectAsset`, `PhotoAnalysis` in [`src/api/models.py`](../../src/api/models.py)):
+
+- **Project date (`project_date`):** The editable header date maps to **`project_date`**, distinct from **`created_at`** (record creation timestamp) and **`updated_at`** (last modification).
+- **GeoJSON uploads:** Stored as **`geojson` assets (`AssetKind.geojson`)** with **no persisted subtype / role** in the database — multiple `.geojson` files are differentiated only by uploads and downstream parsing. Derived values such as **route length** and **segment count** may be stored or computed **on the project** after processing (not separate asset-kind enums).
+- **Photo GPS at upload:** The live “GPS found / Missing GPS” counters come from **EXIF at upload**. Whether a photo matches the routed geometry is a separate **pipeline field** (**`gps_matches_route`** on `PhotoAnalysis`, see Screen 3.2 / data model appendix there).
+- **Duplicates (post-summary):** The UI duplicate list should align with the persisted **`is_duplicated`** flag on **`PhotoAnalysis`** once analysis runs — same concept as “duplicate filenames” in the UX copy.

@@ -94,6 +94,8 @@ Displays:
 
 A small badge or text indicator showing the volume of uploaded data.
 
+**Data note:** This count reflects **upload volume** (e.g. `photo_count` / number of image assets). Map **documentation quality** (green/yellow/red segments) comes from **rolled-up photo analysis**, not from this badge alone.
+
 Example:
 
 - `847 Photos`

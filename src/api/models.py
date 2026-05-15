@@ -1,9 +1,12 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 from enum import Enum
 
+from pydantic import BaseModel, ConfigDict
 from sqlmodel import Field, SQLModel
+
+from src.api.helpers.time import utc_now
 
 
 class Item(SQLModel, table=True):
@@ -35,6 +38,14 @@ class ProjectStatus(str, Enum):
     complete = "complete"
 
 
+class PhotoDocumentationCategory(str, Enum):
+    """Per-photo documentation quality (map node/segment rollup), not workflow status."""
+
+    green = "green"
+    yellow = "yellow"
+    red = "red"
+
+
 class Project(SQLModel, table=True):
     id: str = Field(primary_key=True, max_length=64)
     name: str = Field(max_length=500, index=True)
@@ -43,6 +54,7 @@ class Project(SQLModel, table=True):
     updated_at: datetime | None = Field(default=None)
     photo_count: int | None = Field(default=None)
     status: ProjectStatus = Field(default=ProjectStatus.draft)
+    project_date: date | None = Field(default=None)
 
 
 class ProjectAsset(SQLModel, table=True):
@@ -54,9 +66,37 @@ class ProjectAsset(SQLModel, table=True):
     created_at: datetime
 
 
+class PhotoAnalysis(SQLModel, table=True):
+    """Pipeline / reviewer state for one image asset (1:1 with ProjectAsset when kind is image)."""
+
+    asset_id: str = Field(
+        primary_key=True,
+        foreign_key="projectasset.id",
+        max_length=64,
+    )
+    is_in_domain: bool = Field(default=False)
+    has_white_paper: bool = Field(default=False)
+    has_ruler: bool = Field(default=False)
+    estimated_depth: float | None = Field(default=None)
+    has_duct: bool = Field(default=False)
+    estimate_number_of_ducts: int | None = Field(default=None)
+    has_gdpr_problems: bool = Field(default=False)
+    is_duplicated: bool = Field(default=False)
+    category: PhotoDocumentationCategory | None = Field(default=None)
+    has_sand_bedding: bool = Field(default=False)
+    has_pipe_end_seal: bool = Field(default=False)
+    gps_matches_route: bool = Field(default=False)
+    date_valid: bool = Field(default=False)
+    is_false_call: bool = Field(default=False)
+    reviewer_override_category: PhotoDocumentationCategory | None = Field(default=None)
+    created_at: datetime = Field(default_factory=utc_now)
+    updated_at: datetime = Field(default_factory=utc_now)
+
+
 class ProjectCreate(SQLModel):
     name: str = Field(max_length=500, min_length=1)
     region: str | None = Field(default=None, max_length=128)
+    project_date: date | None = Field(default=None)
 
 
 class ProjectRead(SQLModel):
@@ -67,6 +107,30 @@ class ProjectRead(SQLModel):
     updated_at: datetime | None
     photo_count: int | None
     status: ProjectStatus
+    project_date: date | None
+
+
+class PhotoAnalysisRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+
+    asset_id: str
+    is_in_domain: bool
+    has_white_paper: bool
+    has_ruler: bool
+    estimated_depth: float | None
+    has_duct: bool
+    estimate_number_of_ducts: int | None
+    has_gdpr_problems: bool
+    is_duplicated: bool
+    category: PhotoDocumentationCategory | None
+    has_sand_bedding: bool
+    has_pipe_end_seal: bool
+    gps_matches_route: bool
+    date_valid: bool
+    is_false_call: bool
+    reviewer_override_category: PhotoDocumentationCategory | None
+    created_at: datetime
+    updated_at: datetime
 
 
 class ProjectAssetRead(SQLModel):
@@ -76,6 +140,7 @@ class ProjectAssetRead(SQLModel):
     original_label: str
     stored_relpath: str
     created_at: datetime
+    analysis: PhotoAnalysisRead | None = None
 
 
 class ProjectDetailRead(SQLModel):
@@ -86,4 +151,5 @@ class ProjectDetailRead(SQLModel):
     updated_at: datetime | None
     photo_count: int | None
     status: ProjectStatus
+    project_date: date | None
     assets: list[ProjectAssetRead]

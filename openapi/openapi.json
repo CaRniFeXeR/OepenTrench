@@ -485,6 +485,142 @@
         ],
         "title": "ItemRead"
       },
+      "PhotoAnalysisRead": {
+        "properties": {
+          "asset_id": {
+            "type": "string",
+            "title": "Asset Id"
+          },
+          "is_in_domain": {
+            "type": "boolean",
+            "title": "Is In Domain"
+          },
+          "has_white_paper": {
+            "type": "boolean",
+            "title": "Has White Paper"
+          },
+          "has_ruler": {
+            "type": "boolean",
+            "title": "Has Ruler"
+          },
+          "estimated_depth": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimated Depth"
+          },
+          "has_duct": {
+            "type": "boolean",
+            "title": "Has Duct"
+          },
+          "estimate_number_of_ducts": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimate Number Of Ducts"
+          },
+          "has_gdpr_problems": {
+            "type": "boolean",
+            "title": "Has Gdpr Problems"
+          },
+          "is_duplicated": {
+            "type": "boolean",
+            "title": "Is Duplicated"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PhotoDocumentationCategory"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "has_sand_bedding": {
+            "type": "boolean",
+            "title": "Has Sand Bedding"
+          },
+          "has_pipe_end_seal": {
+            "type": "boolean",
+            "title": "Has Pipe End Seal"
+          },
+          "gps_matches_route": {
+            "type": "boolean",
+            "title": "Gps Matches Route"
+          },
+          "date_valid": {
+            "type": "boolean",
+            "title": "Date Valid"
+          },
+          "is_false_call": {
+            "type": "boolean",
+            "title": "Is False Call"
+          },
+          "reviewer_override_category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PhotoDocumentationCategory"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset_id",
+          "is_in_domain",
+          "has_white_paper",
+          "has_ruler",
+          "estimated_depth",
+          "has_duct",
+          "estimate_number_of_ducts",
+          "has_gdpr_problems",
+          "is_duplicated",
+          "category",
+          "has_sand_bedding",
+          "has_pipe_end_seal",
+          "gps_matches_route",
+          "date_valid",
+          "is_false_call",
+          "reviewer_override_category",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "PhotoAnalysisRead"
+      },
+      "PhotoDocumentationCategory": {
+        "type": "string",
+        "enum": [
+          "green",
+          "yellow",
+          "red"
+        ],
+        "title": "PhotoDocumentationCategory",
+        "description": "Per-photo documentation quality (map node/segment rollup), not workflow status."
+      },
       "ProjectAssetRead": {
         "properties": {
           "id": {
@@ -510,6 +646,16 @@
             "type": "string",
             "format": "date-time",
             "title": "Created At"
+          },
+          "analysis": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PhotoAnalysisRead"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -542,6 +688,18 @@
               }
             ],
             "title": "Region"
+          },
+          "project_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Date"
           }
         },
         "type": "object",
@@ -602,6 +760,18 @@
           "status": {
             "$ref": "#/components/schemas/ProjectStatus"
           },
+          "project_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Date"
+          },
           "assets": {
             "items": {
               "$ref": "#/components/schemas/ProjectAssetRead"
@@ -619,6 +789,7 @@
           "updated_at",
           "photo_count",
           "status",
+          "project_date",
           "assets"
         ],
         "title": "ProjectDetailRead"
@@ -674,6 +845,18 @@
           },
           "status": {
             "$ref": "#/components/schemas/ProjectStatus"
+          },
+          "project_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Date"
           }
         },
         "type": "object",
@@ -684,7 +867,8 @@
           "region",
           "updated_at",
           "photo_count",
-          "status"
+          "status",
+          "project_date"
         ],
         "title": "ProjectRead"
       },

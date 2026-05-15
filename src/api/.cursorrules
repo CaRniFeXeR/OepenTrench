@@ -1,0 +1,11 @@
+# src/api conventions
+
+- **Routes (`routes/`)**: One router file per resource or concern. FastAPI wiring only—parameters, dependencies, responses, status codes. Register each router from `main.py`.
+
+- **Helpers (`helpers/`)**: Small shared utilities (pagination, formatting, etc.). Not for core business rules.
+
+- **Services (`services/`)**: Business logic, orchestration, and data access coordination. Route handlers should call services rather than embed logic.
+
+- **Imports**: Use absolute imports from the project root (e.g. `from src.api...`), not relative imports.
+
+This project’s Cursor rule with the same intent: `.cursor/rules/src-api.mdc` (applies when editing files under `src/api/`).

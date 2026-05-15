@@ -35,7 +35,12 @@ def create_project(
     payload: ProjectCreate,
     session: Annotated[Session, Depends(get_session)],
 ) -> ProjectRead:
-    project = project_service.create_project(session, name=payload.name, region=payload.region)
+    project = project_service.create_project(
+        session,
+        name=payload.name,
+        region=payload.region,
+        project_date=payload.project_date,
+    )
     return ProjectRead.model_validate(project)
 
 
@@ -60,7 +65,7 @@ def read_project(
     if result is None:
         raise HTTPException(status_code=404, detail="project not found")
     project, assets = result
-    reads = [ProjectAssetRead.model_validate(asset) for asset in assets]
+    reads = project_service.project_assets_reads(session, assets)
     return ProjectDetailRead(
         id=project.id,
         name=project.name,
@@ -69,6 +74,7 @@ def read_project(
         updated_at=project.updated_at,
         photo_count=project.photo_count,
         status=project.status,
+        project_date=project.project_date,
         assets=reads,
     )
 
@@ -96,7 +102,7 @@ def upload_project_image(
         raise _payload_too_large_response(exc) from exc
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
-    return ProjectAssetRead.model_validate(asset)
+    return project_service.project_asset_read(session, asset)
 
 
 @router.post("/{project_id}/geojson", response_model=ProjectAssetRead)
@@ -122,4 +128,4 @@ def upload_project_geojson(
         raise _payload_too_large_response(exc) from exc
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
-    return ProjectAssetRead.model_validate(asset)
+    return project_service.project_asset_read(session, asset)
