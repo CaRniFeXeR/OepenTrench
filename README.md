@@ -111,6 +111,34 @@ We may emphasize one or more of these, depending on what we ship at the hackatho
 
 Early-stage hackathon repo. Implementation (ingest, geo-matching, models, map UI) will land here as we build during the event.
 
+### Backend (FastAPI)
+
+From the repo root, install dependencies and use the project virtualenv (not another Python on your PATH):
+
+```bash
+uv sync
+.venv/bin/uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+If you see `Address already in use` on port 8000, an API instance is already running (or stop the old process). If you see `No module named 'fastapi'`, you are not using `.venv/bin/uvicorn` — activate with `source .venv/bin/activate` or call the binary as above.
+
+SQLite is stored at `data/oepentrench_api.db` by default. Set **`OEPENTRENCH_SQLITE_PATH`** to override the database file path.
+
+### Frontend (Vite + React)
+
+After the API is running, start the dashboard from `frontend/`:
+
+```bash
+# Re-export OpenAPI when backend routes change
+python scripts/export_openapi.py
+
+cd frontend
+npm install
+npm run dev
+```
+
+The dev server runs at http://localhost:5173 and proxies `/projects` and `/health` to the API on port 8000. The TypeScript client is generated from `openapi/openapi.json` via `@hey-api/openapi-ts` (`npm run generate:api`).
+
 ### Planned layout
 
 ```text

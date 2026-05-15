@@ -31,6 +31,12 @@ dependencies = [
     "seaborn>=0.13,<1",
     # progress
     "tqdm>=4.66,<5",
+    # api
+    "fastapi>=0.115,<1",
+    "uvicorn[standard]>=0.32,<1",
+    "sqlmodel>=0.0.22,<0.1",
+    "nanoid>=2.0,<3",
+    "python-multipart>=0.0.18,<1",
 ]
 
 [project.optional-dependencies]
