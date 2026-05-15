@@ -113,11 +113,14 @@ Early-stage hackathon repo. Implementation (ingest, geo-matching, models, map UI
 
 ### Backend (FastAPI)
 
-After installing dependencies (e.g. `uv sync`), run the API from the repo root:
+From the repo root, install dependencies and use the project virtualenv (not another Python on your PATH):
 
 ```bash
-uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
+uv sync
+.venv/bin/uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
 ```
+
+If you see `Address already in use` on port 8000, an API instance is already running (or stop the old process). If you see `No module named 'fastapi'`, you are not using `.venv/bin/uvicorn` — activate with `source .venv/bin/activate` or call the binary as above.
 
 SQLite is stored at `data/oepentrench_api.db` by default. Set **`OEPENTRENCH_SQLITE_PATH`** to override the database file path.
 
