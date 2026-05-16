@@ -4,6 +4,11 @@ import type { LngLatBoundsLike, Map as MaplibreMap } from 'maplibre-gl';
 export const MAP_FIT_PADDING = 48;
 export const MAP_FIT_MAX_ZOOM = 15;
 
+export const MAP_FIT_DEFAULT_OPTIONS = {
+  padding: MAP_FIT_PADDING,
+  maxZoom: MAP_FIT_MAX_ZOOM,
+} as const;
+
 function expandBounds(
   bounds: [number, number, number, number],
   lon: number,
@@ -110,8 +115,7 @@ export function fitMapToFeatureCollection(
   }
 
   map.fitBounds(boundsToLngLatBoundsLike(box), {
-    padding: MAP_FIT_PADDING,
-    maxZoom: MAP_FIT_MAX_ZOOM,
+    ...MAP_FIT_DEFAULT_OPTIONS,
     duration,
   });
 }

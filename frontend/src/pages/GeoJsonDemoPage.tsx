@@ -9,7 +9,7 @@ import type {
   LineLayerSpecification,
 } from '@maplibre/maplibre-gl-style-spec';
 
-import { MapView } from '../components/MapView';
+import { MapView } from '../components/map/MapView';
 import { EXAMPLE_GEOJSON_DATASETS } from '../exampleGeojsonModuleUrls';
 import {
   normalizeFeatureCollection,
