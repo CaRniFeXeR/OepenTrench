@@ -61,6 +61,7 @@ class ProjectAsset(SQLModel, table=True):
     kind: AssetKind
     original_label: str = Field(max_length=500)
     stored_relpath: str = Field(max_length=1024)
+    hash_sha256: str = Field(max_length=64)
     created_at: datetime
 
 

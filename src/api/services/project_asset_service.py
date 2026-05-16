@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 from typing import BinaryIO, Optional
@@ -215,6 +216,7 @@ def save_project_image(
         raise LookupError("project not found")
     ext = normalize_image_extension(upload_filename)
     content = _read_body_limited(stream, MAX_IMAGE_BYTES)
+    hash_sha256 = hashlib.sha256(content).hexdigest()
     return _persist_asset(
         session,
         project_id=project_id,
@@ -222,6 +224,7 @@ def save_project_image(
         original_label=original_label,
         ext=ext,
         content=content,
+        hash_sha256=hash_sha256,
     )
 
 
@@ -273,6 +276,7 @@ def _persist_asset(
     original_label: str,
     ext: str,
     content: bytes,
+    hash_sha256: str = '0000000000000000000000000000000000000000000000000000000000000000',
 ) -> ProjectAsset:
     upload_root = ensure_upload_root_exists()
     asset_id = new_nanoid()
@@ -290,6 +294,7 @@ def _persist_asset(
             kind=kind,
             original_label=original_label,
             stored_relpath=relpath.replace("\\", "/"),
+            hash_sha256=hash_sha256,
             created_at=utc_now(),
         )
         session.add(row)
