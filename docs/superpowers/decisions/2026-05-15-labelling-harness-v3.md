@@ -252,3 +252,90 @@ Minimum bar: 2 options, 1 chosen, explicit reasoning.
 - **Affected files:** `src/labelling/config.py`
 - **Commit:** pending
 - **Supersedes:** —
+
+---
+
+### D-010: `MalformedResponseError` writes empty output, `LabellerError` writes nothing
+
+- **Timestamp:** 2026-05-16 13:00 (local)
+- **Task:** Task 3 — Remote labeller + runner
+- **Trigger:** Spec §8 says "MalformedResponse → per-photo WARN; emit empty detection list for that image; record in `run_manifest.errors[]`; continue" and "LabellerError (after retries) → log + skip + record". Both end up in `errors[]` but the on-disk side-effects differ. The data carriers (`LabelOutput`) have no nullability or error markers, so the labeller must signal the distinction via the exception type.
+- **Spec anchors:** §8 (error taxonomy rows), §6.3 (meta JSON shape — needs `image_quality` field), §7 (resume policy: skip when both files exist)
+- **Options considered:**
+  1. Single `LabellerError` for both, with the runner inspecting message strings or attributes. Fragile and message-format-coupled.
+  2. Add a nullable `error_kind` field to `LabelOutput` and have the labeller always return one. Bloats the success type with a never-set field in the common case.
+  3. Subclass: `MalformedResponseError(LabellerError)`. Runner catches the subclass specifically: writes empty `<stem>.txt` and a stub `<stem>.json` with `image_quality: "malformed_response"`, increments errors, does NOT increment `images_failed`. Catches plain `LabellerError` separately: increments `images_failed`, writes no files.
+- **Chosen:** Option 3.
+- **Reasoning:** Clean exception hierarchy maps directly to the spec's two-row distinction. Empty `<stem>.txt` for malformed responses unblocks resume per §7 — re-running with the same config skips the image rather than retrying a request that won't change. Plain `LabellerError` (e.g., 5xx after retries) leaves no files, so re-run will retry the request once the operator fixes whatever caused it. Both still land in `run_manifest.errors[]` with distinct `kind` strings for forensics.
+- **Out-of-scope alternatives deferred:** A `Retry-After`-aware backoff for 429 responses; out of scope at hackathon scale.
+- **Affected files:** `src/labelling/remote_labeller.py`, `src/labelling/runner.py`
+- **Commit:** pending
+- **Supersedes:** —
+
+### D-011: Retry classification (which status codes / exceptions are retryable)
+
+- **Timestamp:** 2026-05-16 13:05 (local)
+- **Task:** Task 3 — Remote labeller + runner
+- **Trigger:** Spec §8 names `LabellerError transient` for "5xx, 429, `httpx.TimeoutException`, `httpx.ConnectError`" but does not enumerate the exact 5xx set, nor where to put `RemoteProtocolError` / `ReadError` / `WriteError`.
+- **Spec anchors:** §8 (LabellerError transient row), §6.3
+- **Options considered:**
+  1. Retry on every non-2xx, every httpx exception. Maximally permissive. Wastes attempts on 400/422 (malformed request) which are never going to succeed.
+  2. Retry only on the spec's literal mention: 429, 500, 502, 503, 504, `httpx.TimeoutException`, `httpx.ConnectError`. Non-retryable: 4xx (excluding 429), `RemoteProtocolError`, `ReadError`, `WriteError`.
+  3. Same as 2 plus `RemoteProtocolError` (server crashed mid-response — likely transient if the server restarts cleanly).
+- **Chosen:** Option 3.
+- **Reasoning:** The spec is illustrative on the 5xx set; the chosen list — {429, 500, 502, 503, 504} — is the canonical retryable HTTP-status family. Adding `RemoteProtocolError` to the retry set covers the realistic "VM server got OOM-killed mid-response" case. 4xx (non-429) stays non-retryable: a 400 or 422 means the request was wrong; retrying without changing it is pointless. The backoff schedule is the spec's literal "1 s → 2 s" extended to 4 s via `2**attempt` for the (rare) case where `retries=3` is configured.
+- **Out-of-scope alternatives deferred:** Jitter on the backoff; `Retry-After` header parsing; circuit-breaker on consecutive failures.
+- **Affected files:** `src/labelling/remote_labeller.py`
+- **Commit:** pending
+- **Supersedes:** —
+
+### D-012: `image_path` translation — must be under `local_image_root`
+
+- **Timestamp:** 2026-05-16 13:10 (local)
+- **Task:** Task 3 — Remote labeller + runner
+- **Trigger:** Spec §5.1 says the request carries an absolute VM path. The local harness has the file at a local path. The translation rule (how to derive the VM path from the local path + config) needs to be pinned.
+- **Spec anchors:** §5.1 (`image_path` request field), §6.5 (`remote_image_root`, `local_image_root` config fields), §13 ("Image-root path on the VM" gap)
+- **Options considered:**
+  1. The user supplies the VM path directly via CLI for every image. Operator-hostile at 500 images.
+  2. String-replace `local_image_root` prefix with `remote_image_root` on every image_path. Fragile to symlinks, relative paths, trailing slashes.
+  3. `image_path.resolve().relative_to(Path(local_image_root).resolve())` → join with `remote_image_root`. Robust to relative paths and symlinks; raises `ValueError` if the image is not under the configured root, which becomes a `LabellerError` with a clear message.
+- **Chosen:** Option 3 (`relative_to` after resolve).
+- **Reasoning:** This handles the realistic cases — `Beispiele/duct/<x>.jpeg` resolved from a CWD-relative path, `Fotos/<x>.jpeg` similarly, and ad-hoc absolute paths — uniformly. Failure mode is explicit: if the operator points at an image outside `local_image_root` (e.g. forgets to update the root after moving Beispiele/), the error fires immediately on the first image rather than after a confusing 404 from the server. Matches the spec's §13.last gap on server-side path-validation: same invariant from the other end.
+- **Out-of-scope alternatives deferred:** Multi-root support (different roots for `Fotos/` vs `Beispiele/`). Single root is enough at hackathon scale; if needed, the operator rsyncs both into `<remote_image_root>/Fotos` and `<remote_image_root>/Beispiele` and the relative-path rule continues to work.
+- **Affected files:** `src/labelling/remote_labeller.py`
+- **Commit:** pending
+- **Supersedes:** —
+
+### D-013: Signal handling + always-write-manifest invariant
+
+- **Timestamp:** 2026-05-16 13:15 (local)
+- **Task:** Task 3 — Remote labeller + runner
+- **Trigger:** Spec §7 says "the runner registers a SIGINT/SIGTERM handler that drains state to disk before exiting" and "a run that started always produces `run_manifest.json` with a final state, even if every image failed". Implementation needs to guarantee the manifest write happens on Ctrl-C and on any uncaught exception.
+- **Spec anchors:** §7 (class invariant), §8
+- **Options considered:**
+  1. `try/finally` around the loop only, with no signal handler. Ctrl-C raises KeyboardInterrupt which the finally catches — works on POSIX, awkward to test, doesn't catch SIGTERM cleanly.
+  2. `atexit.register` to write the manifest. Doesn't run on SIGTERM (default disposition is to terminate without atexit).
+  3. Install SIGINT + SIGTERM handlers that set a flag; the per-image loop checks the flag at iteration start and raises a sentinel `_Interrupted` exception; outer `try/finally` writes the manifest. Restore prior handlers on exit so test/CLI callers don't get persistent handlers.
+- **Chosen:** Option 3 (signal flag + finally + handler restore).
+- **Reasoning:** Sentinel-exception pattern is the standard way to interrupt an in-flight loop without losing the manifest write. Restoring prior handlers means a pytest run that calls `runner.run()` cannot accidentally leave the test's handler chain modified. The flag-based approach also gives a deterministic test path: the test can install the flag manually instead of sending a real signal.
+- **Out-of-scope alternatives deferred:** Per-image timeout enforcement at the runner level (httpx handles per-request timeout via config.timeout_seconds; the runner just trusts the labeller's per-image latency).
+- **Affected files:** `src/labelling/runner.py`
+- **Commit:** pending
+- **Supersedes:** —
+
+### D-014: Class IDs derived from `config.classes` position, not a separate mapping
+
+- **Timestamp:** 2026-05-16 13:20 (local)
+- **Task:** Task 3 — Remote labeller + runner
+- **Trigger:** YOLO `<stem>.txt` lines need integer class IDs. The harness deals in class names throughout (`Detection.cls`, `config.classes`). Need a source of truth for `name → id`.
+- **Spec anchors:** §6.2 (YOLO line format), §6.5 (`classes: list[str]`)
+- **Options considered:**
+  1. A separate `data.yaml` lookup at write-time. Crosses module boundaries (runner depends on the dataset config) and adds yet another moving piece.
+  2. The position of the class name in `config.classes` IS the id. The runner does `config.classes.index(det.cls)`. The convention of "the YAML order is the wire order" is the simplest contract.
+  3. An explicit `class_to_id: dict[str, int]` field on `LabellerConfig`. Lets the operator pin IDs explicitly; redundant with `classes:` ordering unless someone wants to reorder without renumbering.
+- **Chosen:** Option 2 (position is id).
+- **Reasoning:** `config.classes` already orders the classes; the YOLO writer uses that order. Operators get the canonical ID assignment by matching `data.yaml`'s `names:` order in the harness config — that's their responsibility and it surfaces immediately on the first run (a mismatch would change which int appears in `.txt`). One source of truth, no drift opportunity.
+- **Out-of-scope alternatives deferred:** Validating at runtime that `config.classes` matches `data.yaml`'s `names:` mapping. Could be a CLI flag in T6 if needed.
+- **Affected files:** `src/labelling/runner.py`
+- **Commit:** pending
+- **Supersedes:** —
