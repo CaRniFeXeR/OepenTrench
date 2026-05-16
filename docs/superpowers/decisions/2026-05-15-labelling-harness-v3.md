@@ -339,3 +339,56 @@ Minimum bar: 2 options, 1 chosen, explicit reasoning.
 - **Affected files:** `src/labelling/runner.py`
 - **Commit:** pending
 - **Supersedes:** —
+
+---
+
+### D-015: Compare CLI accepts either a `labels/` dir or its parent
+
+- **Timestamp:** 2026-05-16 14:00 (local)
+- **Task:** Task 5 — Compare tool
+- **Trigger:** Spec §5.6 CLI example shows `labelling/labels/` and `labelling/runs/grounding-dino_<ts>/labels/` — both literal `labels/` dirs. The v2 baseline is at `labelling/labels/`; the v3 outputs are at `labelling/runs/<profile>_<ts>/labels/`. Operators are likely to pass the run dir (parent of `labels/`) by mistake.
+- **Spec anchors:** §5.6 (CLI surface), §6.6 (compare output)
+- **Options considered:**
+  1. Strict — only accept the literal `labels/` dir; error out on the parent. Matches the spec example exactly but is brittle.
+  2. Auto-resolve — if the passed path has a `labels/` subdirectory, descend into it; otherwise treat the path as a labels dir directly. The spec example's behaviour is preserved, the friendlier case (passing the run dir) just works.
+  3. Add a `--labels-subdir` flag. Bloats the CLI.
+- **Chosen:** Option 2 (auto-resolve).
+- **Reasoning:** Strictly compatible with the spec example (passing `labels/` directly still works), but tolerates the parent dir which is the natural thing to copy-paste from the runner's stdout (`run_dir: labelling/runs/grounding-dino_<ts>/`). One less footgun at hackathon pace, no API surface added.
+- **Out-of-scope alternatives deferred:** Reading `run_manifest.json` to discover the labels dir — overengineered; the dir-name convention is enough.
+- **Affected files:** `src/labelling/compare.py`, `scripts/compare_runs.py`
+- **Commit:** pending
+- **Supersedes:** —
+
+### D-016: IoU > 0 threshold for a "match" in greedy pairing
+
+- **Timestamp:** 2026-05-16 14:05 (local)
+- **Task:** Task 5 — Compare tool
+- **Trigger:** Greedy matching needs a floor on what counts as a match. A pair with IoU = 0 (no overlap) should not consume a b-box; otherwise an a-box could "match" a far-away b-box just to claim it, hiding a genuine miss.
+- **Spec anchors:** §6.6, §13 ("greedy IoU matching" gap)
+- **Options considered:**
+  1. Any IoU ≥ 0 counts — even no-overlap pairs greedily claim a b-box. Worst: an a-box always finds a "match" even when nothing nearby exists, so missing detections look matched-with-low-IoU rather than unmatched.
+  2. IoU > 0 (strictly positive overlap) — unmatched a-boxes record -1 honestly. Cheap.
+  3. IoU > 0.5 (canonical detection threshold) — a low-but-real overlap counts as no-match. Strict; could under-count real-but-loose matches between v2 (VLM-loose) and v3 (model-tighter).
+- **Chosen:** Option 2 (IoU > 0).
+- **Reasoning:** The diff tool is for operator review, not for AP/recall computation. Strictly-positive overlap means -1 is reserved for "the other run did not detect this region at all" — the actionable signal. Loose matches (IoU = 0.2) are still visible in the per-photo numbers; the operator can decide whether to call them matches at the threshold of their choice. A canonical 0.5 cutoff would discard the visibility of "yes there's a box in roughly the right place but it's loose" cases — those are the most useful ones to inspect.
+- **Out-of-scope alternatives deferred:** A configurable `--min-iou` flag; can be added later if the operator wants stricter pairing.
+- **Affected files:** `src/labelling/compare.py`
+- **Commit:** pending
+- **Supersedes:** —
+
+### D-017: `per_class_mean_iou_when_both_present` excludes unmatched (-1.0) IoUs from the mean
+
+- **Timestamp:** 2026-05-16 14:08 (local)
+- **Task:** Task 5 — Compare tool
+- **Trigger:** Summary stat needs a definition. With unmatched a-boxes scoring -1.0, naive averaging would skew the mean negative. Need to decide whether -1.0 affects the per-class mean.
+- **Spec anchors:** §6.6 (summary block)
+- **Options considered:**
+  1. Average over ALL ious (including -1) — produces a number that mixes "boxes that matched" with "boxes that didn't", uninterpretable.
+  2. Average over only positive ious — produces "when both runs find a box in this class on the same photo, how tight is the IoU between them?" — interpretable.
+  3. Use F-style: harmonic of pairwise IoU and presence-recall. Overengineered for a summary line.
+- **Chosen:** Option 2.
+- **Reasoning:** The summary key explicitly says "when both present", which is itself a presence filter — extending that to "when the boxes can actually be paired" is the natural reading. Operators who want presence-recall can compute it from `class_presence_agreement_rate` and the per-class iou independently. Mixed scoring would dilute the signal — a class where v3 missed half the v2 boxes would average to ~IoU 0.3 even if every matched pair was perfect.
+- **Out-of-scope alternatives deferred:** Reporting median/p95 of IoUs as well as mean — single-stat summary is enough at hackathon scale.
+- **Affected files:** `src/labelling/compare.py`
+- **Commit:** pending
+- **Supersedes:** —
