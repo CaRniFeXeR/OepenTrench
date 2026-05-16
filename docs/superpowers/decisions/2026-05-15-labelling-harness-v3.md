@@ -182,3 +182,73 @@ Minimum bar: 2 options, 1 chosen, explicit reasoning.
 - **Affected files:** `scripts/inspect_labels.py`
 - **Commit:** pending
 - **Supersedes:** —
+
+---
+
+### D-006: `src/labelling/` (flat) instead of `src/oepentrench/labelling/` (nested)
+
+- **Timestamp:** 2026-05-16 12:00 (local)
+- **Task:** Task 2 — Local dataclasses + config loader
+- **Trigger:** Spec §4.1 / §11 names the local package `src/oepentrench/labelling/`, but the existing repo uses a flat `src/` layout (`src/cache.py`, `src/geo.py`, `src/photos.py`; `top_level.txt` = `src`; existing scripts import as `from src.cache import …`). The nested path does not exist on disk.
+- **Spec anchors:** §4.1 (component file paths), §11 ("Files to create" — local section)
+- **Options considered:**
+  1. Restructure the entire repo to `src/oepentrench/<module>/` (move `src/cache.py` → `src/oepentrench/cache.py`, update all imports in `scripts/build_notebooks.py`, update `pyproject.toml`'s `packages.find`, rebuild egg-info). Matches the spec literally but spreads the change across files unrelated to T2.
+  2. Use `src/labelling/` for the harness — flat, matches existing convention (`src/cache.py`, `src/photos.py`). Imports inside become `from src.labelling.base import …`, parallel to the existing `from src.cache import …`. The spec's path becomes a deviation, logged here.
+  3. Create only `src/oepentrench/labelling/` while leaving the other modules at `src/`. Two different layouts in one repo, asymmetric, confusing.
+- **Chosen:** Option 2 (`src/labelling/`).
+- **Reasoning:** The spec's path was inherited from a generic project template; the actual repo has a flat `src/` layout, and switching layouts mid-flight is outside T2's scope. Convention-following keeps the diff narrow and avoids breaking the existing `scripts/build_notebooks.py` imports. The audit can compare on responsibility, not on literal path strings — the spec's §4.1 anchors all map cleanly to `src/labelling/<file>.py`.
+- **Out-of-scope alternatives deferred:** Renaming the package to `oepentrench` at the project's leisure; global refactor, does not block this feature.
+- **Affected files:** `src/labelling/__init__.py`, `src/labelling/base.py`, `src/labelling/config.py`
+- **Commit:** pending
+- **Supersedes:** —
+
+### D-007: `Detection` / `LabelOutput` as dataclasses, not Pydantic models
+
+- **Timestamp:** 2026-05-16 12:05 (local)
+- **Task:** Task 2 — Local dataclasses + config loader
+- **Trigger:** Choice of representation for the per-image data carriers. The harness uses Pydantic for the YAML config; the per-image objects could also be Pydantic.
+- **Spec anchors:** §5.5 (Detection / LabelOutput shown as `@dataclass`)
+- **Options considered:**
+  1. Pydantic v2 `BaseModel` for both — runtime validation on every `Detection(...)` construction; catches bbox values outside [0,1] at creation time; bigger import surface and slower instantiation.
+  2. `@dataclass` for both — matches the spec's exact wording; no per-instance validation; bbox normalisation responsibility sits with the labeller that constructs them.
+  3. `pydantic.dataclasses.dataclass` — middle ground, validates fields but stays dataclass-shaped.
+- **Chosen:** Option 2 (stdlib `@dataclass`).
+- **Reasoning:** The spec explicitly writes these as `@dataclass`. Bbox-validity is the labeller's invariant — it has the image dimensions and the raw model output; pushing that check into the data class would either be redundant or run at the wrong layer. Pydantic adds dependency weight inside hot loops. Sticking to dataclasses also keeps `LabelOutput.detections: list[Detection]` straightforward.
+- **Out-of-scope alternatives deferred:** Adding lightweight bbox-bounds assertions inside `RemoteVlmLabeller` (T3); that's where the invariant belongs.
+- **Affected files:** `src/labelling/base.py`
+- **Commit:** pending
+- **Supersedes:** —
+
+### D-008: Pydantic `extra="forbid"` for `LabellerConfig`
+
+- **Timestamp:** 2026-05-16 12:10 (local)
+- **Task:** Task 2 — Local dataclasses + config loader
+- **Trigger:** Pydantic v2 default allows unknown fields silently. A YAML typo (`prompt:` instead of `prompts:`) would be ignored and the runner would later fail mid-loop with a misleading "missing prompts" error.
+- **Spec anchors:** §6.5 (config schema), §8 (`ConfigError` mapped to exit 2 at startup)
+- **Options considered:**
+  1. Default Pydantic behaviour — extra fields ignored. Simple but allows silent typos.
+  2. `extra="forbid"` — any unknown field raises `ValidationError` at load time. Catches typos immediately, maps to `ConfigError` and exit 2 per §8.
+  3. `extra="allow"` — extra fields kept but not validated. Worst of both — easy to add fields the code never reads.
+- **Chosen:** Option 2 (`extra="forbid"`).
+- **Reasoning:** `ConfigError` exists specifically to abort at startup on invalid YAML (§8). Forbidding unknown fields is the natural extension of that — config typos are exactly the class of error this taxonomy is meant to catch. Cost is one line of config (`model_config = ConfigDict(extra="forbid")`) and slightly stricter YAML; benefit is zero silent-typo bugs at hackathon pace.
+- **Out-of-scope alternatives deferred:** Per-field aliasing for backwards compatibility — no prior config schema to be compatible with.
+- **Affected files:** `src/labelling/config.py`
+- **Commit:** pending
+- **Supersedes:** —
+
+### D-009: Cross-key validation of `prompts` and `per_class_threshold` against `classes`
+
+- **Timestamp:** 2026-05-16 12:12 (local)
+- **Task:** Task 2 — Local dataclasses + config loader
+- **Trigger:** `LabellerConfig.classes` is the source of truth for which classes a run targets. `prompts` and `per_class_threshold` are keyed by class name and could drift from `classes` (typo, missing key, extra key). Pydantic's per-field validation cannot catch this on its own.
+- **Spec anchors:** §6.5 (config schema)
+- **Options considered:**
+  1. Don't validate — let the runner discover at request-build time (`KeyError` on `prompts[cls]`). Cheap but fails late, mid-run.
+  2. `@model_validator(mode="after")` that asserts `set(prompts.keys()) == set(classes) == set(per_class_threshold.keys())`. Fails fast at config load with a clear message.
+  3. Make `prompts` and `per_class_threshold` optional and fall back to a default if a class key is missing — silently masks misconfiguration.
+- **Chosen:** Option 2 (model-level cross validation).
+- **Reasoning:** `ConfigError` at startup is strictly better than a `KeyError` 20 photos into a run. The validator also catches the opposite direction (a prompt for a class not in `classes`) which is harder to spot by eye. Same place catches threshold bounds (`[0,1]`), `iou_nms` bounds, `timeout_seconds > 0`, `retries ≥ 0`, `max_detections_per_class ≥ 1` — all invariants the spec implies but doesn't explicitly assert.
+- **Out-of-scope alternatives deferred:** Validating class names against `data.yaml` from inside the config loader — that crosses module boundaries; the runner can do that check at startup if needed.
+- **Affected files:** `src/labelling/config.py`
+- **Commit:** pending
+- **Supersedes:** —
