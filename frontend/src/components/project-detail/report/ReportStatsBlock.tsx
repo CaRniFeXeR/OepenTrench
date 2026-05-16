@@ -1,3 +1,4 @@
+import { duplicateCountLabel } from '../photo-dashboard/photoDashboardMessages';
 import { PHOTO_DOC_CATEGORIES } from '../../project-images/photoDocumentationCategories';
 import { ReportStatValue } from './ReportStatValue';
 import {
@@ -35,15 +36,22 @@ export function ReportStatsBlock({
                 key={cat.id}
                 className={`flex items-center justify-between gap-3 rounded-lg border border-slate-200 px-3 py-2 ${cat.banner.bgClass}`}
               >
-                <div className="flex min-w-0 items-center gap-2">
-                  <span
-                    className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
-                    style={{ backgroundColor: cat.color }}
-                    aria-hidden
-                  />
-                  <span className={`text-sm font-medium ${cat.banner.textClass}`}>
-                    {cat.label}
-                  </span>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+                      style={{ backgroundColor: cat.color }}
+                      aria-hidden
+                    />
+                    <span className={`text-sm font-medium ${cat.banner.textClass}`}>
+                      {cat.label}
+                    </span>
+                  </div>
+                  {cat.id === 'red' && categoryStats.duplicateCount > 0 && (
+                    <p className="mt-1 text-xs font-medium text-red-800">
+                      {duplicateCountLabel(categoryStats.duplicateCount)}
+                    </p>
+                  )}
                 </div>
                 <ReportStatValue
                   absolute={categoryStats[cat.countKey]}

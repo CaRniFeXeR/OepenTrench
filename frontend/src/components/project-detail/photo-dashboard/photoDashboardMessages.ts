@@ -2,6 +2,10 @@ import type { PhotoDocumentationCategory } from '../../../api/client';
 import { photoDocCategoryFilterLabel } from '../../project-images/photoDocumentationCategories';
 import { activeCriteriaFilterLabels, type TriStateFilter } from '../../project-images/photoDocumentationUtils';
 
+export function duplicateCountLabel(count: number): string {
+  return count === 1 ? '1 duplicate' : `${count} duplicates`;
+}
+
 export function warningApprovalLabel(needsReview: number, yellowTotal: number): string {
   const noun = needsReview === 1 ? 'needs' : 'need';
   if (needsReview < yellowTotal) {
