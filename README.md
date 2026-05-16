@@ -124,6 +124,8 @@ If you see `Address already in use` on port 8000, an API instance is already run
 
 SQLite is stored at `data/oepentrench_api.db` by default. Set **`OEPENTRENCH_SQLITE_PATH`** to override the database file path.
 
+API logs are written to `logs/api.log` (created on startup; gitignored via `*.log`). Every request is logged at INFO; unhandled internal server errors also log a full stack trace at ERROR.
+
 Schema updates use **Alembic** (`alembic/`). The API runs `alembic upgrade head` at startup so the file stays in sync. From the repo root you can apply migrations manually when needed:
 
 ```bash

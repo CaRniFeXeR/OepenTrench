@@ -11,6 +11,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
+from starlette.responses import JSONResponse
 
 from sqlmodel import Session, col, select
 
@@ -57,6 +58,11 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
             response = await call_next(request)
         except Exception:
             duration_ms = (time.perf_counter() - start) * 1000
+            logger.exception(
+                "Unhandled exception on %s %s",
+                request.method,
+                path,
+            )
             logger.info(
                 "%s %s 500 %.1fms client=%s",
                 request.method,
@@ -121,6 +127,23 @@ _configure_logging()
 logger.info("API module loaded")
 
 app = FastAPI(title="OepenTrench API", lifespan=lifespan)
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, _exc: Exception) -> JSONResponse:
+    path = request.url.path
+    if request.url.query:
+        path = f"{path}?{request.url.query}"
+    logger.exception(
+        "Unhandled exception on %s %s",
+        request.method,
+        path,
+    )
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal Server Error"},
+    )
+
 
 app.add_middleware(
     CORSMiddleware,
