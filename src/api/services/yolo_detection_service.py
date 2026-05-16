@@ -24,9 +24,7 @@ from ultralytics import YOLO
 logger = logging.getLogger(__name__)
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
-_DEFAULT_WEIGHTS = (
-    _REPO_ROOT / "project-resources/weights/duct-ruler-whitepaper-coarse/active.pt"
-)
+_DEFAULT_WEIGHTS = _REPO_ROOT / "weights/yolo11l-aug.pt"
 
 # data.yaml class name -> PhotoAnalysis bool field.
 _CLASS_TO_FIELD = {

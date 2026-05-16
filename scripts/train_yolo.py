@@ -33,6 +33,10 @@ DEFAULT_DATA = (
 )
 WEIGHTS_ROOT = REPO_ROOT / "project-resources/weights/duct-ruler-whitepaper-coarse"
 
+# Canonical path the API loads via yolo_detection_service. Every training run
+# overwrites this file; per-run timestamped backups still live under WEIGHTS_ROOT.
+CANONICAL_WEIGHT = REPO_ROOT / "weights/yolo11l-aug.pt"
+
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(
@@ -190,6 +194,10 @@ def main() -> int:
     shutil.copy2(best, final_weight)
     print(f"[ok] saved finetuned weight: {final_weight}")
     print(f"[ok] training artefacts:    {run_dir}")
+
+    CANONICAL_WEIGHT.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(best, CANONICAL_WEIGHT)
+    print(f"[ok] canonical weight (API): {CANONICAL_WEIGHT}")
     return 0
 
 
