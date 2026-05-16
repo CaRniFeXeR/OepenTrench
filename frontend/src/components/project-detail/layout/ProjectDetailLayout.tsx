@@ -72,7 +72,7 @@ export function ProjectDetailLayout({
             coverageLoading={coverageLoading}
           />
 
-          <div className="flex min-h-[480px] min-w-0 flex-1 flex-col">
+          <div className="print:hidden flex min-h-[480px] min-w-0 flex-1 flex-col">
             {routeReady && mapData ? (
               <>
                 <ProjectMapView

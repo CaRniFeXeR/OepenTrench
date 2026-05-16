@@ -33,7 +33,7 @@ export function ReportFcpSection({
   const samples = pickCategorySampleAssets(assets, assetFcpMap, fcpId);
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+    <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm print:break-inside-avoid print:shadow-none print:border-slate-300">
       <header className="border-b border-slate-100 pb-3">
         <h3 className="text-base font-semibold text-slate-900">{title}</h3>
         {subtitle && <p className="mt-0.5 text-xs text-slate-500">{subtitle}</p>}

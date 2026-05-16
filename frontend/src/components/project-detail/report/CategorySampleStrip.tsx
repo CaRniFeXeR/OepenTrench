@@ -14,19 +14,22 @@ export function CategorySampleStrip({
       <h4 className="text-xs font-medium uppercase tracking-wide text-slate-500">
         Sample photos
       </h4>
-      <div className="mt-2 grid grid-cols-3 gap-2">
+      <div className="mt-2 grid grid-cols-3 gap-4">
         {PHOTO_DOC_CATEGORIES.map((cat) => {
           const asset = samples[cat.id];
           return (
-            <div key={cat.id} className="flex flex-col gap-1">
+            <div
+              key={cat.id}
+              className="flex flex-col gap-1 print:break-inside-avoid"
+            >
               <div
-                className={`flex aspect-square items-center justify-center overflow-hidden rounded-lg border border-slate-200 ${cat.banner.bgClass}`}
+                className={`flex aspect-[4/3] min-h-44 items-center justify-center overflow-hidden rounded-lg border border-slate-200 print:aspect-auto print:min-h-40 print:max-h-56 print:[print-color-adjust:exact] ${cat.banner.bgClass}`}
               >
                 {asset ? (
                   <img
                     src={projectImageContentUrl(projectId, asset.id)}
                     alt={asset.original_label}
-                    className="h-full w-full object-cover"
+                    className="h-full w-full object-cover print:max-h-56 print:object-contain"
                     loading="lazy"
                   />
                 ) : (

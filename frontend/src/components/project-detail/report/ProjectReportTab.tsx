@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import type { FeatureCollection } from 'geojson';
 
 import type { FcpCoverageRead, MapPhotoMarkerRead, ProjectDetailRead } from '../../../api/client';
+import { TrenchCoverageSection } from '../TrenchCoverageSection';
 import {
   assetIdToFcpId,
   buildFcpPhotoRows,
@@ -59,16 +60,21 @@ export function ProjectReportTab({
   );
 
   return (
-    <section className="flex min-h-0 flex-1 flex-col overflow-hidden bg-slate-50">
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6">
-        <header className="mb-6">
+    <section
+      id="project-report-print"
+      className="flex min-h-0 flex-1 flex-col overflow-hidden bg-slate-50 print:h-auto print:max-h-none print:overflow-visible print:bg-white"
+    >
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 print:overflow-visible sm:px-6">
+        <header className="mb-6 print:break-after-avoid">
           <h2 className="text-lg font-semibold text-slate-900">Project report</h2>
           <p className="mt-1 text-sm text-slate-600">
-            Documentation quality, analysis checks, and trench coverage for {project.name}.
+            Documentation quality, analysis checks
+            <span className="print:hidden">, and trench coverage</span> for{' '}
+            {project.name}.
           </p>
         </header>
 
-        <section className="mb-8 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+        <section className="mb-8 rounded-xl border border-slate-200 bg-white p-4 shadow-sm print:mb-6 print:break-after-avoid print:shadow-none">
           <h3 className="text-base font-semibold text-slate-900">Project overview</h3>
           <div className="mt-4">
             <ReportStatsBlock
@@ -80,7 +86,7 @@ export function ProjectReportTab({
         </section>
 
         {sortedFcpRows.length > 0 || unassociatedRow ? (
-          <div className="mb-8 space-y-6">
+          <div className="mb-8 space-y-6 print:mb-6">
             <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
               Per FCP
             </h3>
@@ -109,7 +115,7 @@ export function ProjectReportTab({
             )}
           </div>
         ) : (
-          <p className="mb-8 text-sm text-slate-500">
+          <p className="mb-8 text-sm text-slate-500 print:mb-6">
             Upload FCP polygons to see per-FCP breakdown.
           </p>
         )}
@@ -119,6 +125,13 @@ export function ProjectReportTab({
           unassociatedRow={unassociatedRow}
           coverage={coverage}
           coverageLoading={coverageLoading}
+        />
+
+        <TrenchCoverageSection
+          embedded
+          className="mt-8 print:hidden print:shadow-none"
+          coverage={coverage}
+          loading={coverageLoading}
         />
       </div>
     </section>

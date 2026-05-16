@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 
 export function ProjectDetailHeader({ uploadsBusy }: { uploadsBusy: boolean }) {
   return (
-    <header className="border-b border-slate-200 bg-white">
+    <header className="print:hidden border-b border-slate-200 bg-white">
       <div className="px-4 py-4 sm:px-6">
         <Link
           to="/"

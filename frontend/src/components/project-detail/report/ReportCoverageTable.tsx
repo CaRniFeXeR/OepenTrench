@@ -46,7 +46,7 @@ export function ReportCoverageTable({
   }
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-white shadow-sm">
+    <section className="rounded-xl border border-slate-200 bg-white shadow-sm print:shadow-none print:break-inside-avoid">
       <header className="border-b border-slate-100 px-4 py-3">
         <h3 className="text-sm font-semibold text-slate-900">Coverage & documentation by FCP</h3>
         <p className="mt-0.5 text-xs text-slate-500">
@@ -56,12 +56,12 @@ export function ReportCoverageTable({
 
       <div className="px-4 py-3">
         {coverageLoading && !coverage && (
-          <p className="text-xs text-slate-500">Loading coverage…</p>
+          <p className="print:hidden text-xs text-slate-500">Loading coverage…</p>
         )}
 
         <div className="overflow-x-auto rounded-lg border border-slate-200">
           <table className="w-full min-w-[28rem] text-left text-xs">
-            <thead className="bg-slate-50 text-slate-600">
+            <thead className="bg-slate-50 text-slate-600 print:table-header-group">
               <tr>
                 <th className="px-3 py-2 font-medium">FCP</th>
                 <th className="px-3 py-2 font-medium text-right">Coverage</th>

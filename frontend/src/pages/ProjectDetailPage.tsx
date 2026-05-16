@@ -10,15 +10,15 @@ export function ProjectDetailPage() {
     useProjectDetail(projectId);
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-100">
+    <div className="flex min-h-screen flex-col bg-slate-100 print:min-h-0">
       <ProjectDetailHeader uploadsBusy={uploadsBusy} />
 
       <main className="flex flex-1 flex-col">
         {loading && (
-          <p className="px-6 py-8 text-slate-500">Loading project…</p>
+          <p className="print:hidden px-6 py-8 text-slate-500">Loading project…</p>
         )}
         {error && (
-          <div className="mx-4 mt-8 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 sm:mx-6">
+          <div className="print:hidden mx-4 mt-8 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 sm:mx-6">
             {error}
           </div>
         )}
