@@ -1,96 +1,38 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 import {
-  readProjectProjectsProjectIdGet,
-  type ProjectDetailRead,
-} from '../api/client';
-import { ProjectImagesPanel } from '../components/project-images/ProjectImagesPanel';
-import { ProjectUploadPanel } from '../components/project-upload/ProjectUploadPanel';
+  ProjectDetailHeader,
+  ProjectDetailLayout,
+} from '../components/project-detail/ProjectDetailLayout';
+import { useProjectDetail } from '../components/project-detail/useProjectDetail';
 
 export function ProjectDetailPage() {
   const { projectId } = useParams<{ projectId: string }>();
-  const [project, setProject] = useState<ProjectDetailRead | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [uploadsBusy, setUploadsBusy] = useState(false);
-
-  const load = useCallback(async (options?: { silent?: boolean }) => {
-    if (!projectId) {
-      setError('Missing project id.');
-      setLoading(false);
-      return;
-    }
-
-    const silent = options?.silent ?? false;
-    if (!silent) {
-      setLoading(true);
-    }
-    setError(null);
-    const { data, error: apiError } = await readProjectProjectsProjectIdGet({
-      path: { project_id: projectId },
-    });
-    if (!silent) {
-      setLoading(false);
-    }
-
-    if (apiError) {
-      setError('Project not found or failed to load.');
-      setProject(null);
-      return;
-    }
-
-    setProject(data ?? null);
-  }, [projectId]);
-
-  const refreshProject = useCallback(async () => {
-    await load({ silent: true });
-  }, [load]);
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      void load();
-    });
-  }, [load]);
+  const { project, loading, error, uploadsBusy, setUploadsBusy, refreshProject } =
+    useProjectDetail(projectId);
 
   return (
-    <div className="min-h-screen bg-slate-100">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-6xl px-6 py-4">
-          <Link
-            to="/"
-            aria-disabled={uploadsBusy}
-            onClick={(e) => {
-              if (uploadsBusy) e.preventDefault();
-            }}
-            className={`text-sm font-medium text-slate-600 hover:text-slate-900 ${
-              uploadsBusy ? 'pointer-events-none opacity-50' : ''
-            }`}
-          >
-            ← Back to projects
-          </Link>
-        </div>
-      </header>
+    <div className="flex min-h-screen flex-col bg-slate-100">
+      <ProjectDetailHeader uploadsBusy={uploadsBusy} />
 
-      <main className="mx-auto max-w-6xl px-6 py-8">
-        {loading && <p className="text-slate-500">Loading project…</p>}
+      <main className="flex flex-1 flex-col">
+        {loading && (
+          <p className="px-6 py-8 text-slate-500">Loading project…</p>
+        )}
         {error && (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="mx-4 mt-8 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 sm:mx-6">
             {error}
           </div>
         )}
         {!loading && !error && project && (
-          <>
-            <ProjectUploadPanel
-              project={project}
-              onRefresh={refreshProject}
-              onUploadsBusyChange={setUploadsBusy}
-            />
-            <ProjectImagesPanel projectId={project.id} assets={project.assets} />
-          </>
+          <ProjectDetailLayout
+            project={project}
+            uploadsBusy={uploadsBusy}
+            onRefresh={refreshProject}
+            onUploadsBusyChange={setUploadsBusy}
+          />
         )}
       </main>
     </div>
   );
 }
-

@@ -1,48 +1,16 @@
 import { useNavigate } from 'react-router-dom';
 
 import type { ProjectRead } from '../api/client';
+import {
+  formatProjectDate,
+  photoCountLabel,
+  statusChipClass,
+  statusLabel,
+} from '../lib/projectFormatters';
 
 type ProjectCardProps = {
   project: ProjectRead;
 };
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-}
-
-function photoLabel(count: number): string {
-  return `${count} Photo${count === 1 ? '' : 's'}`;
-}
-
-function statusChipClass(status: ProjectRead['status']): string {
-  switch (status) {
-    case 'draft':
-      return 'bg-slate-100 text-slate-600 ring-slate-200';
-    case 'analysing':
-      return 'animate-pulse bg-sky-100 text-sky-800 ring-sky-200';
-    case 'complete':
-      return 'bg-emerald-100 text-emerald-800 ring-emerald-200';
-    default:
-      return 'bg-slate-100 text-slate-600 ring-slate-200';
-  }
-}
-
-function statusLabel(status: ProjectRead['status']): string {
-  switch (status) {
-    case 'draft':
-      return 'Draft';
-    case 'analysing':
-      return 'Analysing';
-    case 'complete':
-      return 'Complete';
-    default:
-      return status;
-  }
-}
 
 export function ProjectCard({ project }: ProjectCardProps) {
   const navigate = useNavigate();
@@ -77,9 +45,9 @@ export function ProjectCard({ project }: ProjectCardProps) {
         {project.region?.trim() ? project.region : 'Region not set'}
       </p>
       <p className="mt-2 text-sm text-slate-500">
-        {datePrefix} {formatDate(dateIso)}
+        {datePrefix} {formatProjectDate(dateIso)}
       </p>
-      <p className="mt-auto pt-4 text-sm font-medium text-slate-700">{photoLabel(photos)}</p>
+      <p className="mt-auto pt-4 text-sm font-medium text-slate-700">{photoCountLabel(photos)}</p>
     </button>
   );
 }

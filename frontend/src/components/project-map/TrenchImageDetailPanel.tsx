@@ -1,5 +1,7 @@
 import type { ProjectAssetRead } from '../../api/client';
 import { AnalysisTagRow, qualityBadge } from '../project-images/analysisDisplay';
+import { PanelBackLink } from '../ui/PanelBackLink';
+import { PhotoStepper } from '../ui/PhotoStepper';
 import { projectImageContentUrl } from './imageContentUrl';
 
 export function TrenchImageDetailPanel({
@@ -27,13 +29,7 @@ export function TrenchImageDetailPanel({
 
   return (
     <div className="flex flex-1 flex-col overflow-y-auto p-4">
-      <button
-        type="button"
-        onClick={onBack}
-        className="mb-3 text-left text-sm font-medium text-violet-700 hover:text-violet-900"
-      >
-        ← Back to FCP
-      </button>
+      <PanelBackLink label="← Back to FCP" onClick={onBack} />
 
       <div className="relative flex items-center justify-center rounded-lg bg-slate-100">
         <button
@@ -80,17 +76,14 @@ export function TrenchImageDetailPanel({
         Flag as False Call
       </button>
 
-      <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-xs text-slate-600">
-        <button type="button" onClick={onPrev} className="font-medium text-violet-700 hover:underline">
-          ← Previous photo
-        </button>
-        <span>
-          Photo {photoIndex + 1} of {photoTotal} in {fcpCode}
-        </span>
-        <button type="button" onClick={onNext} className="font-medium text-violet-700 hover:underline">
-          Next photo →
-        </button>
-      </div>
+      <PhotoStepper
+        variant="footer"
+        photoIndex={photoIndex}
+        photoTotal={photoTotal}
+        contextLabel={fcpCode}
+        onPrev={onPrev}
+        onNext={onNext}
+      />
     </div>
   );
 }

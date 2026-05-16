@@ -1,4 +1,8 @@
 import type { MapPhotoMarkerRead } from '../../api/client';
+import {
+  categoryPercentages,
+  DocumentationStatusBar,
+} from '../ui/DocumentationStatusBar';
 import { categoryCounts } from './mapPhotoUtils';
 import { CATEGORY_COLORS } from './photoMarkerPaint';
 
@@ -12,10 +16,7 @@ export function MapOverlayPanels({
   photos: MapPhotoMarkerRead[];
 }) {
   const counts = categoryCounts(photos);
-  const total = photos.length;
-  const greenPct = total ? Math.round((counts.green / total) * 100) : 0;
-  const yellowPct = total ? Math.round((counts.yellow / total) * 100) : 0;
-  const redPct = total ? Math.round((counts.red / total) * 100) : 0;
+  const { greenPct, yellowPct, redPct } = categoryPercentages(counts);
 
   return (
     <>
@@ -48,7 +49,12 @@ export function MapOverlayPanels({
         </div>
         <div className="rounded-lg border border-slate-200 bg-white/95 px-3 py-2 shadow-md backdrop-blur-sm">
           <p className="mb-1 text-xs font-medium text-slate-700">Photo documentation</p>
-          <DocumentationBar greenPct={greenPct} yellowPct={yellowPct} redPct={redPct} />
+          <DocumentationStatusBar
+            greenPct={greenPct}
+            yellowPct={yellowPct}
+            redPct={redPct}
+            widthClassName="w-48"
+          />
         </div>
       </div>
 
@@ -59,39 +65,6 @@ export function MapOverlayPanels({
         <StatusRow label="Missing" pct={redPct} color={CATEGORY_COLORS.red} />
       </div>
     </>
-  );
-}
-
-function DocumentationBar({
-  greenPct,
-  yellowPct,
-  redPct,
-}: {
-  greenPct: number;
-  yellowPct: number;
-  redPct: number;
-}) {
-  return (
-    <div className="flex h-2 w-48 overflow-hidden rounded-full">
-      {greenPct > 0 && (
-        <div
-          className="h-full"
-          style={{ width: `${greenPct}%`, backgroundColor: CATEGORY_COLORS.green }}
-        />
-      )}
-      {yellowPct > 0 && (
-        <div
-          className="h-full"
-          style={{ width: `${yellowPct}%`, backgroundColor: CATEGORY_COLORS.yellow }}
-        />
-      )}
-      {redPct > 0 && (
-        <div
-          className="h-full"
-          style={{ width: `${redPct}%`, backgroundColor: CATEGORY_COLORS.red }}
-        />
-      )}
-    </div>
   );
 }
 
