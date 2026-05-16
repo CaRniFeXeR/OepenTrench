@@ -38,6 +38,11 @@ export type BodyUploadProjectImageProjectsProjectIdImagesPost = {
 };
 
 /**
+ * GeojsonStatus
+ */
+export type GeojsonStatus = 'missing' | 'ready';
+
+/**
  * HTTPValidationError
  */
 export type HttpValidationError = {
@@ -229,6 +234,7 @@ export type ProjectDetailRead = {
      */
     photo_count: number | null;
     status: ProjectStatus;
+    geojson_status: GeojsonStatus;
     /**
      * Project Date
      */
@@ -268,6 +274,7 @@ export type ProjectRead = {
      */
     photo_count: number | null;
     status: ProjectStatus;
+    geojson_status: GeojsonStatus;
     /**
      * Project Date
      */
@@ -479,8 +486,8 @@ export type ReadProjectProjectsProjectIdGetResponses = {
 
 export type ReadProjectProjectsProjectIdGetResponse = ReadProjectProjectsProjectIdGetResponses[keyof ReadProjectProjectsProjectIdGetResponses];
 
-export type UploadProjectImageProjectsProjectIdImagesPostData = {
-    body: BodyUploadProjectImageProjectsProjectIdImagesPost;
+export type ReadProjectGeojsonProjectsProjectIdGeojsonGetData = {
+    body?: never;
     path: {
         /**
          * Project Id
@@ -488,26 +495,30 @@ export type UploadProjectImageProjectsProjectIdImagesPostData = {
         project_id: string;
     };
     query?: never;
-    url: '/projects/{project_id}/images';
+    url: '/projects/{project_id}/geojson';
 };
 
-export type UploadProjectImageProjectsProjectIdImagesPostErrors = {
+export type ReadProjectGeojsonProjectsProjectIdGeojsonGetErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type UploadProjectImageProjectsProjectIdImagesPostError = UploadProjectImageProjectsProjectIdImagesPostErrors[keyof UploadProjectImageProjectsProjectIdImagesPostErrors];
+export type ReadProjectGeojsonProjectsProjectIdGeojsonGetError = ReadProjectGeojsonProjectsProjectIdGeojsonGetErrors[keyof ReadProjectGeojsonProjectsProjectIdGeojsonGetErrors];
 
-export type UploadProjectImageProjectsProjectIdImagesPostResponses = {
+export type ReadProjectGeojsonProjectsProjectIdGeojsonGetResponses = {
     /**
+     * Response Read Project Geojson Projects  Project Id  Geojson Get
+     *
      * Successful Response
      */
-    200: ProjectAssetRead;
+    200: {
+        [key: string]: unknown;
+    };
 };
 
-export type UploadProjectImageProjectsProjectIdImagesPostResponse = UploadProjectImageProjectsProjectIdImagesPostResponses[keyof UploadProjectImageProjectsProjectIdImagesPostResponses];
+export type ReadProjectGeojsonProjectsProjectIdGeojsonGetResponse = ReadProjectGeojsonProjectsProjectIdGeojsonGetResponses[keyof ReadProjectGeojsonProjectsProjectIdGeojsonGetResponses];
 
 export type UploadProjectGeojsonProjectsProjectIdGeojsonPostData = {
     body: BodyUploadProjectGeojsonProjectsProjectIdGeojsonPost;
@@ -538,3 +549,33 @@ export type UploadProjectGeojsonProjectsProjectIdGeojsonPostResponses = {
 };
 
 export type UploadProjectGeojsonProjectsProjectIdGeojsonPostResponse = UploadProjectGeojsonProjectsProjectIdGeojsonPostResponses[keyof UploadProjectGeojsonProjectsProjectIdGeojsonPostResponses];
+
+export type UploadProjectImageProjectsProjectIdImagesPostData = {
+    body: BodyUploadProjectImageProjectsProjectIdImagesPost;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/projects/{project_id}/images';
+};
+
+export type UploadProjectImageProjectsProjectIdImagesPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UploadProjectImageProjectsProjectIdImagesPostError = UploadProjectImageProjectsProjectIdImagesPostErrors[keyof UploadProjectImageProjectsProjectIdImagesPostErrors];
+
+export type UploadProjectImageProjectsProjectIdImagesPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: ProjectAssetRead;
+};
+
+export type UploadProjectImageProjectsProjectIdImagesPostResponse = UploadProjectImageProjectsProjectIdImagesPostResponses[keyof UploadProjectImageProjectsProjectIdImagesPostResponses];

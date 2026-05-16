@@ -31,3 +31,32 @@ export function isAllowedGeoJsonFile(file: File): boolean {
   const ext = fileExtensionLower(file.name);
   return ext === '.geojson' || ext === '.json';
 }
+
+export const TRENCHES_GEOJSON_SUFFIX = 'Trenches.geojson';
+export const FCP_POLYGONS_GEOJSON_SUFFIX = 'FCP_Polygons.geojson';
+
+export function endswithGeojsonSuffix(name: string, suffix: string): boolean {
+  return name.trim().toLowerCase().endsWith(suffix.toLowerCase());
+}
+
+export function requiredGeojsonSuffixForFile(name: string): string | null {
+  if (endswithGeojsonSuffix(name, TRENCHES_GEOJSON_SUFFIX)) {
+    return TRENCHES_GEOJSON_SUFFIX;
+  }
+  if (endswithGeojsonSuffix(name, FCP_POLYGONS_GEOJSON_SUFFIX)) {
+    return FCP_POLYGONS_GEOJSON_SUFFIX;
+  }
+  return null;
+}
+
+export function geojsonChecklistFromAssets(
+  assets: { kind: string; original_label: string }[],
+): { trenches: boolean; fcpPolygons: boolean } {
+  const geo = assets.filter((a) => a.kind === 'geojson');
+  return {
+    trenches: geo.some((a) => endswithGeojsonSuffix(a.original_label, TRENCHES_GEOJSON_SUFFIX)),
+    fcpPolygons: geo.some((a) =>
+      endswithGeojsonSuffix(a.original_label, FCP_POLYGONS_GEOJSON_SUFFIX),
+    ),
+  };
+}

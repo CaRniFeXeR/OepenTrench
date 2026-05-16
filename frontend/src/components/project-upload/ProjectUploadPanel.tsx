@@ -1,10 +1,23 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { FeatureCollection } from 'geojson';
 
-import type { ProjectDetailRead } from '../../api/client';
+import {
+  readProjectGeojsonProjectsProjectIdGeojsonGet,
+  type ProjectDetailRead,
+} from '../../api/client';
 import { GeoJsonUploadZone } from './GeoJsonUploadZone';
 import { PhotoUploadZone } from './PhotoUploadZone';
 import { UploadMapPreview } from './UploadMapPreview';
+import {
+  FCP_POLYGONS_GEOJSON_SUFFIX,
+  TRENCHES_GEOJSON_SUFFIX,
+  geojsonChecklistFromAssets,
+} from './constants';
+import {
+  normalizeFeatureCollection,
+  stripBlankFillColors,
+} from '../../normalizeExampleGeojson';
 
 function statusLabel(status: ProjectDetailRead['status']): string {
   switch (status) {
@@ -26,6 +39,16 @@ function formatDate(iso: string | null): string {
   return d.toLocaleDateString();
 }
 
+function mergeFeatureCollections(
+  existing: FeatureCollection | null,
+  added: FeatureCollection,
+): FeatureCollection {
+  return {
+    type: 'FeatureCollection',
+    features: [...(existing?.features ?? []), ...added.features],
+  };
+}
+
 export function ProjectUploadPanel({
   project,
   onRefresh,
@@ -33,6 +56,7 @@ export function ProjectUploadPanel({
   project: ProjectDetailRead;
   onRefresh: () => Promise<void>;
 }) {
+  const navigate = useNavigate();
   const [mapData, setMapData] = useState<FeatureCollection | null>(null);
   const [photosBusy, setPhotosBusy] = useState(false);
   const [geoBusy, setGeoBusy] = useState(false);
@@ -42,10 +66,44 @@ export function ProjectUploadPanel({
   }, [onRefresh]);
 
   const imageCount = project.assets.filter((a) => a.kind === 'image').length;
-  const hasGeoJsonAsset = project.assets.some((a) => a.kind === 'geojson');
-
+  const routeReady = project.geojson_status === 'ready';
   const uploadsBusy = photosBusy || geoBusy;
-  const readyToAnalyse = hasGeoJsonAsset && !uploadsBusy;
+  const checklist = geojsonChecklistFromAssets(project.assets);
+
+  useEffect(() => {
+    if (project.geojson_status !== 'ready') return;
+
+    let cancelled = false;
+    void (async () => {
+      const { data, error } = await readProjectGeojsonProjectsProjectIdGeojsonGet({
+        path: { project_id: project.id },
+      });
+      if (cancelled || error || !data) return;
+      const fc = stripBlankFillColors(
+        normalizeFeatureCollection(data as unknown),
+      );
+      setMapData(fc);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [project.id, project.geojson_status]);
+
+  const handlePartialMapData = useCallback((added: FeatureCollection) => {
+    setMapData((prev) => mergeFeatureCollections(prev, added));
+  }, []);
+
+  const missingGeojsonMessage = (): string => {
+    if (routeReady) return '';
+    const missing: string[] = [];
+    if (!checklist.trenches) missing.push(TRENCHES_GEOJSON_SUFFIX);
+    if (!checklist.fcpPolygons) missing.push(FCP_POLYGONS_GEOJSON_SUFFIX);
+    if (missing.length === 2) {
+      return 'Missing GeoJSON — upload Trenches and FCP_Polygons route files ⚠';
+    }
+    return `Still needed: ${missing.join(', ')} ⚠`;
+  };
 
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
@@ -80,56 +138,44 @@ export function ProjectUploadPanel({
           </p>
         </header>
 
+        <GeoJsonUploadZone
+          projectId={project.id}
+          geojsonStatus={project.geojson_status}
+          assets={project.assets}
+          onRefresh={refresh}
+          onMapData={handlePartialMapData}
+          onUploadingChange={setGeoBusy}
+        />
+
         <PhotoUploadZone
           projectId={project.id}
           onRefresh={refresh}
           onUploadingChange={setPhotosBusy}
         />
 
-        <GeoJsonUploadZone
-          projectId={project.id}
-          hasGeoJsonAsset={hasGeoJsonAsset}
-          onRefresh={refresh}
-          onMapData={setMapData}
-          onUploadingChange={setGeoBusy}
-        />
-
         <footer className="sticky bottom-4 rounded-xl border border-slate-200 bg-white p-4 shadow-md">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-slate-600">
-              {readyToAnalyse ? (
-                <span className="font-medium text-emerald-700">Ready to analyse ✓</span>
-              ) : hasGeoJsonAsset ? (
-                <span>
-                  {uploadsBusy
-                    ? 'Upload in progress…'
-                    : 'GeoJSON present — add photos or continue.'}
-                </span>
+              {routeReady && !uploadsBusy ? (
+                <span className="font-medium text-emerald-700">Route files ready ✓</span>
+              ) : uploadsBusy ? (
+                <span>Upload in progress…</span>
               ) : (
-                <span className="font-medium text-amber-800">
-                  Missing GeoJSON — map cannot be generated ⚠
-                </span>
+                <span className="font-medium text-amber-800">{missingGeojsonMessage()}</span>
               )}
             </p>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
-                disabled
-                title="No draft-save API yet — uploads persist immediately."
-                className="rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-500"
+                onClick={() => navigate('/')}
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-800 hover:bg-slate-50"
               >
                 Save draft
               </button>
               <button
                 type="button"
-                disabled={!readyToAnalyse}
-                title={
-                  !hasGeoJsonAsset
-                    ? 'Upload a GeoJSON route file first.'
-                    : uploadsBusy
-                      ? 'Wait for uploads to finish.'
-                      : 'Analysis API is not wired yet.'
-                }
+                disabled
+                title="Analysis pipeline is not available yet."
                 className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white disabled:cursor-not-allowed disabled:opacity-45 hover:bg-slate-800 disabled:hover:bg-slate-900"
               >
                 Save &amp; analyse
@@ -137,8 +183,8 @@ export function ProjectUploadPanel({
             </div>
           </div>
           <p className="mt-2 text-xs text-slate-500">
-            Files are stored when each upload completes. Save buttons are
-            placeholders until PATCH and analyse endpoints exist.
+            Files are stored when each upload completes. Save &amp; analyse will
+            start the pipeline once that API is available.
           </p>
         </footer>
       </div>

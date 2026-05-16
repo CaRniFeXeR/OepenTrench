@@ -16,6 +16,7 @@ from src.api.models import (
 from src.api.services import project_service
 from src.api.services.project_asset_service import (
     PayloadTooLarge,
+    load_merged_project_geojson,
     save_project_geojson,
     save_project_image,
 )
@@ -74,9 +75,23 @@ def read_project(
         updated_at=project.updated_at,
         photo_count=project.photo_count,
         status=project.status,
+        geojson_status=project.geojson_status,
         project_date=project.project_date,
         assets=reads,
     )
+
+
+@router.get("/{project_id}/geojson")
+def read_project_geojson(
+    project_id: str,
+    session: Annotated[Session, Depends(get_session)],
+) -> dict:
+    try:
+        return load_merged_project_geojson(session, project_id)
+    except LookupError:
+        raise HTTPException(status_code=404, detail="project not found") from None
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
 @router.post("/{project_id}/images", response_model=ProjectAssetRead)

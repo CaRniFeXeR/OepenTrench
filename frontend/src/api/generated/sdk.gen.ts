@@ -2,7 +2,7 @@
 
 import { type Client, formDataBodySerializer, type Options as Options2, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { CreateItemItemsPostData, CreateItemItemsPostErrors, CreateItemItemsPostResponses, CreateProjectProjectsPostData, CreateProjectProjectsPostErrors, CreateProjectProjectsPostResponses, HealthHealthGetData, HealthHealthGetResponses, ListItemsItemsGetData, ListItemsItemsGetErrors, ListItemsItemsGetResponses, ListProjectsRouteProjectsGetData, ListProjectsRouteProjectsGetErrors, ListProjectsRouteProjectsGetResponses, ReadProjectProjectsProjectIdGetData, ReadProjectProjectsProjectIdGetErrors, ReadProjectProjectsProjectIdGetResponses, UploadProjectGeojsonProjectsProjectIdGeojsonPostData, UploadProjectGeojsonProjectsProjectIdGeojsonPostErrors, UploadProjectGeojsonProjectsProjectIdGeojsonPostResponses, UploadProjectImageProjectsProjectIdImagesPostData, UploadProjectImageProjectsProjectIdImagesPostErrors, UploadProjectImageProjectsProjectIdImagesPostResponses } from './types.gen';
+import type { CreateItemItemsPostData, CreateItemItemsPostErrors, CreateItemItemsPostResponses, CreateProjectProjectsPostData, CreateProjectProjectsPostErrors, CreateProjectProjectsPostResponses, HealthHealthGetData, HealthHealthGetResponses, ListItemsItemsGetData, ListItemsItemsGetErrors, ListItemsItemsGetResponses, ListProjectsRouteProjectsGetData, ListProjectsRouteProjectsGetErrors, ListProjectsRouteProjectsGetResponses, ReadProjectGeojsonProjectsProjectIdGeojsonGetData, ReadProjectGeojsonProjectsProjectIdGeojsonGetErrors, ReadProjectGeojsonProjectsProjectIdGeojsonGetResponses, ReadProjectProjectsProjectIdGetData, ReadProjectProjectsProjectIdGetErrors, ReadProjectProjectsProjectIdGetResponses, UploadProjectGeojsonProjectsProjectIdGeojsonPostData, UploadProjectGeojsonProjectsProjectIdGeojsonPostErrors, UploadProjectGeojsonProjectsProjectIdGeojsonPostResponses, UploadProjectImageProjectsProjectIdImagesPostData, UploadProjectImageProjectsProjectIdImagesPostErrors, UploadProjectImageProjectsProjectIdImagesPostResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -87,17 +87,12 @@ export const readProjectProjectsProjectIdGet = <ThrowOnError extends boolean = f
 };
 
 /**
- * Upload Project Image
+ * Read Project Geojson
  */
-export const uploadProjectImageProjectsProjectIdImagesPost = <ThrowOnError extends boolean = false>(options: Options<UploadProjectImageProjectsProjectIdImagesPostData, ThrowOnError>) => {
-    return (options.client ?? client).post<UploadProjectImageProjectsProjectIdImagesPostResponses, UploadProjectImageProjectsProjectIdImagesPostErrors, ThrowOnError>({
-        ...formDataBodySerializer,
-        url: '/projects/{project_id}/images',
-        ...options,
-        headers: {
-            'Content-Type': null,
-            ...options.headers
-        }
+export const readProjectGeojsonProjectsProjectIdGeojsonGet = <ThrowOnError extends boolean = false>(options: Options<ReadProjectGeojsonProjectsProjectIdGeojsonGetData, ThrowOnError>) => {
+    return (options.client ?? client).get<ReadProjectGeojsonProjectsProjectIdGeojsonGetResponses, ReadProjectGeojsonProjectsProjectIdGeojsonGetErrors, ThrowOnError>({
+        url: '/projects/{project_id}/geojson',
+        ...options
     });
 };
 
@@ -108,6 +103,21 @@ export const uploadProjectGeojsonProjectsProjectIdGeojsonPost = <ThrowOnError ex
     return (options.client ?? client).post<UploadProjectGeojsonProjectsProjectIdGeojsonPostResponses, UploadProjectGeojsonProjectsProjectIdGeojsonPostErrors, ThrowOnError>({
         ...formDataBodySerializer,
         url: '/projects/{project_id}/geojson',
+        ...options,
+        headers: {
+            'Content-Type': null,
+            ...options.headers
+        }
+    });
+};
+
+/**
+ * Upload Project Image
+ */
+export const uploadProjectImageProjectsProjectIdImagesPost = <ThrowOnError extends boolean = false>(options: Options<UploadProjectImageProjectsProjectIdImagesPostData, ThrowOnError>) => {
+    return (options.client ?? client).post<UploadProjectImageProjectsProjectIdImagesPostResponses, UploadProjectImageProjectsProjectIdImagesPostErrors, ThrowOnError>({
+        ...formDataBodySerializer,
+        url: '/projects/{project_id}/images',
         ...options,
         headers: {
             'Content-Type': null,

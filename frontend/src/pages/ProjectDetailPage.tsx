@@ -13,19 +13,24 @@ export function ProjectDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (options?: { silent?: boolean }) => {
     if (!projectId) {
       setError('Missing project id.');
       setLoading(false);
       return;
     }
 
-    setLoading(true);
+    const silent = options?.silent ?? false;
+    if (!silent) {
+      setLoading(true);
+    }
     setError(null);
     const { data, error: apiError } = await readProjectProjectsProjectIdGet({
       path: { project_id: projectId },
     });
-    setLoading(false);
+    if (!silent) {
+      setLoading(false);
+    }
 
     if (apiError) {
       setError('Project not found or failed to load.');
@@ -35,6 +40,10 @@ export function ProjectDetailPage() {
 
     setProject(data ?? null);
   }, [projectId]);
+
+  const refreshProject = useCallback(async () => {
+    await load({ silent: true });
+  }, [load]);
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -63,9 +72,10 @@ export function ProjectDetailPage() {
           </div>
         )}
         {!loading && !error && project && (
-          <ProjectUploadPanel project={project} onRefresh={load} />
+          <ProjectUploadPanel project={project} onRefresh={refreshProject} />
         )}
       </main>
     </div>
   );
 }
+

@@ -8,8 +8,15 @@ export { client };
 export {
   createProjectProjectsPost,
   listProjectsRouteProjectsGet,
+  readProjectGeojsonProjectsProjectIdGeojsonGet,
   readProjectProjectsProjectIdGet,
   uploadProjectGeojsonProjectsProjectIdGeojsonPost,
   uploadProjectImageProjectsProjectIdImagesPost,
 } from './generated/sdk.gen';
-export type { ProjectDetailRead, ProjectRead, ProjectStatus } from './generated/types.gen';
+export type {
+  GeojsonStatus,
+  ProjectAssetRead,
+  ProjectDetailRead,
+  ProjectRead,
+  ProjectStatus,
+} from './generated/types.gen';

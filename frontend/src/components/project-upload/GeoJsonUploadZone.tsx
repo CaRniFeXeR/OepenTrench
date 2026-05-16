@@ -1,13 +1,16 @@
 import { useCallback, useId, useRef, useState } from 'react';
 import type { FeatureCollection } from 'geojson';
 
-import {
-  uploadProjectGeojsonProjectsProjectIdGeojsonPost,
-} from '../../api/client';
+import type { ProjectAssetRead } from '../../api/client';
+import { uploadProjectGeojsonProjectsProjectIdGeojsonPost } from '../../api/client';
 import {
   MAX_GEOJSON_BYTES,
   GEOJSON_ACCEPT,
+  TRENCHES_GEOJSON_SUFFIX,
+  FCP_POLYGONS_GEOJSON_SUFFIX,
+  geojsonChecklistFromAssets,
   isAllowedGeoJsonFile,
+  requiredGeojsonSuffixForFile,
 } from './constants';
 import {
   normalizeFeatureCollection,
@@ -16,15 +19,21 @@ import {
 
 type GeoJsonUploadZoneProps = {
   projectId: string;
-  hasGeoJsonAsset: boolean;
+  geojsonStatus: 'missing' | 'ready';
+  assets: ProjectAssetRead[];
   onRefresh: () => Promise<void>;
   onMapData: (data: FeatureCollection) => void;
   onUploadingChange: (busy: boolean) => void;
 };
 
+function checklistLabel(uploaded: boolean): string {
+  return uploaded ? 'uploaded' : 'missing';
+}
+
 export function GeoJsonUploadZone({
   projectId,
-  hasGeoJsonAsset,
+  geojsonStatus,
+  assets,
   onRefresh,
   onMapData,
   onUploadingChange,
@@ -36,6 +45,9 @@ export function GeoJsonUploadZone({
   const [successHint, setSuccessHint] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
+  const checklist = geojsonChecklistFromAssets(assets);
+  const uploadedCount = (checklist.trenches ? 1 : 0) + (checklist.fcpPolygons ? 1 : 0);
+
   const applyFile = useCallback(
     async (file: File) => {
       setError(null);
@@ -43,13 +55,22 @@ export function GeoJsonUploadZone({
 
       if (!isAllowedGeoJsonFile(file)) {
         setError('Use a .geojson or .json file.');
-        return;
+        return false;
       }
+
+      const matchedSuffix = requiredGeojsonSuffixForFile(file.name);
+      if (!matchedSuffix) {
+        setError(
+          `Filename must end with ${TRENCHES_GEOJSON_SUFFIX} or ${FCP_POLYGONS_GEOJSON_SUFFIX}.`,
+        );
+        return false;
+      }
+
       if (file.size > MAX_GEOJSON_BYTES) {
         setError(
           `File is too large (max ${Math.round(MAX_GEOJSON_BYTES / (1024 * 1024))} MB).`,
         );
-        return;
+        return false;
       }
 
       let parsedFc: FeatureCollection;
@@ -59,7 +80,7 @@ export function GeoJsonUploadZone({
         parsedFc = stripBlankFillColors(normalizeFeatureCollection(json));
       } catch {
         setError('Could not read valid GeoJSON from this file.');
-        return;
+        return false;
       }
 
       const segmentCount = parsedFc.features.length;
@@ -80,45 +101,75 @@ export function GeoJsonUploadZone({
             ? String((apiError as { detail: unknown }).detail)
             : 'Upload failed.';
         setError(detail);
-        return;
+        return false;
       }
 
       onMapData(parsedFc);
-      setSuccessHint(
-        `Route file loaded — ${segmentCount} feature${segmentCount === 1 ? '' : 's'} detected.`,
-      );
       await onRefresh();
+
+      const trenchesAfter =
+        checklist.trenches || matchedSuffix === TRENCHES_GEOJSON_SUFFIX;
+      const fcpAfter =
+        checklist.fcpPolygons || matchedSuffix === FCP_POLYGONS_GEOJSON_SUFFIX;
+      const countAfter = (trenchesAfter ? 1 : 0) + (fcpAfter ? 1 : 0);
+      const suffixShort =
+        matchedSuffix === TRENCHES_GEOJSON_SUFFIX ? 'Trenches' : 'FCP polygons';
+
+      setSuccessHint(
+        `${suffixShort} uploaded (${segmentCount} feature${segmentCount === 1 ? '' : 's'}) — ${countAfter} of 2 required files.`,
+      );
+      return true;
     },
-    [projectId, onRefresh, onMapData, onUploadingChange],
+    [projectId, onRefresh, onMapData, onUploadingChange, checklist],
+  );
+
+  const applyFiles = useCallback(
+    async (files: FileList | File[]) => {
+      for (const file of Array.from(files)) {
+        const ok = await applyFile(file);
+        if (!ok) break;
+      }
+    },
+    [applyFile],
   );
 
   const onDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
       setDragOver(false);
-      const f = e.dataTransfer.files[0];
-      if (f) void applyFile(f);
+      if (e.dataTransfer.files.length) {
+        void applyFiles(e.dataTransfer.files);
+      }
     },
-    [applyFile],
+    [applyFiles],
   );
 
   return (
     <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <h3 className="text-sm font-semibold text-slate-900">GeoJSON route</h3>
       <p className="mt-1 text-xs text-slate-500">
-        One route file (.geojson / .json), max{' '}
-        {Math.round(MAX_GEOJSON_BYTES / (1024 * 1024))} MB. Validated on the
-        server.
+        Upload two files: one ending with <strong>{TRENCHES_GEOJSON_SUFFIX}</strong> and one
+        with <strong>{FCP_POLYGONS_GEOJSON_SUFFIX}</strong>. Max{' '}
+        {Math.round(MAX_GEOJSON_BYTES / (1024 * 1024))} MB each. Validated on the server.
       </p>
 
-      {!hasGeoJsonAsset && (
-        <div
-          className="mt-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-950"
-          role="status"
-        >
-          <strong className="font-medium">GeoJSON route file is missing.</strong>{' '}
-          The map view cannot be generated until this file is added. You can
-          upload it now or return to this project later.
+      <ul className="mt-3 space-y-1 text-xs">
+        <li className={checklist.trenches ? 'text-emerald-700' : 'text-amber-900'}>
+          {checklist.trenches ? '✓' : '○'} {TRENCHES_GEOJSON_SUFFIX} —{' '}
+          {checklistLabel(checklist.trenches)}
+        </li>
+        <li className={checklist.fcpPolygons ? 'text-emerald-700' : 'text-amber-900'}>
+          {checklist.fcpPolygons ? '✓' : '○'} {FCP_POLYGONS_GEOJSON_SUFFIX} —{' '}
+          {checklistLabel(checklist.fcpPolygons)}
+        </li>
+      </ul>
+
+      {geojsonStatus === 'missing' && (
+        <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-950" role="status">
+          <strong className="font-medium">Required GeoJSON files are incomplete.</strong>{' '}
+          {uploadedCount === 1
+            ? 'Upload the remaining file to enable the route map.'
+            : 'The map view cannot be generated until both files are added.'}
         </div>
       )}
 
@@ -149,19 +200,20 @@ export function GeoJsonUploadZone({
           id={inputId}
           type="file"
           accept={GEOJSON_ACCEPT}
+          multiple
           className="hidden"
           disabled={uploading}
           onChange={(e) => {
-            const f = e.target.files?.[0];
+            const fl = e.target.files;
             e.target.value = '';
-            if (f) void applyFile(f);
+            if (fl?.length) void applyFiles(fl);
           }}
         />
         <span className="text-sm font-medium text-slate-700">
-          Drop GeoJSON here or click to browse
+          Drop GeoJSON files here or click to browse
         </span>
         <span className="mt-1 text-xs text-slate-500">
-          {uploading ? 'Uploading…' : 'One file per upload'}
+          {uploading ? 'Uploading…' : 'Select one or both required files'}
         </span>
       </div>
 

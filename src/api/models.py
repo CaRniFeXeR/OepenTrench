@@ -38,6 +38,11 @@ class ProjectStatus(str, Enum):
     complete = "complete"
 
 
+class GeojsonStatus(str, Enum):
+    missing = "missing"
+    ready = "ready"
+
+
 class PhotoDocumentationCategory(str, Enum):
     """Per-photo documentation quality (map node/segment rollup), not workflow status."""
 
@@ -54,6 +59,7 @@ class Project(SQLModel, table=True):
     updated_at: datetime | None = Field(default=None)
     photo_count: int | None = Field(default=None)
     status: ProjectStatus = Field(default=ProjectStatus.draft)
+    geojson_status: GeojsonStatus = Field(default=GeojsonStatus.missing)
     project_date: date | None = Field(default=None)
 
 
@@ -107,6 +113,7 @@ class ProjectRead(SQLModel):
     updated_at: datetime | None
     photo_count: int | None
     status: ProjectStatus
+    geojson_status: GeojsonStatus
     project_date: date | None
 
 
@@ -151,5 +158,6 @@ class ProjectDetailRead(SQLModel):
     updated_at: datetime | None
     photo_count: int | None
     status: ProjectStatus
+    geojson_status: GeojsonStatus
     project_date: date | None
     assets: list[ProjectAssetRead]

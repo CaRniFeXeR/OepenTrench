@@ -268,13 +268,55 @@
         }
       }
     },
-    "/projects/{project_id}/images": {
+    "/projects/{project_id}/geojson": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Read Project Geojson",
+        "operationId": "read_project_geojson_projects__project_id__geojson_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Read Project Geojson Projects  Project Id  Geojson Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "tags": [
           "projects"
         ],
-        "summary": "Upload Project Image",
-        "operationId": "upload_project_image_projects__project_id__images_post",
+        "summary": "Upload Project Geojson",
+        "operationId": "upload_project_geojson_projects__project_id__geojson_post",
         "parameters": [
           {
             "name": "project_id",
@@ -291,7 +333,7 @@
           "content": {
             "multipart/form-data": {
               "schema": {
-                "$ref": "#/components/schemas/Body_upload_project_image_projects__project_id__images_post"
+                "$ref": "#/components/schemas/Body_upload_project_geojson_projects__project_id__geojson_post"
               }
             }
           }
@@ -320,13 +362,13 @@
         }
       }
     },
-    "/projects/{project_id}/geojson": {
+    "/projects/{project_id}/images": {
       "post": {
         "tags": [
           "projects"
         ],
-        "summary": "Upload Project Geojson",
-        "operationId": "upload_project_geojson_projects__project_id__geojson_post",
+        "summary": "Upload Project Image",
+        "operationId": "upload_project_image_projects__project_id__images_post",
         "parameters": [
           {
             "name": "project_id",
@@ -343,7 +385,7 @@
           "content": {
             "multipart/form-data": {
               "schema": {
-                "$ref": "#/components/schemas/Body_upload_project_geojson_projects__project_id__geojson_post"
+                "$ref": "#/components/schemas/Body_upload_project_image_projects__project_id__images_post"
               }
             }
           }
@@ -432,6 +474,14 @@
           "file"
         ],
         "title": "Body_upload_project_image_projects__project_id__images_post"
+      },
+      "GeojsonStatus": {
+        "type": "string",
+        "enum": [
+          "missing",
+          "ready"
+        ],
+        "title": "GeojsonStatus"
       },
       "HTTPValidationError": {
         "properties": {
@@ -760,6 +810,9 @@
           "status": {
             "$ref": "#/components/schemas/ProjectStatus"
           },
+          "geojson_status": {
+            "$ref": "#/components/schemas/GeojsonStatus"
+          },
           "project_date": {
             "anyOf": [
               {
@@ -789,6 +842,7 @@
           "updated_at",
           "photo_count",
           "status",
+          "geojson_status",
           "project_date",
           "assets"
         ],
@@ -846,6 +900,9 @@
           "status": {
             "$ref": "#/components/schemas/ProjectStatus"
           },
+          "geojson_status": {
+            "$ref": "#/components/schemas/GeojsonStatus"
+          },
           "project_date": {
             "anyOf": [
               {
@@ -868,6 +925,7 @@
           "updated_at",
           "photo_count",
           "status",
+          "geojson_status",
           "project_date"
         ],
         "title": "ProjectRead"
