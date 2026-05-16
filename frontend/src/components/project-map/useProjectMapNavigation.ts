@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useState, type RefObject } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type RefObject,
+} from 'react';
 import type { MapRef } from 'react-map-gl/maplibre';
 import type { Feature, FeatureCollection } from 'geojson';
 import type { MapLayerMouseEvent } from 'maplibre-gl';
@@ -20,16 +27,37 @@ export function useProjectMapNavigation({
   mapData,
   mapPhotos,
   imageAssets,
+  selectedFcpId: controlledSelectedFcpId,
+  onSelectedFcpIdChange,
 }: {
   mapRef: RefObject<MapRef | null>;
   mapData: FeatureCollection;
   mapPhotos: MapPhotoMarkerRead[];
   imageAssets: ProjectAssetRead[];
+  selectedFcpId?: string | null;
+  onSelectedFcpIdChange?: (id: string | null) => void;
 }) {
   const [level, setLevel] = useState<MapLevel>('project');
-  const [selectedFcpId, setSelectedFcpId] = useState<string | null>(null);
+  const [internalSelectedFcpId, setInternalSelectedFcpId] = useState<string | null>(null);
   const [highlightedPhotoId, setHighlightedPhotoId] = useState<string | null>(null);
   const [reviewQueueMode, setReviewQueueMode] = useState(false);
+  const skipExternalSyncRef = useRef(false);
+
+  const isControlled = onSelectedFcpIdChange != null;
+  const selectedFcpId = isControlled
+    ? (controlledSelectedFcpId ?? null)
+    : internalSelectedFcpId;
+
+  const updateSelectedFcpId = useCallback(
+    (id: string | null) => {
+      if (isControlled) {
+        onSelectedFcpIdChange!(id);
+      } else {
+        setInternalSelectedFcpId(id);
+      }
+    },
+    [isControlled, onSelectedFcpIdChange],
+  );
 
   const { fcpPolygons, trenches } = useMemo(() => {
     const split = splitProjectGeojson(mapData);
@@ -133,33 +161,65 @@ export function useProjectMapNavigation({
   );
 
   const goToProject = useCallback(() => {
+    skipExternalSyncRef.current = true;
     setLevel('project');
-    setSelectedFcpId(null);
+    updateSelectedFcpId(null);
     setHighlightedPhotoId(null);
     setReviewQueueMode(false);
     fitToCollection(mapData);
-  }, [mapData, fitToCollection]);
+  }, [mapData, fitToCollection, updateSelectedFcpId]);
 
   const goToFcp = useCallback(
     (fcpId: string) => {
+      skipExternalSyncRef.current = true;
       setLevel('fcp');
-      setSelectedFcpId(fcpId);
+      updateSelectedFcpId(fcpId);
       const inFcp = photosForFcp(mapPhotos, fcpId);
       setHighlightedPhotoId(inFcp[0]?.asset_id ?? null);
       fitToFcp(fcpId);
     },
-    [mapPhotos, fitToFcp],
+    [mapPhotos, fitToFcp, updateSelectedFcpId],
   );
 
   const goToPhoto = useCallback(
     (assetId: string, fcpId: string | null) => {
+      skipExternalSyncRef.current = true;
       setLevel('photo');
-      if (fcpId) setSelectedFcpId(fcpId);
+      if (fcpId) updateSelectedFcpId(fcpId);
       setHighlightedPhotoId(assetId);
       easeToPhoto(assetId);
     },
-    [easeToPhoto],
+    [easeToPhoto, updateSelectedFcpId],
   );
+
+  useEffect(() => {
+    if (!isControlled) return;
+    if (skipExternalSyncRef.current) {
+      skipExternalSyncRef.current = false;
+      return;
+    }
+
+    const fcpId = controlledSelectedFcpId ?? null;
+    if (fcpId == null) {
+      setLevel('project');
+      setHighlightedPhotoId(null);
+      setReviewQueueMode(false);
+      fitToCollection(mapData);
+      return;
+    }
+
+    setLevel('fcp');
+    const inFcp = photosForFcp(mapPhotos, fcpId);
+    setHighlightedPhotoId(inFcp[0]?.asset_id ?? null);
+    fitToFcp(fcpId);
+  }, [
+    isControlled,
+    controlledSelectedFcpId,
+    mapPhotos,
+    mapData,
+    fitToFcp,
+    fitToCollection,
+  ]);
 
   useEffect(() => {
     if (level === 'fcp' && selectedFcpId) {
@@ -244,11 +304,12 @@ export function useProjectMapNavigation({
 
   const startWarningReview = useCallback(
     (fcpId: string) => {
+      skipExternalSyncRef.current = true;
       const inFcp = photosForFcp(mapPhotos, fcpId);
       const first = inFcp.find((p) => photoNeedsReview(assetsById.get(p.asset_id)?.analysis));
       setReviewQueueMode(true);
       setLevel('photo');
-      setSelectedFcpId(fcpId);
+      updateSelectedFcpId(fcpId);
       if (first) {
         setHighlightedPhotoId(first.asset_id);
         easeToPhoto(first.asset_id);
@@ -257,7 +318,7 @@ export function useProjectMapNavigation({
         if (fcpId) fitToFcp(fcpId);
       }
     },
-    [mapPhotos, assetsById, easeToPhoto, fitToFcp],
+    [mapPhotos, assetsById, easeToPhoto, fitToFcp, updateSelectedFcpId],
   );
 
   const fcpPhotos = useMemo(() => {

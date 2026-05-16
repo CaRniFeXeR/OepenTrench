@@ -20,10 +20,6 @@ export function ProjectCard({ project }: ProjectCardProps) {
   const datePrefix = hasUpdated ? 'Updated' : 'Created';
 
   function handleClick() {
-    if (project.status === 'complete') {
-      navigate({ pathname: '/map', search: `?projectId=${encodeURIComponent(project.id)}` });
-      return;
-    }
     navigate(`/projects/${project.id}`);
   }
 

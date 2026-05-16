@@ -20,27 +20,6 @@ export function MapOverlayPanels({
 
   return (
     <>
-      <div className="pointer-events-none absolute left-3 top-3 z-10 max-w-xs rounded-lg border border-slate-200 bg-white/95 p-3 text-xs shadow-md backdrop-blur-sm">
-        <p className="font-semibold text-slate-900">Network structure</p>
-        <ul className="mt-2 space-y-1 text-slate-600">
-          <li className="flex items-center gap-2">
-            <span className="inline-block h-3 w-3 rounded-sm bg-violet-600" />
-            FCP — fiber concentration area
-          </li>
-          <li className="flex items-center gap-2">
-            <span className="inline-block h-3 w-3 rounded-full bg-slate-500" />
-            Trench route segment
-          </li>
-          <li className="flex items-center gap-2">
-            <span className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500" />
-            Documented photo (GPS)
-          </li>
-        </ul>
-        <p className="mt-2 text-slate-500">
-          Identifies trench sections where documentation may not meet requirements.
-        </p>
-      </div>
-
       <div className="pointer-events-none absolute bottom-3 left-3 right-3 z-10 flex flex-wrap items-end justify-between gap-3">
         <div className="rounded-lg border border-slate-200 bg-white/95 px-3 py-2 text-xs shadow-md backdrop-blur-sm">
           <p className="font-medium text-slate-900">

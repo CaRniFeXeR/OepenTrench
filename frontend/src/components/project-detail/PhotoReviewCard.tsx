@@ -1,5 +1,5 @@
 import type { ProjectAssetRead } from '../../api/client';
-import { AnalysisTagRow, qualityBadge } from '../project-images/analysisDisplay';
+import { qualityBadge } from '../project-images/analysisDisplay';
 import { projectImageContentUrl } from '../project-map/imageContentUrl';
 import { PhotoReviewSection } from '../project-map/PhotoReviewSection';
 
@@ -41,17 +41,13 @@ export function PhotoReviewCard({
         </p>
 
         {analysis ? (
-          <>
-            <div className="mt-3">
-              <AnalysisTagRow analysis={analysis} compact />
-            </div>
-            <PhotoReviewSection
-              projectId={projectId}
-              assetId={asset.id}
-              analysis={analysis}
-              onSaved={onSaved}
-            />
-          </>
+          <PhotoReviewSection
+            projectId={projectId}
+            assetId={asset.id}
+            analysis={analysis}
+            onSaved={onSaved}
+            compact
+          />
         ) : (
           <p className="mt-3 text-xs text-slate-500">Analysis pending</p>
         )}

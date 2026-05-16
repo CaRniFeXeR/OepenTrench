@@ -1,8 +1,8 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef } from 'react';
 import type { MapRef } from 'react-map-gl/maplibre';
 import type { FeatureCollection } from 'geojson';
 
-import type { ProjectDetailRead } from '../../api/client';
+import type { MapPhotoMarkerRead, ProjectDetailRead } from '../../api/client';
 import { MapView } from '../map/MapView';
 import { useMapFitToFeatureCollection } from '../map/useMapFitToFeatureCollection';
 import { FcpSummaryPanel } from './FcpSummaryPanel';
@@ -18,31 +18,38 @@ export function ProjectMapView({
   mapData,
   onProjectRefresh,
   embedded = false,
+  mapPhotos: mapPhotosProp,
+  mapPhotosLoading = false,
+  selectedFcpId,
+  onSelectedFcpIdChange,
 }: {
   project: ProjectDetailRead;
   mapData: FeatureCollection;
   onProjectRefresh: () => Promise<void>;
   embedded?: boolean;
+  mapPhotos?: MapPhotoMarkerRead[];
+  mapPhotosLoading?: boolean;
+  selectedFcpId?: string | null;
+  onSelectedFcpIdChange?: (fcpId: string | null) => void;
 }) {
   const mapRef = useRef<MapRef | null>(null);
-  const [mapPhotosRefreshKey, setMapPhotosRefreshKey] = useState(0);
   const imageCount = project.assets.filter((a) => a.kind === 'image').length;
   const imageAssets = useMemo(
     () => project.assets.filter((a) => a.kind === 'image'),
     [project.assets],
   );
 
-  const { mapPhotos, loading: photosLoading } = useProjectMapData(
-    project.id,
-    imageCount,
-    mapPhotosRefreshKey,
-  );
+  const internalMapData = useProjectMapData(project.id, imageCount);
+  const mapPhotos = mapPhotosProp ?? internalMapData.mapPhotos;
+  const photosLoading = mapPhotosProp != null ? mapPhotosLoading : internalMapData.loading;
 
   const navigation = useProjectMapNavigation({
     mapRef,
     mapData,
     mapPhotos,
     imageAssets,
+    selectedFcpId,
+    onSelectedFcpIdChange,
   });
 
   const { initialBounds, fitBoundsOptions, onMapLoad } =
@@ -51,7 +58,7 @@ export function ProjectMapView({
   const {
     level,
     setLevel,
-    selectedFcpId,
+    selectedFcpId: resolvedSelectedFcpId,
     fcpPolygons,
     trenches,
     photoMarkers,
@@ -74,7 +81,6 @@ export function ProjectMapView({
 
   const handleReviewSaved = async () => {
     await onProjectRefresh();
-    setMapPhotosRefreshKey((k) => k + 1);
   };
 
   return (
@@ -96,7 +102,7 @@ export function ProjectMapView({
             trenches={trenches}
             fcpPolygons={fcpPolygons}
             photoMarkers={photoMarkers}
-            selectedFcpId={selectedFcpId}
+            selectedFcpId={resolvedSelectedFcpId}
           />
         </MapView>
 
@@ -117,7 +123,7 @@ export function ProjectMapView({
 
       {!embedded && (
         <MapDetailColumn open={detailOpen}>
-          {level === 'fcp' && selectedFcpId && (
+          {level === 'fcp' && resolvedSelectedFcpId && (
             <FcpSummaryPanel
               fcpLabel={fcpLabel}
               fcpCode={fcpCode}
@@ -130,10 +136,10 @@ export function ProjectMapView({
               onNextPhoto={() => stepPhoto(1)}
               onOpenPhoto={() => {
                 if (highlightedPhotoIdResolved) {
-                  goToPhoto(highlightedPhotoIdResolved, selectedFcpId);
+                  goToPhoto(highlightedPhotoIdResolved, resolvedSelectedFcpId);
                 }
               }}
-              onStartWarningReview={() => startWarningReview(selectedFcpId)}
+              onStartWarningReview={() => startWarningReview(resolvedSelectedFcpId)}
             />
           )}
           {level === 'photo' &&
@@ -160,3 +166,4 @@ export function ProjectMapView({
     </div>
   );
 }
+
