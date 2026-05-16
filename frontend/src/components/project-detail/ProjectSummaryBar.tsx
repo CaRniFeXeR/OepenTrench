@@ -4,7 +4,7 @@ import {
   photoCountLabel,
   statusChipClass,
   statusLabel,
-} from '../../lib/projectFormatters';
+} from '../../helpers/projectFormatters';
 import { imageAssets } from '../project-images/projectImageListUtils';
 import { EditableProjectName } from '../project-upload/EditableProjectName';
 import { RouteUploadStatus } from './RouteUploadStatus';

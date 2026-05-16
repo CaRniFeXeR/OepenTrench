@@ -6,7 +6,7 @@ import {
   photoCountLabel,
   statusChipClass,
   statusLabel,
-} from '../lib/projectFormatters';
+} from '../helpers/projectFormatters';
 
 type ProjectCardProps = {
   project: ProjectRead;
