@@ -11,8 +11,8 @@ export const photoCirclePaint = {
   'circle-radius': [
     'case',
     ['boolean', ['get', 'highlighted'], false],
-    12,
     7,
+    4,
   ],
   'circle-color': [
     'match',
@@ -28,8 +28,8 @@ export const photoCirclePaint = {
   'circle-stroke-width': [
     'case',
     ['boolean', ['get', 'highlighted'], false],
-    3,
-    1.5,
+    2,
+    1,
   ],
   'circle-stroke-color': [
     'case',
@@ -44,3 +44,15 @@ export const photoCirclePaint = {
     1,
   ],
 } as NonNullable<CircleLayerSpecification['paint']>;
+
+/** Higher sort key renders above other photo markers in the same layer. */
+export const photoCircleLayout = {
+  'circle-sort-key': [
+    'case',
+    ['boolean', ['get', 'highlighted'], false],
+    3,
+    ['boolean', ['get', 'dimmed'], false],
+    0,
+    1,
+  ],
+} as NonNullable<CircleLayerSpecification['layout']>;

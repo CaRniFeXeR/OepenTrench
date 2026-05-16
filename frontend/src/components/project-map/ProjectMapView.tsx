@@ -7,8 +7,11 @@ import type {
   MapPhotoMarkerRead,
   ProjectDetailRead,
 } from '../../api/client';
+import { qualityBadge } from '../project-images/analysisDisplay';
+import { photoDocCategoryLabel } from '../project-images/photoDocumentationCategories';
 import { imageAssets } from '../project-images/projectImageListUtils';
 import { MapView } from '../map/MapView';
+import { PhotoMapPopup } from '../map/PhotoMapPopup';
 import { useMapFitToFeatureCollection } from '../map/useMapFitToFeatureCollection';
 import { FcpSummaryPanel } from './FcpSummaryPanel';
 import { MapDetailColumn } from './MapDetailColumn';
@@ -17,6 +20,8 @@ import { ProjectMapLayers } from './ProjectMapLayers';
 import { TrenchImageDetailPanel } from './TrenchImageDetailPanel';
 import { buildCoverageCompartmentCollection } from './coverageCompartmentUtils';
 import { useProjectMapData } from './useProjectMapData';
+import { projectImageContentUrl } from './imageContentUrl';
+import { effectiveCategory } from './mapPhotoUtils';
 import { useProjectMapNavigation } from './useProjectMapNavigation';
 
 export function ProjectMapView({
@@ -86,7 +91,31 @@ export function ProjectMapView({
     reviewQueueMode,
     startWarningReview,
     warningReviewCount,
+    assetsById,
+    popupPhoto,
+    closePhotoPopup,
   } = navigation;
+
+  const popupContent = useMemo(() => {
+    if (!popupPhoto) return null;
+    const marker = mapPhotos.find((p) => p.asset_id === popupPhoto.assetId);
+    const asset = assetsById.get(popupPhoto.assetId);
+    const title =
+      asset?.original_label ??
+      marker?.fcp_label ??
+      marker?.fcp_code ??
+      'Photo';
+    const subtitle =
+      marker?.fcp_code && marker.fcp_code !== title ? marker.fcp_code : undefined;
+    const markerCategory = marker ? effectiveCategory(marker.category) : 'unknown';
+    const category =
+      asset?.analysis != null
+        ? qualityBadge(asset.analysis).label
+        : markerCategory !== 'unknown'
+          ? photoDocCategoryLabel(markerCategory)
+          : undefined;
+    return { title, subtitle, categoryLabel: category };
+  }, [popupPhoto, mapPhotos, assetsById]);
 
   const coverageSummary = useMemo(() => {
     if (!coverage || !resolvedSelectedFcpId) return null;
@@ -135,6 +164,17 @@ export function ProjectMapView({
             coverageCompartments={coverageCompartments}
             selectedFcpId={resolvedSelectedFcpId}
           />
+          {popupPhoto && popupContent && (
+            <PhotoMapPopup
+              longitude={popupPhoto.longitude}
+              latitude={popupPhoto.latitude}
+              imageUrl={projectImageContentUrl(project.id, popupPhoto.assetId)}
+              title={popupContent.title}
+              subtitle={popupContent.subtitle}
+              categoryLabel={popupContent.categoryLabel}
+              onClose={closePhotoPopup}
+            />
+          )}
         </MapView>
 
         {(embedded || level === 'project') && (

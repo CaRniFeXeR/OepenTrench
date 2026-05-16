@@ -63,6 +63,8 @@ export function useProjectMapNavigation({
     handleMapClick,
     stepPhoto,
     startWarningReview,
+    popupPhoto,
+    closePhotoPopup,
   } = useMapNavigationActions({
     mapRef,
     mapData,
@@ -108,5 +110,8 @@ export function useProjectMapNavigation({
     setReviewQueueMode,
     startWarningReview,
     warningReviewCount,
+    assetsById,
+    popupPhoto,
+    closePhotoPopup,
   };
 }

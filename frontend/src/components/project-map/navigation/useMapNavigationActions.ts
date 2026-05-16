@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, type RefObject } from 'react';
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import type { MapRef } from 'react-map-gl/maplibre';
 import type { Feature, FeatureCollection } from 'geojson';
 import type { MapLayerMouseEvent } from 'maplibre-gl';
@@ -9,6 +9,12 @@ import { fitMapToFeatureCollection } from '../../map/geoBounds';
 import { LAYER_FCP_FILL, LAYER_PHOTOS } from '../ProjectMapLayers';
 import { isUnassociatedFcpId } from '../../project-detail/fcpPhotoTableUtils';
 import { photosForFcp, type MapLevel } from '../mapPhotoUtils';
+
+export type PhotoMapPopupState = {
+  assetId: string;
+  longitude: number;
+  latitude: number;
+};
 
 export function useMapNavigationActions({
   mapRef,
@@ -46,6 +52,11 @@ export function useMapNavigationActions({
   controlledSelectedFcpId?: string | null;
 }) {
   const skipExternalSyncRef = useRef(false);
+  const [popupPhoto, setPopupPhoto] = useState<PhotoMapPopupState | null>(null);
+
+  const closePhotoPopup = useCallback(() => {
+    setPopupPhoto(null);
+  }, []);
 
   const fitToCollection = useCallback(
     (fc: FeatureCollection) => {
@@ -85,6 +96,7 @@ export function useMapNavigationActions({
     updateSelectedFcpId(null);
     setHighlightedPhotoId(null);
     setReviewQueueMode(false);
+    setPopupPhoto(null);
     fitToCollection(mapData);
   }, [mapData, fitToCollection, updateSelectedFcpId, setLevel, setHighlightedPhotoId, setReviewQueueMode]);
 
@@ -93,6 +105,7 @@ export function useMapNavigationActions({
       skipExternalSyncRef.current = true;
       setLevel('fcp');
       updateSelectedFcpId(fcpId);
+      setPopupPhoto(null);
       const inFcp = photosForFcp(mapPhotos, fcpId);
       setHighlightedPhotoId(inFcp[0]?.asset_id ?? null);
       if (!isUnassociatedFcpId(fcpId)) {
@@ -125,6 +138,7 @@ export function useMapNavigationActions({
       setLevel('project');
       setHighlightedPhotoId(null);
       setReviewQueueMode(false);
+      setPopupPhoto(null);
       fitToCollection(mapData);
       return;
     }
@@ -171,6 +185,14 @@ export function useMapNavigationActions({
         const assetId = String(photoHits[0].properties?.asset_id ?? '');
         const fcpId = photoHits[0].properties?.fcp_id;
         if (assetId) {
+          const photo = mapPhotos.find((p) => p.asset_id === assetId);
+          if (photo) {
+            setPopupPhoto({
+              assetId,
+              longitude: photo.coordinates[0],
+              latitude: photo.coordinates[1],
+            });
+          }
           goToPhoto(assetId, fcpId != null ? String(fcpId) : selectedFcpId);
           return;
         }
@@ -185,6 +207,7 @@ export function useMapNavigationActions({
           if (level === 'project') {
             goToFcp(fcpId);
           } else if (level === 'photo' && fcpId === selectedFcpId) {
+            closePhotoPopup();
             setLevel('fcp');
             setHighlightedPhotoId(highlightedPhotoId);
           } else if (fcpId !== selectedFcpId) {
@@ -195,7 +218,10 @@ export function useMapNavigationActions({
       }
 
       if (level !== 'project') {
+        closePhotoPopup();
         goToProject();
+      } else {
+        closePhotoPopup();
       }
     },
     [
@@ -205,9 +231,11 @@ export function useMapNavigationActions({
       level,
       selectedFcpId,
       highlightedPhotoId,
+      mapPhotos,
       mapRef,
       setLevel,
       setHighlightedPhotoId,
+      closePhotoPopup,
     ],
   );
 
@@ -264,5 +292,7 @@ export function useMapNavigationActions({
     handleMapClick,
     stepPhoto,
     startWarningReview,
+    popupPhoto,
+    closePhotoPopup,
   };
 }
