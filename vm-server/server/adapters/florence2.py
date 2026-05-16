@@ -14,7 +14,7 @@ class Florence2Adapter(Adapter):
 
     @property
     def classes(self) -> List[str]:
-        return ["duct", "ruler", "whitepaper", "sitetag"]
+        return ["duct", "ruler", "whitepaper"]
 
     def load_model(self) -> None:
         raise NotImplementedError(

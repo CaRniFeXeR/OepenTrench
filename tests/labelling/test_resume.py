@@ -24,9 +24,9 @@ def _config() -> LabellerConfig:
         model="fake-model",
         remote_image_root="/r",
         local_image_root="/l",
-        classes=["duct", "ruler", "whitepaper", "sitetag"],
-        prompts={c: c for c in ("duct", "ruler", "whitepaper", "sitetag")},
-        per_class_threshold={c: 0.25 for c in ("duct", "ruler", "whitepaper", "sitetag")},
+        classes=["duct", "ruler", "whitepaper"],
+        prompts={c: c for c in ("duct", "ruler", "whitepaper")},
+        per_class_threshold={c: 0.25 for c in ("duct", "ruler", "whitepaper")},
     )
 
 

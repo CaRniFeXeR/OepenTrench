@@ -18,7 +18,6 @@ CLASSES_YAML = textwrap.dedent(
       0: duct
       1: ruler
       2: whitepaper
-      3: sitetag
     """
 )
 
@@ -82,7 +81,7 @@ def test_compare_runs_full_flow(tmp_path):
     (b_dir / "photo1.txt").write_text("1 0.5 0.5 0.2 0.6\n")  # ruler, exact
 
     result = compare_runs(a_dir, b_dir, yaml_p)
-    assert result.classes == ["duct", "ruler", "whitepaper", "sitetag"]
+    assert result.classes == ["duct", "ruler", "whitepaper"]
     assert result.summary["photos_compared"] == 1
     assert result.summary["class_presence_agreement_rate"] == 1.0
     assert result.summary["per_class_mean_iou_when_both_present"]["ruler"] == 1.0

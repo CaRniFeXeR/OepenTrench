@@ -58,6 +58,10 @@ inspect = [
     # visual bbox inspection / dataset browsing
     "fiftyone>=1.0,<2",
 ]
+train = [
+    # YOLOv11 finetuning (pulls torch/torchvision)
+    "ultralytics>=8.3,<9",
+]
 dev = [
     "ruff>=0.5,<1",
     "pytest>=8,<9",

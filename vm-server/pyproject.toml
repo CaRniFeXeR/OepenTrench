@@ -17,6 +17,8 @@ dependencies = [
     "pydantic>=2.6,<3",
     # I/O.
     "pillow>=11,<12",
+    # OWLv2's image processor needs scipy for its high-quality resize step.
+    "scipy>=1.13,<2",
 ]
 
 [[tool.uv.index]]

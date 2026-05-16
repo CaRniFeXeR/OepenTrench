@@ -135,7 +135,7 @@ OepenTrench/
 │       ├── specs/2026-05-15-…-design.md       # design spec
 │       └── decisions/2026-05-15-….md          # decision ledger
 ├── project-resources/custom-datasets/duct-and-ruler/detection/
-│   ├── data.yaml                              # 4-class schema (gitignored — lives on disk)
+│   ├── data.yaml                              # 3-class schema (gitignored — lives on disk)
 │   ├── labelling/
 │   │   ├── labels/                            # v2 baseline (frozen)
 │   │   ├── meta/                              # v2 meta

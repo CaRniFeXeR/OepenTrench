@@ -15,21 +15,17 @@ model: grounding-dino-base
 remote_image_root: /home/user/data
 local_image_root: ./project-resources
 
-classes: [duct, ruler, whitepaper, sitetag]
+classes: [duct, ruler, whitepaper]
 
 prompts:
   duct: "HDPE conduit . Schutzrohr . fibre optic cable . bundled coloured ducts . end caps . corrugated black pipe in trench"
   ruler: "folding rule . Zollstock . Meterstab . tape measure . levelling rod . painted ruler stake"
-  # whitepaper / sitetag prompts authored to share no salient tokens —
-  # _match_label_to_class needs class-specific discriminators.
-  whitepaper: "handwritten address note . printed address sheet . postal address with street and city . typed coordinates lat lon"
-  sitetag: "F-number contractor code . DataMatrix barcode label . site identifier marker . contractor reference number"
+  whitepaper: "handwritten address note . printed address sheet . postal address with street and city . site identifier paper slip with contractor reference number"
 
 per_class_threshold:
   duct: 0.25
   ruler: 0.20
   whitepaper: 0.30
-  sitetag: 0.25
 
 iou_nms: 0.5
 max_detections_per_class: 5

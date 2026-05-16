@@ -61,14 +61,6 @@ local_settings.py
 db.sqlite3
 db.sqlite3-journal
 
-# Local API SQLite (file-backed)
-data/oepentrench_api.db
-data/oepentrench_api.db-journal
-
-# Frontend
-frontend/node_modules/
-frontend/dist/
-
 # Flask stuff:
 instance/
 .webassets-cache
@@ -226,4 +218,4 @@ __marimo__/
 .streamlit/secrets.toml
 .idea/
 project-resources/
-data/uploads/**
+daa/

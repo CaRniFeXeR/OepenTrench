@@ -21,9 +21,8 @@ def test_int_keys_sort_numerically(tmp_path):
           0: duct
           1: ruler
           2: whitepaper
-          3: sitetag
     """))
-    assert _load_class_names(p) == ["duct", "ruler", "whitepaper", "sitetag"]
+    assert _load_class_names(p) == ["duct", "ruler", "whitepaper"]
 
 
 def test_string_keys_sort_numerically_not_lexically(tmp_path):

@@ -23,9 +23,9 @@ def cfg(tmp_path) -> LabellerConfig:
         model="grounding-dino-base",
         remote_image_root="/home/threenicorn/data",
         local_image_root=str(tmp_path),
-        classes=["duct", "ruler", "whitepaper", "sitetag"],
-        prompts={c: c for c in ("duct", "ruler", "whitepaper", "sitetag")},
-        per_class_threshold={c: 0.25 for c in ("duct", "ruler", "whitepaper", "sitetag")},
+        classes=["duct", "ruler", "whitepaper"],
+        prompts={c: c for c in ("duct", "ruler", "whitepaper")},
+        per_class_threshold={c: 0.25 for c in ("duct", "ruler", "whitepaper")},
         timeout_seconds=2.0,
         retries=2,
     )

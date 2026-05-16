@@ -6,7 +6,7 @@
 
 ## 1. Goal & Context
 
-Replace the ad-hoc Claude-subagent batch-dispatch labelling workflow used for v2 of the duct-and-ruler detection dataset with a configurable two-process system: a Python harness on the operator's laptop, and a single-model FastAPI detection server on the user's VM (`threenicorn`, 2× RTX 5090). The harness produces YOLO-format labels for four classes — `duct` (0), `ruler` (1), `whitepaper` (2), `sitetag` (3) — across the 500 sampled photos and supports head-to-head comparison of model outputs so the user can pick the labeller that best replaces the current loose-bbox VLM pass.
+Replace the ad-hoc Claude-subagent batch-dispatch labelling workflow used for v2 of the duct-and-ruler detection dataset with a configurable two-process system: a Python harness on the operator's laptop, and a single-model FastAPI detection server on the user's VM (`threenicorn`, 2× RTX 5090). The harness produces YOLO-format labels for three classes — `duct` (0), `ruler` (1), `whitepaper` (2) — across the 500 sampled photos and supports head-to-head comparison of model outputs so the user can pick the labeller that best replaces the current loose-bbox VLM pass.
 
 The hackathon end-state is: one validated remote-vlm round-trip on Grounding DINO Base, a 20-photo `batch_00` labelled with it, and a per-photo diff against the v2 baseline shown to the user before any larger run.
 
@@ -26,7 +26,7 @@ The hackathon end-state is: one validated remote-vlm round-trip on Grounding DIN
 - Hot-swap of models on the VM. One model per server lifetime; `make stop && make <other>` to swap.
 - Persistent metrics, traces, structured-log emitters. stdout + per-run JSON manifest is the whole observability surface.
 - Per-bbox rationale strings. One global rationale per image.
-- Updating Ultralytics training configs. Training is out of scope; the 4-class `data.yaml` will fail training on the 2-class v2 labels but no training runs this session.
+- Updating Ultralytics training configs. Training is out of scope; the 3-class `data.yaml` will fail training on the 2-class v2 labels but no training runs this session.
 - A web UI for labelling.
 
 ## 3. Architecture Overview
@@ -250,8 +250,9 @@ names:
   0: duct
   1: ruler
   2: whitepaper
-  3: sitetag
 ```
+
+> Schema revised post-implementation: the `sitetag` class (id 3) was removed when corpus inspection showed no separate physical object — the F-numbered contractor code prints on the same paper slip as the address (see decision ledger D-032).
 
 ### 6.2 Per-image YOLO `<stem>.txt`
 
@@ -313,7 +314,7 @@ class LabellerConfig(BaseModel):
     model: str                                   # e.g. "grounding-dino-base"
     remote_image_root: str                       # e.g. "/home/<user>/data"
     local_image_root: str                        # for filename resolution at the local side
-    classes: list[str]                           # ["duct","ruler","whitepaper","sitetag"]
+    classes: list[str]                           # ["duct","ruler","whitepaper"]
     prompts: dict[str, str]                      # per-class prompts
     per_class_threshold: dict[str, float]
     iou_nms: float = 0.5
@@ -328,20 +329,20 @@ class LabellerConfig(BaseModel):
 {
   "run_a": "labelling/labels/",
   "run_b": "labelling/runs/grounding-dino_<ts>/labels/",
-  "classes": ["duct", "ruler", "whitepaper", "sitetag"],
+  "classes": ["duct", "ruler", "whitepaper"],
   "per_photo": [
     {
       "filename": "1_IMG-20240809-WA0025.jpg",
-      "a_classes": {"duct": false, "ruler": true,  "whitepaper": false, "sitetag": false},
-      "b_classes": {"duct": false, "ruler": true,  "whitepaper": false, "sitetag": false},
+      "a_classes": {"duct": false, "ruler": true,  "whitepaper": false},
+      "b_classes": {"duct": false, "ruler": true,  "whitepaper": false},
       "class_agreement": true,
       "ruler_ious": [0.81],          // best IoU per a-bbox, -1 if unmatched
-      "duct_ious": [], "whitepaper_ious": [], "sitetag_ious": []
+      "duct_ious": [], "whitepaper_ious": []
     }
   ],
   "summary": {
     "class_presence_agreement_rate": 0.95,
-    "per_class_mean_iou_when_both_present": {"duct": 0.71, "ruler": 0.66, "whitepaper": 0.0, "sitetag": 0.0}
+    "per_class_mean_iou_when_both_present": {"duct": 0.71, "ruler": 0.66, "whitepaper": 0.0}
   }
 }
 ```
@@ -440,9 +441,9 @@ VM (`~/repos/vision/`):
 - `tests/test_health.sh`
 
 **Files to modify:**
-- `project-resources/custom-datasets/duct-and-ruler/detection/data.yaml` — add classes 2 + 3.
-- `project-resources/custom-datasets/duct-and-ruler/detection/README.md` — reflect 4-class schema + harness layout (kept as a one-page change, not a rewrite).
-- `scripts/inspect_labels.py` — read class names from `data.yaml`, accept `--run`/`--data-yaml`, support 4 classes.
+- `project-resources/custom-datasets/duct-and-ruler/detection/data.yaml` — add class 2 (`whitepaper`). (Class 3 `sitetag` was added then removed post-implementation; see D-032.)
+- `project-resources/custom-datasets/duct-and-ruler/detection/README.md` — reflect 3-class schema + harness layout (kept as a one-page change, not a rewrite).
+- `scripts/inspect_labels.py` — read class names from `data.yaml`, accept `--run`/`--data-yaml`, support N classes.
 - `pyproject.toml` — add `httpx`, `pyyaml`, `pydantic` to runtime deps; add `respx` to `dev` extras.
 
 **Config keys added:** the `LabellerConfig` schema (§6.5).
@@ -455,7 +456,7 @@ VM (`~/repos/vision/`):
 
 The implementer is done when **all** of the following are observably true:
 
-1. **Schema updated.** `data.yaml` lists 4 classes (duct, ruler, whitepaper, sitetag) at IDs 0–3.
+1. **Schema updated.** `data.yaml` lists 3 classes (duct, ruler, whitepaper) at IDs 0–2. (Originally specified as 4 with `sitetag` at id 3; collapsed post-implementation per D-032 after corpus inspection.)
 2. **Inspector adapted.** `scripts/inspect_labels.py` reads class names from `data.yaml`, accepts `--run <dir>`, and still opens cleanly on the existing v2 layout (`labelling/labels/` + `labelling/meta/` + `Fotos/`).
 3. **Operator-mediated Claude runs document.** `docs/labelling-harness.md` describes the operator workflow that produces `labelling/runs/claude-opus_<ts>/{labels,meta,run_manifest.json}` so `compare_runs.py` works on it identically to a remote-vlm run.
 4. **VM server reachable.** Through `ssh -L 8000:localhost:8000 threenicorn`, `curl localhost:8000/health` returns `{"status":"ok","model":"grounding-dino-base", …}`.
@@ -472,8 +473,8 @@ Each entry below is a decision the implementer will face that the spec intention
 
 | Gap | Guidance | Out-of-bounds |
 |---|---|---|
-| Exact Grounding DINO prompt strings per class | Start from EN+DE phrasing inspired by R14 (e.g. "HDPE conduit . Schutzrohr . fibre cable . end caps" for duct; "folding rule . Zollstock . Meterstab . tape measure" for ruler). Iterate on the first 20 photos before locking. Whitepaper / sitetag prompts have no R14 precedent — implementer judges. Record each iteration in the run_manifest's `config.prompts`. | Don't ship class names alone as prompts — phrasal disambiguation matters for Grounding DINO. |
-| Per-class confidence threshold defaults | R14 numbers (0.25 / 0.20 / 0.30 / 0.25 for duct / ruler / whitepaper / sitetag) are starting points. Tune on batch_00 before any larger run. | Don't hardcode anywhere except the YAML — keep tunable. |
+| Exact Grounding DINO prompt strings per class | Start from EN+DE phrasing inspired by R14 (e.g. "HDPE conduit . Schutzrohr . fibre cable . end caps" for duct; "folding rule . Zollstock . Meterstab . tape measure" for ruler). Iterate on the first 20 photos before locking. Whitepaper prompt has no R14 precedent — implementer judges. Record each iteration in the run_manifest's `config.prompts`. | Don't ship class names alone as prompts — phrasal disambiguation matters for Grounding DINO. |
+| Per-class confidence threshold defaults | R14 numbers (0.25 / 0.20 / 0.30 for duct / ruler / whitepaper) are starting points. Tune on batch_00 before any larger run. | Don't hardcode anywhere except the YAML — keep tunable. |
 | `compare.py` output JSON field names | Required content: per-photo class-presence agreement + per-class bbox IoU matching + a summary block. The exact field names in §6.6 are illustrative — implementer may rename for clarity. | Don't emit a flat list of mismatches — group by photo so the user can act on it. |
 | Whether `inspect_labels.py` is rewritten or extended | Extend in place. The existing `pick_layout()` already handles two paths; add a third for `labelling/runs/<dir>/` and read `data.yaml` for class names. | Don't break v2 inspection. |
 | Image-root path on the VM | Suggest `/home/<user>/data/Fotos` and `/home/<user>/data/Beispiele` after `tar | ssh threenicorn 'tar xz -C ~/data'`. Implementer picks the final layout after SSH'ing in and confirms in the config. | Don't hardcode — keep `remote_image_root` in the YAML. |
@@ -489,8 +490,8 @@ Each entry below is a decision the implementer will face that the spec intention
 ## 14. Risks & Open Questions
 
 ### Resolved during brainstorming
-- Whitepaper class scope → **two classes**: `whitepaper` (printed/handwritten address or coordinates) and `sitetag` (F-numbered contractor codes, DataMatrix slips).
-- First VM model → **Grounding DINO Base** (Apache 2.0, ~50 ms/image on a 5090, text-prompted, covers all 4 classes via per-class prompts).
+- ~~Whitepaper class scope → **two classes**: `whitepaper` (printed/handwritten address or coordinates) and `sitetag` (F-numbered contractor codes, DataMatrix slips).~~ **Reverted post-implementation (D-032): one class `whitepaper` covers the slip; the F-numbered contractor code is printed on the same physical sheet as the address. Class id 3 removed.**
+- First VM model → **Grounding DINO Base** (Apache 2.0, ~50 ms/image on a 5090, text-prompted, covers all 3 classes via per-class prompts).
 - Hybrid mode shape → per-image arbitration (Claude sees image + remote bboxes), **built in the next session**, operator-mediated via Agent dispatch.
 - Cache scope → **intra-run resume only**; no cross-run content-addressable cache.
 - Concurrency → **serial only**.
@@ -498,14 +499,12 @@ Each entry below is a decision the implementer will face that the spec intention
 - Claude labelling → **operator-mediated via Agent dispatch in this Claude Code session**, model = Opus 4.7; no anthropic SDK; no API spend.
 
 ### Risks (mitigations stated; implementer should monitor)
-- **Grounding DINO Base may not localise `sitetag` well** — F-tag slips have small text; the model is object-shaped, not text-aware. If batch_00 sitetag recall is < 0.5, flag it and prioritise T-Rex2 image-prompt next session. Mitigation lives in the next-session backlog, not this one.
 - **SSH tunnel can drop mid-run.** Mitigation: pre-run `/health` probe aborts cleanly; operator restarts the tunnel and re-runs (resume picks up where it left off).
 - **VM unreachable.** Mitigation: operator-mediated Claude run path keeps working.
-- **WhatsApp recompression destroys sitetag DataMatrix detail.** Already known from R8; not a detection-side problem. Detection only needs the slip bbox, not the decoded payload.
-- **Updated `data.yaml` breaks any subsequent Ultralytics training run.** Mitigation: training is out of scope; when verified labels move into `labels/train/`, they'll be 4-class and consistent.
+- **Updated `data.yaml` breaks any subsequent Ultralytics training run.** Mitigation: training is out of scope; when verified labels move into `labels/train/`, they'll be 3-class and consistent.
 - **Disk on VM.** Corpus tar is ~1.2 GB, Beispiele < 100 MB. Negligible.
 - **Path mismatch between local manifest filenames and VM filesystem** if some files were renamed during tar/extract. Mitigation: `/health` returns `images_under_root`; the harness logs a WARN if it differs from `manifest.csv` row count and asks the operator to confirm.
 
 ### Open questions (NOT blockers for this design; flag at session end)
-1. Are there F-tag exemplars on disk anywhere (e.g. in `Beispiele/`), or does the user need to manually crop 3–5 from the corpus before T-Rex2 can be useful in the next session? A `ls Beispiele/` plus a glance at filenames would answer.
+1. ~~Are there F-tag exemplars on disk anywhere…~~ **Moot after D-032: no separate F-tag class.**
 2. Should each v3 run also write a per-run `data.yaml` (with the exact class IDs it used) into the run dir, so the inspector / compare can self-describe a run? Default this session: one global `data.yaml`; revisit if the class set ever forks per profile.

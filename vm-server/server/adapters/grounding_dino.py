@@ -13,7 +13,7 @@ from server.schema import Detection, DetectRequest, DetectResponse
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_CLASSES = ["duct", "ruler", "whitepaper", "sitetag"]
+DEFAULT_CLASSES = ["duct", "ruler", "whitepaper"]
 DEFAULT_PROMPTS = {
     "duct": (
         "HDPE conduit . Schutzrohr . fibre optic cable . bundled coloured ducts . "
@@ -23,18 +23,13 @@ DEFAULT_PROMPTS = {
         "folding rule . Zollstock . Meterstab . tape measure . levelling rod . "
         "painted ruler stake"
     ),
-    # whitepaper / sitetag prompts authored to share no salient tokens
-    # so _match_label_to_class can disambiguate by longest-substring score.
     "whitepaper": (
         "handwritten address note . printed address sheet . "
-        "postal address with street and city . typed coordinates lat lon"
-    ),
-    "sitetag": (
-        "F-number contractor code . DataMatrix barcode label . "
-        "site identifier marker . contractor reference number"
+        "postal address with street and city . "
+        "site identifier paper slip with contractor reference number"
     ),
 }
-DEFAULT_THRESHOLDS = {"duct": 0.25, "ruler": 0.20, "whitepaper": 0.30, "sitetag": 0.25}
+DEFAULT_THRESHOLDS = {"duct": 0.25, "ruler": 0.20, "whitepaper": 0.30}
 
 
 class GroundingDinoAdapter(Adapter):
@@ -171,10 +166,6 @@ class GroundingDinoAdapter(Adapter):
         the class's prompt, and (b) the longest single token of ``label`` that
         appears in the class's prompt. Pick the class with the highest score
         ``(full_match_len, longest_token_match_len)``.
-
-        Avoids the pre-fix bug where overlapping prompts (e.g. ``whitepaper``
-        and ``sitetag`` both mentioning "paper" / "card") got assigned by dict
-        iteration order rather than by specificity.
         """
         lab = label.lower().strip(" .").strip()
         if not lab:

@@ -16,17 +16,15 @@ VALID_YAML = textwrap.dedent(
     model: grounding-dino-base
     remote_image_root: /home/user/data
     local_image_root: /tmp
-    classes: [duct, ruler, whitepaper, sitetag]
+    classes: [duct, ruler, whitepaper]
     prompts:
       duct: "HDPE conduit"
       ruler: "folding rule"
       whitepaper: "paper"
-      sitetag: "F-tag"
     per_class_threshold:
       duct: 0.25
       ruler: 0.20
       whitepaper: 0.30
-      sitetag: 0.25
     """
 )
 
@@ -42,7 +40,7 @@ def test_valid_config_loads(tmp_path):
     assert isinstance(cfg, LabellerConfig)
     assert cfg.name == "grounding-dino"
     assert cfg.mode == "remote-vlm"
-    assert cfg.classes == ["duct", "ruler", "whitepaper", "sitetag"]
+    assert cfg.classes == ["duct", "ruler", "whitepaper"]
     assert cfg.iou_nms == 0.5  # default
     assert cfg.retries == 2  # default
 
@@ -77,7 +75,7 @@ def test_unknown_field_rejected_by_extra_forbid(tmp_path):
 
 
 def test_prompts_missing_class_key_raises(tmp_path):
-    body = VALID_YAML.replace('  sitetag: "F-tag"\n', "")
+    body = VALID_YAML.replace('  whitepaper: "paper"\n', "")
     with pytest.raises(ConfigError, match="prompts keys"):
         load_config(_write(tmp_path, body))
 
