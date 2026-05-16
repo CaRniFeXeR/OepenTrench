@@ -2,19 +2,18 @@ from __future__ import annotations
 
 from sqlmodel import Session
 
+from src.api.helpers.geojson_sampling import random_point_in_geojson_bounds
 from src.api.helpers.time import utc_now
 from src.api.models import (
     AssetKind,
+    GeojsonStatus,
     PhotoAnalysis,
     PhotoDocumentationCategory,
     Project,
     ProjectAsset,
 )
-
-_DUMMY_GPS_COORDINATES = {
-    "type": "Point",
-    "coordinates": [14.2958, 46.5537],
-}
+from src.api.services.extract_img_metadata_service import extract_img_metadata
+from src.api.services.project_asset_service import load_merged_project_geojson
 
 
 def _dummy_analysis_fields() -> dict:
@@ -34,8 +33,21 @@ def _dummy_analysis_fields() -> dict:
         "date_valid": True,
         "is_false_call": False,
         "reviewer_override_category": None,
-        "gps_coordinates": _DUMMY_GPS_COORDINATES,
     }
+
+
+def _resolve_gps_coordinates(
+    session: Session,
+    *,
+    project: Project,
+    metadata: dict,
+) -> dict | None:
+    if "dummy" in project.name.lower():
+        if project.geojson_status != GeojsonStatus.ready:
+            return None
+        geojson = load_merged_project_geojson(session, project.id)
+        return random_point_in_geojson_bounds(geojson)
+    return metadata.get("gps_coordinates")
 
 
 def _validate_image_asset(
@@ -43,7 +55,7 @@ def _validate_image_asset(
     *,
     project_id: str,
     asset_id: str,
-) -> ProjectAsset:
+) -> tuple[ProjectAsset, Project]:
     project = session.get(Project, project_id)
     if project is None:
         raise LookupError("project not found")
@@ -54,7 +66,7 @@ def _validate_image_asset(
         raise ValueError("asset does not belong to project")
     if asset.kind != AssetKind.image:
         raise ValueError("asset is not an image")
-    return asset
+    return asset, project
 
 
 def analyze_image_asset(
@@ -63,8 +75,17 @@ def analyze_image_asset(
     project_id: str,
     asset_id: str,
 ) -> PhotoAnalysis:
-    _validate_image_asset(session, project_id=project_id, asset_id=asset_id)
-    return _upsert_dummy_analysis(session, asset_id=asset_id)
+    _asset, project = _validate_image_asset(
+        session, project_id=project_id, asset_id=asset_id
+    )
+    metadata = extract_img_metadata(
+        session, project_id=project_id, asset_id=asset_id
+    )
+    fields = _dummy_analysis_fields()
+    fields["gps_coordinates"] = _resolve_gps_coordinates(
+        session, project=project, metadata=metadata
+    )
+    return _upsert_analysis(session, asset_id=asset_id, fields=fields)
 
 
 def analyze_image_asset_by_id(session: Session, asset_id: str) -> PhotoAnalysis:
@@ -78,9 +99,10 @@ def analyze_image_asset_by_id(session: Session, asset_id: str) -> PhotoAnalysis:
     )
 
 
-def _upsert_dummy_analysis(session: Session, *, asset_id: str) -> PhotoAnalysis:
+def _upsert_analysis(
+    session: Session, *, asset_id: str, fields: dict
+) -> PhotoAnalysis:
     now = utc_now()
-    fields = _dummy_analysis_fields()
     existing = session.get(PhotoAnalysis, asset_id)
     if existing is not None:
         for key, value in fields.items():
