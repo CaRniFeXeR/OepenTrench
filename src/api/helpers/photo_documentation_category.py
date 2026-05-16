@@ -20,6 +20,14 @@ _REVIEWER_ATTR: dict[CategoryField, str] = {
     "gps_matches_route": "reviewer_gps_matches_route",
 }
 
+_MISMATCH_FIELD_KEYS: dict[CategoryField, str] = {
+    "has_duct": "duct",
+    "has_ruler": "ruler",
+    "is_in_domain": "domain",
+    "has_gdpr_problems": "privacy",
+    "gps_matches_route": "gps",
+}
+
 
 def compute_category(
     *,
@@ -69,6 +77,42 @@ def automated_category(analysis: PhotoAnalysis) -> PhotoDocumentationCategory:
         has_gdpr_problems=analysis.has_gdpr_problems,
         gps_matches_route=analysis.gps_matches_route,
     )
+
+
+def _reviewer_disagrees_with_ai(analysis: PhotoAnalysis, field: CategoryField) -> bool:
+    reviewer_attr = _REVIEWER_ATTR[field]
+    reviewer_val = getattr(analysis, reviewer_attr)
+    if reviewer_val is None:
+        return False
+    return bool(reviewer_val) != bool(getattr(analysis, field))
+
+
+def ai_reviewer_mismatch(analysis: PhotoAnalysis) -> bool:
+    if analysis.reviewed_at is None:
+        return False
+    if any(_reviewer_disagrees_with_ai(analysis, field) for field in _REVIEWER_ATTR):
+        return True
+    if (
+        analysis.reviewer_override_category is not None
+        and analysis.category is not None
+        and analysis.reviewer_override_category != analysis.category
+    ):
+        return True
+    return False
+
+
+def mismatch_field_keys(analysis: PhotoAnalysis) -> list[str]:
+    keys: list[str] = []
+    for field, key in _MISMATCH_FIELD_KEYS.items():
+        if _reviewer_disagrees_with_ai(analysis, field):
+            keys.append(key)
+    if (
+        analysis.reviewer_override_category is not None
+        and analysis.category is not None
+        and analysis.reviewer_override_category != analysis.category
+    ):
+        keys.append("category")
+    return keys
 
 
 def photo_analysis_to_read(row: PhotoAnalysis) -> PhotoAnalysisRead:

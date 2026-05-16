@@ -30,6 +30,61 @@
         }
       }
     },
+    "/online-learning/disagreements": {
+      "get": {
+        "tags": [
+          "online-learning"
+        ],
+        "summary": "List Disagreements",
+        "operationId": "list_disagreements_online_learning_disagreements_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 25,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnlineLearningDisagreementsPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/projects": {
       "post": {
         "tags": [
@@ -356,6 +411,64 @@
         }
       }
     },
+    "/projects/{project_id}/fcp-coverage": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Calculate Project Fcp Coverage",
+        "operationId": "calculate_project_fcp_coverage_projects__project_id__fcp_coverage_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "fcp_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Fcp Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FcpCoverageRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/projects/{project_id}/images/{asset_id}/content": {
       "get": {
         "tags": [
@@ -629,6 +742,131 @@
           "file"
         ],
         "title": "Body_upload_project_image_projects__project_id__images_post"
+      },
+      "FcpCoverageCompartmentRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "fcp_id": {
+            "type": "string",
+            "title": "Fcp Id"
+          },
+          "covered": {
+            "type": "boolean",
+            "title": "Covered"
+          },
+          "length_m": {
+            "type": "number",
+            "title": "Length M"
+          },
+          "center": {
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Center"
+          },
+          "geometry": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Geometry"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "fcp_id",
+          "covered",
+          "length_m",
+          "center",
+          "geometry"
+        ],
+        "title": "FcpCoverageCompartmentRead"
+      },
+      "FcpCoverageRead": {
+        "properties": {
+          "compartments": {
+            "items": {
+              "$ref": "#/components/schemas/FcpCoverageCompartmentRead"
+            },
+            "type": "array",
+            "title": "Compartments"
+          },
+          "summaries": {
+            "items": {
+              "$ref": "#/components/schemas/FcpCoverageSummaryRead"
+            },
+            "type": "array",
+            "title": "Summaries"
+          }
+        },
+        "type": "object",
+        "required": [
+          "compartments",
+          "summaries"
+        ],
+        "title": "FcpCoverageRead"
+      },
+      "FcpCoverageSummaryRead": {
+        "properties": {
+          "fcp_id": {
+            "type": "string",
+            "title": "Fcp Id"
+          },
+          "fcp_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fcp Code"
+          },
+          "fcp_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fcp Label"
+          },
+          "compartment_count": {
+            "type": "integer",
+            "title": "Compartment Count"
+          },
+          "covered_count": {
+            "type": "integer",
+            "title": "Covered Count"
+          },
+          "coverage_ratio": {
+            "type": "number",
+            "title": "Coverage Ratio"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fcp_id",
+          "fcp_code",
+          "fcp_label",
+          "compartment_count",
+          "covered_count",
+          "coverage_ratio"
+        ],
+        "title": "FcpCoverageSummaryRead"
       },
       "GeojsonStatus": {
         "type": "string",
@@ -1375,6 +1613,121 @@
           "name"
         ],
         "title": "ProjectUpdate"
+      },
+      "OnlineLearningDisagreementsPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OnlineLearningMismatchItemRead"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          },
+          "stats": {
+            "$ref": "#/components/schemas/OnlineLearningStatsRead"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset",
+          "stats"
+        ],
+        "title": "OnlineLearningDisagreementsPage"
+      },
+      "OnlineLearningMismatchItemRead": {
+        "properties": {
+          "asset_id": {
+            "type": "string",
+            "title": "Asset Id"
+          },
+          "project_id": {
+            "type": "string",
+            "title": "Project Id"
+          },
+          "project_name": {
+            "type": "string",
+            "title": "Project Name"
+          },
+          "original_label": {
+            "type": "string",
+            "title": "Original Label"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "reviewed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Reviewed At"
+          },
+          "analysis": {
+            "$ref": "#/components/schemas/PhotoAnalysisRead"
+          },
+          "mismatch_fields": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Mismatch Fields"
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset_id",
+          "project_id",
+          "project_name",
+          "original_label",
+          "created_at",
+          "reviewed_at",
+          "analysis",
+          "mismatch_fields"
+        ],
+        "title": "OnlineLearningMismatchItemRead"
+      },
+      "OnlineLearningStatsRead": {
+        "properties": {
+          "total_reviewed": {
+            "type": "integer",
+            "title": "Total Reviewed"
+          },
+          "total_mismatch": {
+            "type": "integer",
+            "title": "Total Mismatch"
+          },
+          "mismatch_rate": {
+            "type": "number",
+            "title": "Mismatch Rate"
+          },
+          "projects_with_mismatch": {
+            "type": "integer",
+            "title": "Projects With Mismatch"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_reviewed",
+          "total_mismatch",
+          "mismatch_rate",
+          "projects_with_mismatch"
+        ],
+        "title": "OnlineLearningStatsRead"
       },
       "ValidationError": {
         "properties": {

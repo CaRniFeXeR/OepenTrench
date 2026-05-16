@@ -9,6 +9,7 @@ from sqlmodel import Session
 from src.api.database import get_session
 from src.api.helpers.pagination import clamp_limit, clamp_offset
 from src.api.models import (
+    FcpCoverageRead,
     MapPhotosRead,
     PhotoAnalysisReviewUpdate,
     ProjectAsset,
@@ -20,6 +21,7 @@ from src.api.models import (
 )
 from src.api.services import project_service
 from src.api.services import photo_analysis_service
+from src.api.services.compartment_service import compute_fcp_coverage
 from src.api.services.map_photos_service import list_map_photo_markers
 from src.api.services.project_asset_service import (
     PayloadTooLarge,
@@ -124,6 +126,20 @@ def read_project_map_photos(
     except LookupError:
         raise HTTPException(status_code=404, detail="project not found") from None
     return MapPhotosRead(photos=photos)
+
+
+@router.post("/{project_id}/fcp-coverage", response_model=FcpCoverageRead)
+def calculate_project_fcp_coverage(
+    project_id: str,
+    session: Annotated[Session, Depends(get_session)],
+    fcp_id: Annotated[Optional[str], Query()] = None,
+) -> FcpCoverageRead:
+    try:
+        return compute_fcp_coverage(session, project_id, fcp_id=fcp_id)
+    except LookupError:
+        raise HTTPException(status_code=404, detail="project not found") from None
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 @router.get("/{project_id}/images/{asset_id}/content")

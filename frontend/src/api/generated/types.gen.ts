@@ -38,6 +38,85 @@ export type BodyUploadProjectImageProjectsProjectIdImagesPost = {
 };
 
 /**
+ * FcpCoverageCompartmentRead
+ */
+export type FcpCoverageCompartmentRead = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Fcp Id
+     */
+    fcp_id: string;
+    /**
+     * Covered
+     */
+    covered: boolean;
+    /**
+     * Length M
+     */
+    length_m: number;
+    /**
+     * Center
+     */
+    center: [
+        number,
+        number
+    ];
+    /**
+     * Geometry
+     */
+    geometry: {
+        [key: string]: unknown;
+    };
+};
+
+/**
+ * FcpCoverageRead
+ */
+export type FcpCoverageRead = {
+    /**
+     * Compartments
+     */
+    compartments: Array<FcpCoverageCompartmentRead>;
+    /**
+     * Summaries
+     */
+    summaries: Array<FcpCoverageSummaryRead>;
+};
+
+/**
+ * FcpCoverageSummaryRead
+ */
+export type FcpCoverageSummaryRead = {
+    /**
+     * Fcp Id
+     */
+    fcp_id: string;
+    /**
+     * Fcp Code
+     */
+    fcp_code: string | null;
+    /**
+     * Fcp Label
+     */
+    fcp_label: string | null;
+    /**
+     * Compartment Count
+     */
+    compartment_count: number;
+    /**
+     * Covered Count
+     */
+    covered_count: number;
+    /**
+     * Coverage Ratio
+     */
+    coverage_ratio: number;
+};
+
+/**
  * GeojsonStatus
  */
 export type GeojsonStatus = 'missing' | 'ready';
@@ -397,6 +476,86 @@ export type ProjectUpdate = {
 };
 
 /**
+ * OnlineLearningDisagreementsPage
+ */
+export type OnlineLearningDisagreementsPage = {
+    /**
+     * Items
+     */
+    items: Array<OnlineLearningMismatchItemRead>;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Limit
+     */
+    limit: number;
+    /**
+     * Offset
+     */
+    offset: number;
+    stats: OnlineLearningStatsRead;
+};
+
+/**
+ * OnlineLearningMismatchItemRead
+ */
+export type OnlineLearningMismatchItemRead = {
+    /**
+     * Asset Id
+     */
+    asset_id: string;
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Project Name
+     */
+    project_name: string;
+    /**
+     * Original Label
+     */
+    original_label: string;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Reviewed At
+     */
+    reviewed_at: string;
+    analysis: PhotoAnalysisRead;
+    /**
+     * Mismatch Fields
+     */
+    mismatch_fields: Array<string>;
+};
+
+/**
+ * OnlineLearningStatsRead
+ */
+export type OnlineLearningStatsRead = {
+    /**
+     * Total Reviewed
+     */
+    total_reviewed: number;
+    /**
+     * Total Mismatch
+     */
+    total_mismatch: number;
+    /**
+     * Mismatch Rate
+     */
+    mismatch_rate: number;
+    /**
+     * Projects With Mismatch
+     */
+    projects_with_mismatch: number;
+};
+
+/**
  * ValidationError
  */
 export type ValidationError = {
@@ -443,6 +602,40 @@ export type HealthHealthGetResponses = {
 };
 
 export type HealthHealthGetResponse = HealthHealthGetResponses[keyof HealthHealthGetResponses];
+
+export type ListDisagreementsOnlineLearningDisagreementsGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Offset
+         */
+        offset?: number;
+    };
+    url: '/online-learning/disagreements';
+};
+
+export type ListDisagreementsOnlineLearningDisagreementsGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListDisagreementsOnlineLearningDisagreementsGetError = ListDisagreementsOnlineLearningDisagreementsGetErrors[keyof ListDisagreementsOnlineLearningDisagreementsGetErrors];
+
+export type ListDisagreementsOnlineLearningDisagreementsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: OnlineLearningDisagreementsPage;
+};
+
+export type ListDisagreementsOnlineLearningDisagreementsGetResponse = ListDisagreementsOnlineLearningDisagreementsGetResponses[keyof ListDisagreementsOnlineLearningDisagreementsGetResponses];
 
 export type ListProjectsRouteProjectsGetData = {
     body?: never;
@@ -658,6 +851,41 @@ export type ReadProjectMapPhotosProjectsProjectIdMapPhotosGetResponses = {
 };
 
 export type ReadProjectMapPhotosProjectsProjectIdMapPhotosGetResponse = ReadProjectMapPhotosProjectsProjectIdMapPhotosGetResponses[keyof ReadProjectMapPhotosProjectsProjectIdMapPhotosGetResponses];
+
+export type CalculateProjectFcpCoverageProjectsProjectIdFcpCoveragePostData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: {
+        /**
+         * Fcp Id
+         */
+        fcp_id?: string | null;
+    };
+    url: '/projects/{project_id}/fcp-coverage';
+};
+
+export type CalculateProjectFcpCoverageProjectsProjectIdFcpCoveragePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CalculateProjectFcpCoverageProjectsProjectIdFcpCoveragePostError = CalculateProjectFcpCoverageProjectsProjectIdFcpCoveragePostErrors[keyof CalculateProjectFcpCoverageProjectsProjectIdFcpCoveragePostErrors];
+
+export type CalculateProjectFcpCoverageProjectsProjectIdFcpCoveragePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: FcpCoverageRead;
+};
+
+export type CalculateProjectFcpCoverageProjectsProjectIdFcpCoveragePostResponse = CalculateProjectFcpCoverageProjectsProjectIdFcpCoveragePostResponses[keyof CalculateProjectFcpCoverageProjectsProjectIdFcpCoveragePostResponses];
 
 export type ReadProjectImageContentProjectsProjectIdImagesAssetIdContentGetData = {
     body?: never;
