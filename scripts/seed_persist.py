@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 from typing import BinaryIO
@@ -123,12 +124,14 @@ def _write_asset(
     abs_path = upload_root.joinpath(*Path(relpath).parts)
     abs_path.parent.mkdir(parents=True, exist_ok=True)
     abs_path.write_bytes(content)
+    hash_sha256 = hashlib.sha256(content).hexdigest()
     row = ProjectAsset(
         id=asset_id,
         project_id=project_id,
         kind=kind,
         original_label=original_label,
         stored_relpath=relpath.replace("\\", "/"),
+        hash_sha256=hash_sha256,
         created_at=utc_now(),
     )
     session.add(row)
