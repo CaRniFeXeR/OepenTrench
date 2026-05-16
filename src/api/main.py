@@ -28,15 +28,17 @@ def _configure_logging() -> None:
     log_dir.mkdir(parents=True, exist_ok=True)
     log_file = log_dir / "api.log"
 
-    logger.setLevel(logging.INFO)
-    if logger.handlers:
+    pkg_logger = logging.getLogger("oepentrench")
+    pkg_logger.setLevel(logging.INFO)
+    if pkg_logger.handlers:
         return
 
     handler = logging.FileHandler(log_file, mode="a", encoding="utf-8")
     handler.setFormatter(
-        logging.Formatter("%(asctime)s %(levelname)s %(message)s")
+        logging.Formatter("%(asctime)s %(levelname)s [%(name)s] %(message)s")
     )
-    logger.addHandler(handler)
+    pkg_logger.addHandler(handler)
+    pkg_logger.propagate = False
 
 
 class RequestLoggingMiddleware(BaseHTTPMiddleware):
