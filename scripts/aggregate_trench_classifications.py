@@ -85,9 +85,13 @@ def main() -> None:
                 continue
 
             dst_dir = TRENCH if label == "trench" else NO_TRENCH
+            other_dir = NO_TRENCH if label == "trench" else TRENCH
             dst = dst_dir / src.name
-            if not dst.exists():
-                shutil.copy2(src, dst)
+            other = other_dir / src.name
+            # If the user already curated this file into either class, do not overwrite.
+            if dst.exists() or other.exists():
+                continue
+            shutil.copy2(src, dst)
 
     # Final tallies — include bootstrapped images already in trench/ and no-trench/.
     final_trench = sum(1 for _ in TRENCH.iterdir() if _.is_file())

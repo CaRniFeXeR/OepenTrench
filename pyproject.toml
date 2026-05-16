@@ -62,6 +62,16 @@ train = [
     # YOLOv11 finetuning (pulls torch/torchvision)
     "ultralytics>=8.3,<9",
 ]
+classifier = [
+    # Trench/no-trench gate: DINOv2 frozen encoder + LR head.
+    # ultralytics also pulls torch/torchvision so installing both `train` and
+    # `classifier` is fine and gets the right Apple-Silicon wheels via uv.
+    "torch>=2.3,<3",
+    "torchvision>=0.18,<1",
+    "transformers>=4.44,<5",
+    "scikit-learn>=1.4,<2",
+    "joblib>=1.4,<2",
+]
 dev = [
     "ruff>=0.5,<1",
     "pytest>=8,<9",
