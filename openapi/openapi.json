@@ -412,6 +412,97 @@
         }
       }
     },
+    "/projects/{project_id}/map-photos": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Read Project Map Photos",
+        "operationId": "read_project_map_photos_projects__project_id__map_photos_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MapPhotosRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/images/{asset_id}/content": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Read Project Image Content",
+        "operationId": "read_project_image_content_projects__project_id__images__asset_id__content_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "asset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Asset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/projects/{project_id}/images": {
       "post": {
         "tags": [
@@ -664,6 +755,97 @@
           "created_at"
         ],
         "title": "ItemRead"
+      },
+      "MapPhotoMarkerRead": {
+        "properties": {
+          "asset_id": {
+            "type": "string",
+            "title": "Asset Id"
+          },
+          "coordinates": {
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Coordinates"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PhotoDocumentationCategory"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fcp_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fcp Id"
+          },
+          "fcp_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fcp Code"
+          },
+          "fcp_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fcp Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset_id",
+          "coordinates",
+          "category",
+          "fcp_id",
+          "fcp_code",
+          "fcp_label"
+        ],
+        "title": "MapPhotoMarkerRead"
+      },
+      "MapPhotosRead": {
+        "properties": {
+          "photos": {
+            "items": {
+              "$ref": "#/components/schemas/MapPhotoMarkerRead"
+            },
+            "type": "array",
+            "title": "Photos"
+          }
+        },
+        "type": "object",
+        "required": [
+          "photos"
+        ],
+        "title": "MapPhotosRead"
       },
       "PhotoAnalysisRead": {
         "properties": {

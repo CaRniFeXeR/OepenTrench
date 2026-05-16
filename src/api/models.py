@@ -174,3 +174,18 @@ class ProjectDetailRead(SQLModel):
     geojson_status: GeojsonStatus
     project_date: date | None
     assets: list[ProjectAssetRead]
+
+
+class MapPhotoMarkerRead(BaseModel):
+    model_config = ConfigDict(use_enum_values=True)
+
+    asset_id: str
+    coordinates: tuple[float, float]
+    category: PhotoDocumentationCategory | None
+    fcp_id: str | None
+    fcp_code: str | None
+    fcp_label: str | None
+
+
+class MapPhotosRead(BaseModel):
+    photos: list[MapPhotoMarkerRead]

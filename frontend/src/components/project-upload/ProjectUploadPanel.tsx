@@ -9,6 +9,7 @@ import {
 import { EditableProjectName } from './EditableProjectName';
 import { GeoJsonUploadZone } from './GeoJsonUploadZone';
 import { PhotoUploadZone } from './PhotoUploadZone';
+import { ProjectMapView } from '../project-map/ProjectMapView';
 import { UploadMapPreview } from './UploadMapPreview';
 import {
   FCP_POLYGONS_GEOJSON_SUFFIX,
@@ -232,8 +233,12 @@ export function ProjectUploadPanel({
         </footer>
       </div>
 
-      <div className="md:min-h-0 md:min-w-0">
-        <UploadMapPreview featureCollection={mapData} height={480} />
+      <div className="md:min-h-0 md:min-w-0 md:sticky md:top-4 md:self-start">
+        {routeReady && mapData ? (
+          <ProjectMapView project={project} mapData={mapData} height={560} />
+        ) : (
+          <UploadMapPreview featureCollection={mapData} height={560} />
+        )}
       </div>
     </div>
   );

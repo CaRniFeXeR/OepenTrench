@@ -3,11 +3,13 @@ from __future__ import annotations
 from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
+from fastapi.responses import FileResponse
 from sqlmodel import Session
 
 from src.api.database import get_session
 from src.api.helpers.pagination import clamp_limit, clamp_offset
 from src.api.models import (
+    MapPhotosRead,
     ProjectAsset,
     ProjectAssetRead,
     ProjectCreate,
@@ -17,12 +19,14 @@ from src.api.models import (
 )
 from src.api.services import project_service
 from src.api.services import photo_analysis_service
+from src.api.services.map_photos_service import list_map_photo_markers
 from src.api.services.project_asset_service import (
     PayloadTooLarge,
     load_merged_project_geojson,
     save_project_geojson,
     save_project_image,
 )
+from src.api.services.project_image_service import resolve_project_image_path
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -107,6 +111,37 @@ def read_project_geojson(
         raise HTTPException(status_code=404, detail="project not found") from None
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/{project_id}/map-photos", response_model=MapPhotosRead)
+def read_project_map_photos(
+    project_id: str,
+    session: Annotated[Session, Depends(get_session)],
+) -> MapPhotosRead:
+    try:
+        photos = list_map_photo_markers(session, project_id)
+    except LookupError:
+        raise HTTPException(status_code=404, detail="project not found") from None
+    return MapPhotosRead(photos=photos)
+
+
+@router.get("/{project_id}/images/{asset_id}/content")
+def read_project_image_content(
+    project_id: str,
+    asset_id: str,
+    session: Annotated[Session, Depends(get_session)],
+) -> FileResponse:
+    try:
+        _asset, abs_path, media_type = resolve_project_image_path(
+            session,
+            project_id=project_id,
+            asset_id=asset_id,
+        )
+    except LookupError:
+        raise HTTPException(status_code=404, detail="not found") from None
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return FileResponse(abs_path, media_type=media_type)
 
 
 @router.post("/{project_id}/images", response_model=ProjectAssetRead)

@@ -9,6 +9,7 @@ export {
   createProjectProjectsPost,
   listProjectsRouteProjectsGet,
   readProjectGeojsonProjectsProjectIdGeojsonGet,
+  readProjectMapPhotosProjectsProjectIdMapPhotosGet,
   readProjectProjectsProjectIdGet,
   updateProjectRouteProjectsProjectIdPatch,
   uploadProjectGeojsonProjectsProjectIdGeojsonPost,
@@ -16,6 +17,9 @@ export {
 } from './generated/sdk.gen';
 export type {
   GeojsonStatus,
+  MapPhotoMarkerRead,
+  PhotoAnalysisRead,
+  PhotoDocumentationCategory,
   ProjectAssetRead,
   ProjectDetailRead,
   ProjectRead,

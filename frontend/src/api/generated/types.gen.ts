@@ -98,6 +98,46 @@ export type ItemRead = {
 };
 
 /**
+ * MapPhotoMarkerRead
+ */
+export type MapPhotoMarkerRead = {
+    /**
+     * Asset Id
+     */
+    asset_id: string;
+    /**
+     * Coordinates
+     */
+    coordinates: [
+        number,
+        number
+    ];
+    category: PhotoDocumentationCategory | null;
+    /**
+     * Fcp Id
+     */
+    fcp_id: string | null;
+    /**
+     * Fcp Code
+     */
+    fcp_code: string | null;
+    /**
+     * Fcp Label
+     */
+    fcp_label: string | null;
+};
+
+/**
+ * MapPhotosRead
+ */
+export type MapPhotosRead = {
+    /**
+     * Photos
+     */
+    photos: Array<MapPhotoMarkerRead>;
+};
+
+/**
  * PhotoAnalysisRead
  */
 export type PhotoAnalysisRead = {
@@ -607,6 +647,68 @@ export type UploadProjectGeojsonProjectsProjectIdGeojsonPostResponses = {
 };
 
 export type UploadProjectGeojsonProjectsProjectIdGeojsonPostResponse = UploadProjectGeojsonProjectsProjectIdGeojsonPostResponses[keyof UploadProjectGeojsonProjectsProjectIdGeojsonPostResponses];
+
+export type ReadProjectMapPhotosProjectsProjectIdMapPhotosGetData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/projects/{project_id}/map-photos';
+};
+
+export type ReadProjectMapPhotosProjectsProjectIdMapPhotosGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ReadProjectMapPhotosProjectsProjectIdMapPhotosGetError = ReadProjectMapPhotosProjectsProjectIdMapPhotosGetErrors[keyof ReadProjectMapPhotosProjectsProjectIdMapPhotosGetErrors];
+
+export type ReadProjectMapPhotosProjectsProjectIdMapPhotosGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: MapPhotosRead;
+};
+
+export type ReadProjectMapPhotosProjectsProjectIdMapPhotosGetResponse = ReadProjectMapPhotosProjectsProjectIdMapPhotosGetResponses[keyof ReadProjectMapPhotosProjectsProjectIdMapPhotosGetResponses];
+
+export type ReadProjectImageContentProjectsProjectIdImagesAssetIdContentGetData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Asset Id
+         */
+        asset_id: string;
+    };
+    query?: never;
+    url: '/projects/{project_id}/images/{asset_id}/content';
+};
+
+export type ReadProjectImageContentProjectsProjectIdImagesAssetIdContentGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ReadProjectImageContentProjectsProjectIdImagesAssetIdContentGetError = ReadProjectImageContentProjectsProjectIdImagesAssetIdContentGetErrors[keyof ReadProjectImageContentProjectsProjectIdImagesAssetIdContentGetErrors];
+
+export type ReadProjectImageContentProjectsProjectIdImagesAssetIdContentGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
 
 export type UploadProjectImageProjectsProjectIdImagesPostData = {
     body: BodyUploadProjectImageProjectsProjectIdImagesPost;
