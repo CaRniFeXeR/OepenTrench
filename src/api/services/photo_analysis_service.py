@@ -7,6 +7,7 @@ from src.api.helpers.time import utc_now
 from src.api.models import (
     AssetKind,
     GeojsonStatus,
+    GpsCoordinates,
     PhotoAnalysis,
     PhotoDocumentationCategory,
     Project,
@@ -40,14 +41,14 @@ def _resolve_gps_coordinates(
     session: Session,
     *,
     project: Project,
-    metadata: dict,
+    extracted: GpsCoordinates | None,
 ) -> dict | None:
     if "dummy" in project.name.lower():
         if project.geojson_status != GeojsonStatus.ready:
             return None
         geojson = load_merged_project_geojson(session, project.id)
         return random_point_in_geojson_bounds(geojson)
-    return metadata.get("gps_coordinates")
+    return extracted.model_dump(mode="json") if extracted is not None else None
 
 
 def _validate_image_asset(
@@ -78,12 +79,12 @@ def analyze_image_asset(
     _asset, project = _validate_image_asset(
         session, project_id=project_id, asset_id=asset_id
     )
-    metadata = extract_img_metadata(
+    extracted = extract_img_metadata(
         session, project_id=project_id, asset_id=asset_id
     )
     fields = _dummy_analysis_fields()
     fields["gps_coordinates"] = _resolve_gps_coordinates(
-        session, project=project, metadata=metadata
+        session, project=project, extracted=extracted
     )
     return _upsert_analysis(session, asset_id=asset_id, fields=fields)
 
