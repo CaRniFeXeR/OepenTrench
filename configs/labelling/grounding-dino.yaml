@@ -12,7 +12,7 @@ mode: remote-vlm
 endpoint: http://localhost:8000
 model: grounding-dino-base
 
-remote_image_root: /home/threenicorn/data
+remote_image_root: /home/user/data
 local_image_root: ./project-resources
 
 classes: [duct, ruler, whitepaper, sitetag]
