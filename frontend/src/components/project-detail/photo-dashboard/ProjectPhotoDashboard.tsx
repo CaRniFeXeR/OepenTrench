@@ -87,6 +87,7 @@ export function ProjectPhotoDashboard({
                   projectId={project.id}
                   asset={asset}
                   onSaved={handleReviewSaved}
+                  showDuplicateControl={selectedCategory === 'red'}
                 />
               ))}
             </div>

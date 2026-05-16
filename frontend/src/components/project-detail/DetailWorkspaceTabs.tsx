@@ -8,7 +8,7 @@ import { ProjectReportTab } from './report/ProjectReportTab';
 
 const TABS: { id: DetailWorkspaceTab; label: string }[] = [
   { id: 'files', label: 'Files' },
-  { id: 'analysis', label: 'Analysis' },
+  { id: 'review', label: 'Review' },
   { id: 'report', label: 'Report' },
 ];
 
@@ -87,7 +87,7 @@ export function DetailWorkspaceTabs({
         </div>
         <div
           className={
-            activeTab === 'analysis' ? 'h-full min-h-0' : 'hidden print:hidden'
+            activeTab === 'review' ? 'h-full min-h-0' : 'hidden print:hidden'
           }
         >
           <ProjectPhotoDashboard

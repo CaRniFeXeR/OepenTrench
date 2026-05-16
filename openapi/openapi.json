@@ -1471,6 +1471,17 @@
             ],
             "title": "Reviewer Gps Matches Route"
           },
+          "reviewer_is_duplicated": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewer Is Duplicated"
+          },
           "reviewed_at": {
             "anyOf": [
               {
@@ -1523,6 +1534,10 @@
             "type": "boolean",
             "title": "Effective Gps Matches Route"
           },
+          "effective_is_duplicated": {
+            "type": "boolean",
+            "title": "Effective Is Duplicated"
+          },
           "effective_category": {
             "anyOf": [
               {
@@ -1555,6 +1570,7 @@
           "reviewer_is_in_domain",
           "reviewer_has_gdpr_problems",
           "reviewer_gps_matches_route",
+          "reviewer_is_duplicated",
           "reviewed_at",
           "gps_coordinates",
           "created_at",
@@ -1564,6 +1580,7 @@
           "effective_is_in_domain",
           "effective_has_gdpr_problems",
           "effective_gps_matches_route",
+          "effective_is_duplicated",
           "effective_category"
         ],
         "title": "PhotoAnalysisRead"
@@ -1624,6 +1641,17 @@
               }
             ],
             "title": "Reviewer Gps Matches Route"
+          },
+          "reviewer_is_duplicated": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewer Is Duplicated"
           },
           "reviewer_override_category": {
             "anyOf": [

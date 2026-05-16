@@ -36,6 +36,7 @@ class PhotoAnalysis(SQLModel, table=True):
     reviewer_is_in_domain: bool | None = Field(default=None)
     reviewer_has_gdpr_problems: bool | None = Field(default=None)
     reviewer_gps_matches_route: bool | None = Field(default=None)
+    reviewer_is_duplicated: bool | None = Field(default=None)
     reviewed_at: datetime | None = Field(default=None)
     gps_coordinates: dict | None = Field(default=None, sa_column=Column(JSON))
     created_at: datetime = Field(default_factory=utc_now)
@@ -64,6 +65,7 @@ class PhotoAnalysisRead(BaseModel):
     reviewer_is_in_domain: bool | None
     reviewer_has_gdpr_problems: bool | None
     reviewer_gps_matches_route: bool | None
+    reviewer_is_duplicated: bool | None
     reviewed_at: datetime | None
     gps_coordinates: GpsCoordinates | None
     created_at: datetime
@@ -73,6 +75,7 @@ class PhotoAnalysisRead(BaseModel):
     effective_is_in_domain: bool
     effective_has_gdpr_problems: bool
     effective_gps_matches_route: bool
+    effective_is_duplicated: bool
     effective_category: PhotoDocumentationCategory | None
 
 
@@ -82,5 +85,6 @@ class PhotoAnalysisReviewUpdate(BaseModel):
     reviewer_is_in_domain: bool | None = None
     reviewer_has_gdpr_problems: bool | None = None
     reviewer_gps_matches_route: bool | None = None
+    reviewer_is_duplicated: bool | None = None
     reviewer_override_category: PhotoDocumentationCategory | None = None
     mark_reviewed: bool = True

@@ -402,6 +402,10 @@ export type PhotoAnalysisRead = {
      */
     reviewer_gps_matches_route: boolean | null;
     /**
+     * Reviewer Is Duplicated
+     */
+    reviewer_is_duplicated: boolean | null;
+    /**
      * Reviewed At
      */
     reviewed_at: string | null;
@@ -434,6 +438,10 @@ export type PhotoAnalysisRead = {
      * Effective Gps Matches Route
      */
     effective_gps_matches_route: boolean;
+    /**
+     * Effective Is Duplicated
+     */
+    effective_is_duplicated: boolean;
     effective_category: PhotoDocumentationCategory | null;
 };
 
@@ -461,6 +469,10 @@ export type PhotoAnalysisReviewUpdate = {
      * Reviewer Gps Matches Route
      */
     reviewer_gps_matches_route?: boolean | null;
+    /**
+     * Reviewer Is Duplicated
+     */
+    reviewer_is_duplicated?: boolean | null;
     reviewer_override_category?: PhotoDocumentationCategory | null;
     /**
      * Mark Reviewed

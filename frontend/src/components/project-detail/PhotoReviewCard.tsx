@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 
 import type { ProjectAssetRead } from '../../api/client';
+import { DuplicateOverrideRow } from '../photo-review/DuplicateOverrideRow';
 import { PhotoReviewSection } from '../photo-review/PhotoReviewSection';
 import { qualityBadge } from '../project-images/analysisDisplay';
 import { projectImageContentUrl } from '../project-map/imageContentUrl';
@@ -96,10 +97,12 @@ export function PhotoReviewCard({
   projectId,
   asset,
   onSaved,
+  showDuplicateControl = false,
 }: {
   projectId: string;
   asset: ProjectAssetRead;
   onSaved: () => Promise<void>;
+  showDuplicateControl?: boolean;
 }) {
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const analysis = asset.analysis;
@@ -140,13 +143,24 @@ export function PhotoReviewCard({
 
       <div className="flex flex-1 flex-col p-3">
         {analysis ? (
-          <PhotoReviewSection
-            projectId={projectId}
-            assetId={asset.id}
-            analysis={analysis}
-            onSaved={onSaved}
-            compact
-          />
+          <>
+            {showDuplicateControl && (
+              <DuplicateOverrideRow
+                projectId={projectId}
+                assetId={asset.id}
+                analysis={analysis}
+                onSaved={onSaved}
+                compact
+              />
+            )}
+            <PhotoReviewSection
+              projectId={projectId}
+              assetId={asset.id}
+              analysis={analysis}
+              onSaved={onSaved}
+              compact
+            />
+          </>
         ) : (
           <p className="text-xs text-slate-500">Analysis pending</p>
         )}
@@ -160,12 +174,22 @@ export function PhotoReviewCard({
           onClose={() => setReviewModalOpen(false)}
         >
           {analysis ? (
-            <PhotoReviewSection
-              projectId={projectId}
-              assetId={asset.id}
-              analysis={analysis}
-              onSaved={onSaved}
-            />
+            <>
+              {showDuplicateControl && (
+                <DuplicateOverrideRow
+                  projectId={projectId}
+                  assetId={asset.id}
+                  analysis={analysis}
+                  onSaved={onSaved}
+                />
+              )}
+              <PhotoReviewSection
+                projectId={projectId}
+                assetId={asset.id}
+                analysis={analysis}
+                onSaved={onSaved}
+              />
+            </>
           ) : (
             <p className="text-sm text-slate-500">Analysis pending</p>
           )}
