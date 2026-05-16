@@ -1,11 +1,25 @@
 import type { ProjectAssetRead } from '../../api/client';
-import { effectiveCategory } from '../project-map/mapPhotoUtils';
+import {
+  analysisEffectiveCategory,
+  photoNeedsReview,
+} from './photoDocumentationUtils';
 
-export type QualityFilter = 'all' | 'good' | 'poor' | 'missing' | 'pending';
+export type QualityFilter =
+  | 'all'
+  | 'good'
+  | 'warning'
+  | 'failed'
+  | 'warning_needs_review'
+  | 'pending';
 export type ImageSortOption = 'newest' | 'name_asc' | 'name_desc';
 export type PageSize = 25 | 50 | 100;
 
-export type ImageQualityBucket = 'good' | 'poor' | 'missing' | 'pending';
+export type ImageQualityBucket =
+  | 'good'
+  | 'warning'
+  | 'failed'
+  | 'warning_needs_review'
+  | 'pending';
 
 export function imageAssets(assets: ProjectAssetRead[]): ProjectAssetRead[] {
   return assets.filter((a) => a.kind === 'image');
@@ -15,12 +29,13 @@ export function imageQualityBucket(asset: ProjectAssetRead): ImageQualityBucket 
   if (!asset.analysis) {
     return 'pending';
   }
-  const cat = effectiveCategory(
-    asset.analysis.reviewer_override_category ?? asset.analysis.category ?? null,
-  );
+  if (photoNeedsReview(asset.analysis)) {
+    return 'warning_needs_review';
+  }
+  const cat = analysisEffectiveCategory(asset.analysis);
   if (cat === 'green') return 'good';
-  if (cat === 'yellow') return 'poor';
-  return 'missing';
+  if (cat === 'yellow') return 'warning';
+  return 'failed';
 }
 
 export function filterImages(

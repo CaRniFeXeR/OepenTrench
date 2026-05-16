@@ -163,6 +163,30 @@ export type PhotoAnalysisRead = {
      */
     is_false_call: boolean;
     reviewer_override_category: PhotoDocumentationCategory | null;
+    /**
+     * Reviewer Has Duct
+     */
+    reviewer_has_duct: boolean | null;
+    /**
+     * Reviewer Has Ruler
+     */
+    reviewer_has_ruler: boolean | null;
+    /**
+     * Reviewer Is In Domain
+     */
+    reviewer_is_in_domain: boolean | null;
+    /**
+     * Reviewer Has Gdpr Problems
+     */
+    reviewer_has_gdpr_problems: boolean | null;
+    /**
+     * Reviewer Gps Matches Route
+     */
+    reviewer_gps_matches_route: boolean | null;
+    /**
+     * Reviewed At
+     */
+    reviewed_at: string | null;
     gps_coordinates: GpsCoordinates | null;
     /**
      * Created At
@@ -172,12 +196,66 @@ export type PhotoAnalysisRead = {
      * Updated At
      */
     updated_at: string;
+    /**
+     * Effective Has Duct
+     */
+    effective_has_duct: boolean;
+    /**
+     * Effective Has Ruler
+     */
+    effective_has_ruler: boolean;
+    /**
+     * Effective Is In Domain
+     */
+    effective_is_in_domain: boolean;
+    /**
+     * Effective Has Gdpr Problems
+     */
+    effective_has_gdpr_problems: boolean;
+    /**
+     * Effective Gps Matches Route
+     */
+    effective_gps_matches_route: boolean;
+    effective_category: PhotoDocumentationCategory | null;
+};
+
+/**
+ * PhotoAnalysisReviewUpdate
+ */
+export type PhotoAnalysisReviewUpdate = {
+    /**
+     * Reviewer Has Duct
+     */
+    reviewer_has_duct?: boolean | null;
+    /**
+     * Reviewer Has Ruler
+     */
+    reviewer_has_ruler?: boolean | null;
+    /**
+     * Reviewer Is In Domain
+     */
+    reviewer_is_in_domain?: boolean | null;
+    /**
+     * Reviewer Has Gdpr Problems
+     */
+    reviewer_has_gdpr_problems?: boolean | null;
+    /**
+     * Reviewer Gps Matches Route
+     */
+    reviewer_gps_matches_route?: boolean | null;
+    reviewer_override_category?: PhotoDocumentationCategory | null;
+    /**
+     * Mark Reviewed
+     */
+    mark_reviewed?: boolean;
 };
 
 /**
  * PhotoDocumentationCategory
  *
  * Per-photo documentation quality (map node/segment rollup), not workflow status.
+ *
+ * Rules and review workflow: docs/photo-documentation-category.md
  */
 export type PhotoDocumentationCategory = 'green' | 'yellow' | 'red';
 
@@ -676,3 +754,37 @@ export type AnalyzeProjectImageProjectsProjectIdImagesAssetIdAnalyzePostResponse
 };
 
 export type AnalyzeProjectImageProjectsProjectIdImagesAssetIdAnalyzePostResponse = AnalyzeProjectImageProjectsProjectIdImagesAssetIdAnalyzePostResponses[keyof AnalyzeProjectImageProjectsProjectIdImagesAssetIdAnalyzePostResponses];
+
+export type ReviewProjectImageAnalysisProjectsProjectIdImagesAssetIdAnalysisPatchData = {
+    body: PhotoAnalysisReviewUpdate;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Asset Id
+         */
+        asset_id: string;
+    };
+    query?: never;
+    url: '/projects/{project_id}/images/{asset_id}/analysis';
+};
+
+export type ReviewProjectImageAnalysisProjectsProjectIdImagesAssetIdAnalysisPatchErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ReviewProjectImageAnalysisProjectsProjectIdImagesAssetIdAnalysisPatchError = ReviewProjectImageAnalysisProjectsProjectIdImagesAssetIdAnalysisPatchErrors[keyof ReviewProjectImageAnalysisProjectsProjectIdImagesAssetIdAnalysisPatchErrors];
+
+export type ReviewProjectImageAnalysisProjectsProjectIdImagesAssetIdAnalysisPatchResponses = {
+    /**
+     * Successful Response
+     */
+    200: ProjectAssetRead;
+};
+
+export type ReviewProjectImageAnalysisProjectsProjectIdImagesAssetIdAnalysisPatchResponse = ReviewProjectImageAnalysisProjectsProjectIdImagesAssetIdAnalysisPatchResponses[keyof ReviewProjectImageAnalysisProjectsProjectIdImagesAssetIdAnalysisPatchResponses];

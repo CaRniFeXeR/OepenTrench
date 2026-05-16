@@ -2,7 +2,7 @@
 
 import { type Client, formDataBodySerializer, type Options as Options2, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AnalyzeProjectImageProjectsProjectIdImagesAssetIdAnalyzePostData, AnalyzeProjectImageProjectsProjectIdImagesAssetIdAnalyzePostErrors, AnalyzeProjectImageProjectsProjectIdImagesAssetIdAnalyzePostResponses, CreateProjectProjectsPostData, CreateProjectProjectsPostErrors, CreateProjectProjectsPostResponses, HealthHealthGetData, HealthHealthGetResponses, ListProjectsRouteProjectsGetData, ListProjectsRouteProjectsGetErrors, ListProjectsRouteProjectsGetResponses, ReadProjectGeojsonProjectsProjectIdGeojsonGetData, ReadProjectGeojsonProjectsProjectIdGeojsonGetErrors, ReadProjectGeojsonProjectsProjectIdGeojsonGetResponses, ReadProjectImageContentProjectsProjectIdImagesAssetIdContentGetData, ReadProjectImageContentProjectsProjectIdImagesAssetIdContentGetErrors, ReadProjectImageContentProjectsProjectIdImagesAssetIdContentGetResponses, ReadProjectMapPhotosProjectsProjectIdMapPhotosGetData, ReadProjectMapPhotosProjectsProjectIdMapPhotosGetErrors, ReadProjectMapPhotosProjectsProjectIdMapPhotosGetResponses, ReadProjectProjectsProjectIdGetData, ReadProjectProjectsProjectIdGetErrors, ReadProjectProjectsProjectIdGetResponses, UpdateProjectRouteProjectsProjectIdPatchData, UpdateProjectRouteProjectsProjectIdPatchErrors, UpdateProjectRouteProjectsProjectIdPatchResponses, UploadProjectGeojsonProjectsProjectIdGeojsonPostData, UploadProjectGeojsonProjectsProjectIdGeojsonPostErrors, UploadProjectGeojsonProjectsProjectIdGeojsonPostResponses, UploadProjectImageProjectsProjectIdImagesPostData, UploadProjectImageProjectsProjectIdImagesPostErrors, UploadProjectImageProjectsProjectIdImagesPostResponses } from './types.gen';
+import type { AnalyzeProjectImageProjectsProjectIdImagesAssetIdAnalyzePostData, AnalyzeProjectImageProjectsProjectIdImagesAssetIdAnalyzePostErrors, AnalyzeProjectImageProjectsProjectIdImagesAssetIdAnalyzePostResponses, CreateProjectProjectsPostData, CreateProjectProjectsPostErrors, CreateProjectProjectsPostResponses, HealthHealthGetData, HealthHealthGetResponses, ListProjectsRouteProjectsGetData, ListProjectsRouteProjectsGetErrors, ListProjectsRouteProjectsGetResponses, ReadProjectGeojsonProjectsProjectIdGeojsonGetData, ReadProjectGeojsonProjectsProjectIdGeojsonGetErrors, ReadProjectGeojsonProjectsProjectIdGeojsonGetResponses, ReadProjectImageContentProjectsProjectIdImagesAssetIdContentGetData, ReadProjectImageContentProjectsProjectIdImagesAssetIdContentGetErrors, ReadProjectImageContentProjectsProjectIdImagesAssetIdContentGetResponses, ReadProjectMapPhotosProjectsProjectIdMapPhotosGetData, ReadProjectMapPhotosProjectsProjectIdMapPhotosGetErrors, ReadProjectMapPhotosProjectsProjectIdMapPhotosGetResponses, ReadProjectProjectsProjectIdGetData, ReadProjectProjectsProjectIdGetErrors, ReadProjectProjectsProjectIdGetResponses, ReviewProjectImageAnalysisProjectsProjectIdImagesAssetIdAnalysisPatchData, ReviewProjectImageAnalysisProjectsProjectIdImagesAssetIdAnalysisPatchErrors, ReviewProjectImageAnalysisProjectsProjectIdImagesAssetIdAnalysisPatchResponses, UpdateProjectRouteProjectsProjectIdPatchData, UpdateProjectRouteProjectsProjectIdPatchErrors, UpdateProjectRouteProjectsProjectIdPatchResponses, UploadProjectGeojsonProjectsProjectIdGeojsonPostData, UploadProjectGeojsonProjectsProjectIdGeojsonPostErrors, UploadProjectGeojsonProjectsProjectIdGeojsonPostResponses, UploadProjectImageProjectsProjectIdImagesPostData, UploadProjectImageProjectsProjectIdImagesPostErrors, UploadProjectImageProjectsProjectIdImagesPostResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -143,5 +143,19 @@ export const analyzeProjectImageProjectsProjectIdImagesAssetIdAnalyzePost = <Thr
     return (options.client ?? client).post<AnalyzeProjectImageProjectsProjectIdImagesAssetIdAnalyzePostResponses, AnalyzeProjectImageProjectsProjectIdImagesAssetIdAnalyzePostErrors, ThrowOnError>({
         url: '/projects/{project_id}/images/{asset_id}/analyze',
         ...options
+    });
+};
+
+/**
+ * Review Project Image Analysis
+ */
+export const reviewProjectImageAnalysisProjectsProjectIdImagesAssetIdAnalysisPatch = <ThrowOnError extends boolean = false>(options: Options<ReviewProjectImageAnalysisProjectsProjectIdImagesAssetIdAnalysisPatchData, ThrowOnError>) => {
+    return (options.client ?? client).patch<ReviewProjectImageAnalysisProjectsProjectIdImagesAssetIdAnalysisPatchResponses, ReviewProjectImageAnalysisProjectsProjectIdImagesAssetIdAnalysisPatchErrors, ThrowOnError>({
+        url: '/projects/{project_id}/images/{asset_id}/analysis',
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+        }
     });
 };

@@ -10,6 +10,7 @@ from src.api.database import get_session
 from src.api.helpers.pagination import clamp_limit, clamp_offset
 from src.api.models import (
     MapPhotosRead,
+    PhotoAnalysisReviewUpdate,
     ProjectAsset,
     ProjectAssetRead,
     ProjectCreate,
@@ -184,6 +185,34 @@ def analyze_project_image(
             session,
             project_id=project_id,
             asset_id=asset_id,
+        )
+        session.commit()
+    except LookupError:
+        raise HTTPException(status_code=404, detail="not found") from None
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    asset = session.get(ProjectAsset, asset_id)
+    if asset is None:
+        raise HTTPException(status_code=404, detail="asset not found")
+    return project_service.project_asset_read(session, asset)
+
+
+@router.patch(
+    "/{project_id}/images/{asset_id}/analysis",
+    response_model=ProjectAssetRead,
+)
+def review_project_image_analysis(
+    project_id: str,
+    asset_id: str,
+    payload: PhotoAnalysisReviewUpdate,
+    session: Annotated[Session, Depends(get_session)],
+) -> ProjectAssetRead:
+    try:
+        photo_analysis_service.review_image_analysis(
+            session,
+            project_id=project_id,
+            asset_id=asset_id,
+            payload=payload,
         )
         session.commit()
     except LookupError:

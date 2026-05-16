@@ -2,7 +2,7 @@ import type { CircleLayerSpecification } from '@maplibre/maplibre-gl-style-spec'
 
 export const CATEGORY_COLORS = {
   green: '#22c55e',
-  yellow: '#eab308',
+  yellow: '#f97316',
   red: '#ef4444',
   unknown: '#94a3b8',
 } as const;

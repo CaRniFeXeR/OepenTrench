@@ -61,8 +61,8 @@ export function MapOverlayPanels({
       <div className="pointer-events-none absolute right-3 top-3 z-10 w-40 rounded-lg border border-slate-200 bg-white/95 p-3 text-xs shadow-md backdrop-blur-sm">
         <p className="mb-2 font-semibold text-slate-900">Photo status</p>
         <StatusRow label="Complete" pct={greenPct} color={CATEGORY_COLORS.green} />
-        <StatusRow label="Partial" pct={yellowPct} color={CATEGORY_COLORS.yellow} />
-        <StatusRow label="Missing" pct={redPct} color={CATEGORY_COLORS.red} />
+        <StatusRow label="Warning" pct={yellowPct} color={CATEGORY_COLORS.yellow} />
+        <StatusRow label="Failed" pct={redPct} color={CATEGORY_COLORS.red} />
       </div>
     </>
   );

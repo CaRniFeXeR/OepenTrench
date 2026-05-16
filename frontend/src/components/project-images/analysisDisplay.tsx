@@ -1,5 +1,5 @@
 import type { PhotoAnalysisRead } from '../../api/client';
-import { effectiveCategory } from '../project-map/mapPhotoUtils';
+import { analysisEffectiveCategory } from './photoDocumentationUtils';
 
 export function qualityBadge(
   analysis: PhotoAnalysisRead | null | undefined,
@@ -9,27 +9,30 @@ export function qualityBadge(
     if (options?.pendingWhenNull) {
       return { label: 'Pending', className: 'bg-slate-100 text-slate-600' };
     }
-    return { label: 'Missing', className: 'bg-red-100 text-red-800' };
+    return { label: 'Failed', className: 'bg-red-100 text-red-800' };
   }
 
-  const cat = effectiveCategory(
-    analysis.reviewer_override_category ?? analysis.category ?? null,
-  );
+  const cat = analysisEffectiveCategory(analysis);
   if (cat === 'green') {
     return { label: 'Good', className: 'bg-emerald-100 text-emerald-800' };
   }
   if (cat === 'yellow') {
-    return { label: 'Poor', className: 'bg-amber-100 text-amber-900' };
+    return {
+      label: analysis.reviewed_at ? 'Warning' : 'Warning · review',
+      className: 'bg-orange-100 text-orange-900',
+    };
   }
-  return { label: 'Missing', className: 'bg-red-100 text-red-800' };
+  return { label: 'Failed', className: 'bg-red-100 text-red-800' };
 }
 
 export function AnalysisTag({
   label,
   ok,
+  overridden,
 }: {
   label: string;
   ok: boolean;
+  overridden?: boolean;
 }) {
   return (
     <span
@@ -37,25 +40,67 @@ export function AnalysisTag({
         ok
           ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
           : 'border-red-200 bg-red-50 text-red-800'
-      }`}
+      } ${overridden ? 'ring-1 ring-violet-300' : ''}`}
+      title={overridden ? 'Reviewer override' : undefined}
     >
       {ok ? '✓' : '✗'} {label}
+      {overridden ? ' *' : ''}
     </span>
   );
 }
 
-const ANALYSIS_TAGS = [
-  { key: 'duct', full: 'Duct visible', short: 'Duct', ok: (a: PhotoAnalysisRead) => a.has_duct },
-  { key: 'ruler', full: 'Burial depth / ruler', short: 'Ruler', ok: (a: PhotoAnalysisRead) => a.has_ruler },
-  { key: 'gps', full: 'GPS match', short: 'GPS', ok: (a: PhotoAnalysisRead) => a.gps_matches_route },
-  { key: 'date', full: 'Date valid', short: 'Date', ok: (a: PhotoAnalysisRead) => a.date_valid },
+type AnalysisTagDef = {
+  key: string;
+  full: string;
+  short: string;
+  ok: (a: PhotoAnalysisRead) => boolean;
+  overridden: (a: PhotoAnalysisRead) => boolean;
+};
+
+const ANALYSIS_TAGS: AnalysisTagDef[] = [
+  {
+    key: 'duct',
+    full: 'Duct visible',
+    short: 'Duct',
+    ok: (a) => a.effective_has_duct,
+    overridden: (a) => a.reviewer_has_duct != null,
+  },
+  {
+    key: 'ruler',
+    full: 'Burial depth / ruler',
+    short: 'Ruler',
+    ok: (a) => a.effective_has_ruler,
+    overridden: (a) => a.reviewer_has_ruler != null,
+  },
+  {
+    key: 'domain',
+    full: 'In domain',
+    short: 'Domain',
+    ok: (a) => a.effective_is_in_domain,
+    overridden: (a) => a.reviewer_is_in_domain != null,
+  },
+  {
+    key: 'gps',
+    full: 'GPS match',
+    short: 'GPS',
+    ok: (a) => a.effective_gps_matches_route,
+    overridden: (a) => a.reviewer_gps_matches_route != null,
+  },
+  {
+    key: 'date',
+    full: 'Date valid',
+    short: 'Date',
+    ok: (a) => a.date_valid,
+    overridden: () => false,
+  },
   {
     key: 'privacy',
     full: 'Privacy clear',
     short: 'Privacy',
-    ok: (a: PhotoAnalysisRead) => !a.has_gdpr_problems,
+    ok: (a) => !a.effective_has_gdpr_problems,
+    overridden: (a) => a.reviewer_has_gdpr_problems != null,
   },
-] as const;
+];
 
 export function AnalysisTagRow({
   analysis,
@@ -71,6 +116,7 @@ export function AnalysisTagRow({
           key={tag.key}
           label={compact ? tag.short : tag.full}
           ok={tag.ok(analysis)}
+          overridden={tag.overridden(analysis)}
         />
       ))}
     </div>

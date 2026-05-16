@@ -507,6 +507,67 @@
           }
         }
       }
+    },
+    "/projects/{project_id}/images/{asset_id}/analysis": {
+      "patch": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Review Project Image Analysis",
+        "operationId": "review_project_image_analysis_projects__project_id__images__asset_id__analysis_patch",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "asset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Asset Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PhotoAnalysisReviewUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectAssetRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -794,6 +855,73 @@
               }
             ]
           },
+          "reviewer_has_duct": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewer Has Duct"
+          },
+          "reviewer_has_ruler": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewer Has Ruler"
+          },
+          "reviewer_is_in_domain": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewer Is In Domain"
+          },
+          "reviewer_has_gdpr_problems": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewer Has Gdpr Problems"
+          },
+          "reviewer_gps_matches_route": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewer Gps Matches Route"
+          },
+          "reviewed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed At"
+          },
           "gps_coordinates": {
             "anyOf": [
               {
@@ -813,6 +941,36 @@
             "type": "string",
             "format": "date-time",
             "title": "Updated At"
+          },
+          "effective_has_duct": {
+            "type": "boolean",
+            "title": "Effective Has Duct"
+          },
+          "effective_has_ruler": {
+            "type": "boolean",
+            "title": "Effective Has Ruler"
+          },
+          "effective_is_in_domain": {
+            "type": "boolean",
+            "title": "Effective Is In Domain"
+          },
+          "effective_has_gdpr_problems": {
+            "type": "boolean",
+            "title": "Effective Has Gdpr Problems"
+          },
+          "effective_gps_matches_route": {
+            "type": "boolean",
+            "title": "Effective Gps Matches Route"
+          },
+          "effective_category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PhotoDocumentationCategory"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -831,11 +989,99 @@
           "date_valid",
           "is_false_call",
           "reviewer_override_category",
+          "reviewer_has_duct",
+          "reviewer_has_ruler",
+          "reviewer_is_in_domain",
+          "reviewer_has_gdpr_problems",
+          "reviewer_gps_matches_route",
+          "reviewed_at",
           "gps_coordinates",
           "created_at",
-          "updated_at"
+          "updated_at",
+          "effective_has_duct",
+          "effective_has_ruler",
+          "effective_is_in_domain",
+          "effective_has_gdpr_problems",
+          "effective_gps_matches_route",
+          "effective_category"
         ],
         "title": "PhotoAnalysisRead"
+      },
+      "PhotoAnalysisReviewUpdate": {
+        "properties": {
+          "reviewer_has_duct": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewer Has Duct"
+          },
+          "reviewer_has_ruler": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewer Has Ruler"
+          },
+          "reviewer_is_in_domain": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewer Is In Domain"
+          },
+          "reviewer_has_gdpr_problems": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewer Has Gdpr Problems"
+          },
+          "reviewer_gps_matches_route": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewer Gps Matches Route"
+          },
+          "reviewer_override_category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PhotoDocumentationCategory"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "mark_reviewed": {
+            "type": "boolean",
+            "title": "Mark Reviewed",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "PhotoAnalysisReviewUpdate"
       },
       "PhotoDocumentationCategory": {
         "type": "string",
@@ -845,7 +1091,7 @@
           "red"
         ],
         "title": "PhotoDocumentationCategory",
-        "description": "Per-photo documentation quality (map node/segment rollup), not workflow status."
+        "description": "Per-photo documentation quality (map node/segment rollup), not workflow status.\n\nRules and review workflow: docs/photo-documentation-category.md"
       },
       "ProjectAssetRead": {
         "properties": {

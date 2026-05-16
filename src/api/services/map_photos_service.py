@@ -5,11 +5,11 @@ import re
 from shapely.geometry import Point, shape
 from sqlmodel import Session, col, select
 
+from src.api.helpers.photo_documentation_category import effective_category
 from src.api.models import (
     AssetKind,
     MapPhotoMarkerRead,
     PhotoAnalysis,
-    PhotoDocumentationCategory,
     Project,
     ProjectAsset,
 )
@@ -38,14 +38,6 @@ def _fcp_id_from_properties(props: dict | None) -> str | None:
     if as_oop is not None:
         return str(as_oop)
     return None
-
-
-def _effective_category(
-    analysis: PhotoAnalysis,
-) -> PhotoDocumentationCategory | None:
-    if analysis.reviewer_override_category is not None:
-        return analysis.reviewer_override_category
-    return analysis.category
 
 
 def _load_fcp_polygon_features(session: Session, project_id: str) -> list[dict]:
@@ -151,7 +143,7 @@ def list_map_photo_markers(session: Session, project_id: str) -> list[MapPhotoMa
             MapPhotoMarkerRead(
                 asset_id=asset.id,
                 coordinates=(lon, lat),
-                category=_effective_category(analysis),
+                category=effective_category(analysis),
                 fcp_id=fcp_id,
                 fcp_code=fcp_code,
                 fcp_label=fcp_label,

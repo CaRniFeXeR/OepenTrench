@@ -10,20 +10,24 @@ export function FcpSummaryPanel({
   projectName,
   photos,
   highlightedPhotoId,
+  warningReviewCount,
   onBack,
   onPrevPhoto,
   onNextPhoto,
   onOpenPhoto,
+  onStartWarningReview,
 }: {
   fcpLabel: string;
   fcpCode: string;
   projectName: string;
   photos: MapPhotoMarkerRead[];
   highlightedPhotoId: string | null;
+  warningReviewCount: number;
   onBack: () => void;
   onPrevPhoto: () => void;
   onNextPhoto: () => void;
   onOpenPhoto: () => void;
+  onStartWarningReview: () => void;
 }) {
   const counts = categoryCounts(photos);
   const highlightIndex = highlightedPhotoId
@@ -47,6 +51,16 @@ export function FcpSummaryPanel({
         <p className="mb-1 text-xs font-medium text-slate-600">Status in this FCP</p>
         <DocumentationStatusBarFromCounts counts={counts} />
       </div>
+
+      {warningReviewCount > 0 && (
+        <button
+          type="button"
+          onClick={onStartWarningReview}
+          className="mt-4 w-full rounded-lg border border-orange-300 bg-orange-50 px-3 py-2 text-sm font-medium text-orange-900 hover:bg-orange-100"
+        >
+          Review warnings ({warningReviewCount})
+        </button>
+      )}
 
       <p className="mt-4 text-xs text-slate-600">
         Click a photo on the map or use the arrows below to review individual trench

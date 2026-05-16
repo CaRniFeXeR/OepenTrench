@@ -3,6 +3,7 @@ import { AnalysisTagRow, qualityBadge } from '../project-images/analysisDisplay'
 import { PanelBackLink } from '../ui/PanelBackLink';
 import { PhotoStepper } from '../ui/PhotoStepper';
 import { projectImageContentUrl } from './imageContentUrl';
+import { PhotoReviewSection } from './PhotoReviewSection';
 
 export function TrenchImageDetailPanel({
   projectId,
@@ -10,18 +11,22 @@ export function TrenchImageDetailPanel({
   fcpCode,
   photoIndex,
   photoTotal,
+  reviewQueueMode,
   onBack,
   onPrev,
   onNext,
+  onReviewSaved,
 }: {
   projectId: string;
   asset: ProjectAssetRead;
   fcpCode: string;
   photoIndex: number;
   photoTotal: number;
+  reviewQueueMode?: boolean;
   onBack: () => void;
   onPrev: () => void;
   onNext: () => void;
+  onReviewSaved: () => Promise<void>;
 }) {
   const analysis = asset.analysis;
   const badge = qualityBadge(analysis);
@@ -30,6 +35,12 @@ export function TrenchImageDetailPanel({
   return (
     <div className="flex flex-1 flex-col overflow-y-auto p-4">
       <PanelBackLink label="← Back to FCP" onClick={onBack} />
+
+      {reviewQueueMode && (
+        <p className="mb-2 rounded-md bg-orange-50 px-2 py-1 text-xs font-medium text-orange-900">
+          Warning review queue — {photoTotal} photo{photoTotal === 1 ? '' : 's'} remaining
+        </p>
+      )}
 
       <div className="relative flex items-center justify-center rounded-lg bg-slate-100">
         <button
@@ -67,14 +78,14 @@ export function TrenchImageDetailPanel({
         </div>
       )}
 
-      <button
-        type="button"
-        disabled
-        title="False call override API is not available yet."
-        className="mt-4 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-500 disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        Flag as False Call
-      </button>
+      {analysis && (
+        <PhotoReviewSection
+          projectId={projectId}
+          assetId={asset.id}
+          analysis={analysis}
+          onSaved={onReviewSaved}
+        />
+      )}
 
       <PhotoStepper
         variant="footer"

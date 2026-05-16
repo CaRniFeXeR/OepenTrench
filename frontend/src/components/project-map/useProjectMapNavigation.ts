@@ -4,6 +4,7 @@ import type { Feature, FeatureCollection } from 'geojson';
 import type { MapLayerMouseEvent } from 'maplibre-gl';
 
 import type { MapPhotoMarkerRead, ProjectAssetRead } from '../../api/client';
+import { photoNeedsReview } from '../project-images/photoDocumentationUtils';
 import { fitMapToFeatureCollection } from '../map/geoBounds';
 import { LAYER_FCP_FILL, LAYER_PHOTOS } from './ProjectMapLayers';
 import {
@@ -28,6 +29,7 @@ export function useProjectMapNavigation({
   const [level, setLevel] = useState<MapLevel>('project');
   const [selectedFcpId, setSelectedFcpId] = useState<string | null>(null);
   const [highlightedPhotoId, setHighlightedPhotoId] = useState<string | null>(null);
+  const [reviewQueueMode, setReviewQueueMode] = useState(false);
 
   const { fcpPolygons, trenches } = useMemo(() => {
     const split = splitProjectGeojson(mapData);
@@ -46,10 +48,22 @@ export function useProjectMapNavigation({
   }, [imageAssets]);
 
   const navigablePhotos = useMemo(() => {
-    if (selectedFcpId) return photosForFcp(mapPhotos, selectedFcpId);
-    if (level === 'photo') return mapPhotos;
-    return [];
-  }, [mapPhotos, selectedFcpId, level]);
+    let photos: MapPhotoMarkerRead[];
+    if (selectedFcpId) {
+      photos = photosForFcp(mapPhotos, selectedFcpId);
+    } else if (level === 'photo') {
+      photos = mapPhotos;
+    } else {
+      return [];
+    }
+    if (!reviewQueueMode) {
+      return photos;
+    }
+    return photos.filter((p) => {
+      const asset = assetsById.get(p.asset_id);
+      return photoNeedsReview(asset?.analysis);
+    });
+  }, [mapPhotos, selectedFcpId, level, reviewQueueMode, assetsById]);
 
   const selectedFcpFeature = useMemo((): Feature | null => {
     if (!selectedFcpId) return null;
@@ -122,6 +136,7 @@ export function useProjectMapNavigation({
     setLevel('project');
     setSelectedFcpId(null);
     setHighlightedPhotoId(null);
+    setReviewQueueMode(false);
     fitToCollection(mapData);
   }, [mapData, fitToCollection]);
 
@@ -227,6 +242,35 @@ export function useProjectMapNavigation({
     ? navigablePhotos.findIndex((p) => p.asset_id === highlightedPhotoIdResolved)
     : -1;
 
+  const startWarningReview = useCallback(
+    (fcpId: string) => {
+      const inFcp = photosForFcp(mapPhotos, fcpId);
+      const first = inFcp.find((p) => photoNeedsReview(assetsById.get(p.asset_id)?.analysis));
+      setReviewQueueMode(true);
+      setLevel('photo');
+      setSelectedFcpId(fcpId);
+      if (first) {
+        setHighlightedPhotoId(first.asset_id);
+        easeToPhoto(first.asset_id);
+      } else {
+        setHighlightedPhotoId(inFcp[0]?.asset_id ?? null);
+        if (fcpId) fitToFcp(fcpId);
+      }
+    },
+    [mapPhotos, assetsById, easeToPhoto, fitToFcp],
+  );
+
+  const fcpPhotos = useMemo(() => {
+    if (!selectedFcpId) return [];
+    return photosForFcp(mapPhotos, selectedFcpId);
+  }, [mapPhotos, selectedFcpId]);
+
+  const warningReviewCount = useMemo(() => {
+    return fcpPhotos.filter((p) =>
+      photoNeedsReview(assetsById.get(p.asset_id)?.analysis),
+    ).length;
+  }, [fcpPhotos, assetsById]);
+
   const detailOpen = level === 'fcp' || level === 'photo';
 
   return {
@@ -237,6 +281,7 @@ export function useProjectMapNavigation({
     trenches,
     photoMarkers,
     navigablePhotos,
+    fcpPhotos,
     fcpLabel,
     fcpCode,
     highlightedPhotoIdResolved,
@@ -248,5 +293,9 @@ export function useProjectMapNavigation({
     goToPhoto,
     handleMapClick,
     stepPhoto,
+    reviewQueueMode,
+    setReviewQueueMode,
+    startWarningReview,
+    warningReviewCount,
   };
 }

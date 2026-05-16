@@ -72,8 +72,9 @@ export function ProjectImagesPanel({
             >
               <option value="all">All</option>
               <option value="good">Good</option>
-              <option value="poor">Poor</option>
-              <option value="missing">Missing</option>
+              <option value="warning">Warning</option>
+              <option value="warning_needs_review">Warning — needs review</option>
+              <option value="failed">Failed</option>
               <option value="pending">Pending analysis</option>
             </select>
           </label>

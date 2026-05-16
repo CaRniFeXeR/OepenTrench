@@ -46,7 +46,11 @@ export function ProjectDetailLayout({
 
           <div className="flex min-h-[480px] min-w-0 flex-1 flex-col border-b border-slate-200 lg:border-b-0">
             {routeReady && mapData ? (
-              <ProjectMapView project={project} mapData={mapData} />
+              <ProjectMapView
+                project={project}
+                mapData={mapData}
+                onProjectRefresh={onRefresh}
+              />
             ) : (
               <div className="h-full min-h-[480px] p-3">
                 <UploadMapPreview featureCollection={mapData} height={480} />

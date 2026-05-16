@@ -8,6 +8,7 @@ import {
 export function useProjectMapData(
   projectId: string,
   photoCount: number,
+  refreshKey = 0,
 ) {
   const [mapPhotos, setMapPhotos] = useState<MapPhotoMarkerRead[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,7 +37,7 @@ export function useProjectMapData(
     return () => {
       cancelled = true;
     };
-  }, [projectId, photoCount]);
+  }, [projectId, photoCount, refreshKey]);
 
   return { mapPhotos, loading, error };
 }

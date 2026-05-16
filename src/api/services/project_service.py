@@ -7,10 +7,10 @@ from sqlmodel import Session, col, select
 
 from src.api.helpers.time import utc_now
 from src.api.ids import new_nanoid
+from src.api.helpers.photo_documentation_category import photo_analysis_to_read
 from src.api.models import (
     AssetKind,
     PhotoAnalysis,
-    PhotoAnalysisRead,
     Project,
     ProjectAsset,
     ProjectAssetRead,
@@ -79,7 +79,7 @@ def _project_asset_to_read(
         original_label=asset.original_label,
         stored_relpath=asset.stored_relpath,
         created_at=asset.created_at,
-        analysis=PhotoAnalysisRead.model_validate(row) if row is not None else None,
+        analysis=photo_analysis_to_read(row) if row is not None else None,
     )
 
 

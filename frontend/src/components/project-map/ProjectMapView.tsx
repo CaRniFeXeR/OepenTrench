@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import type { MapRef } from 'react-map-gl/maplibre';
 import type { FeatureCollection } from 'geojson';
 
@@ -16,11 +16,14 @@ import { useProjectMapNavigation } from './useProjectMapNavigation';
 export function ProjectMapView({
   project,
   mapData,
+  onProjectRefresh,
 }: {
   project: ProjectDetailRead;
   mapData: FeatureCollection;
+  onProjectRefresh: () => Promise<void>;
 }) {
   const mapRef = useRef<MapRef | null>(null);
+  const [mapPhotosRefreshKey, setMapPhotosRefreshKey] = useState(0);
   const imageCount = project.assets.filter((a) => a.kind === 'image').length;
   const imageAssets = useMemo(
     () => project.assets.filter((a) => a.kind === 'image'),
@@ -30,6 +33,7 @@ export function ProjectMapView({
   const { mapPhotos, loading: photosLoading } = useProjectMapData(
     project.id,
     imageCount,
+    mapPhotosRefreshKey,
   );
 
   const navigation = useProjectMapNavigation({
@@ -50,6 +54,7 @@ export function ProjectMapView({
     trenches,
     photoMarkers,
     navigablePhotos,
+    fcpPhotos,
     fcpLabel,
     fcpCode,
     highlightedPhotoIdResolved,
@@ -60,7 +65,15 @@ export function ProjectMapView({
     goToPhoto,
     handleMapClick,
     stepPhoto,
+    reviewQueueMode,
+    startWarningReview,
+    warningReviewCount,
   } = navigation;
+
+  const handleReviewSaved = async () => {
+    await onProjectRefresh();
+    setMapPhotosRefreshKey((k) => k + 1);
+  };
 
   return (
     <div className="flex min-h-[480px] flex-1 flex-col lg:flex-row lg:min-h-0">
@@ -102,8 +115,9 @@ export function ProjectMapView({
             fcpLabel={fcpLabel}
             fcpCode={fcpCode}
             projectName={project.name}
-            photos={navigablePhotos}
+            photos={fcpPhotos}
             highlightedPhotoId={highlightedPhotoIdResolved}
+            warningReviewCount={warningReviewCount}
             onBack={goToProject}
             onPrevPhoto={() => stepPhoto(-1)}
             onNextPhoto={() => stepPhoto(1)}
@@ -112,6 +126,7 @@ export function ProjectMapView({
                 goToPhoto(highlightedPhotoIdResolved, selectedFcpId);
               }
             }}
+            onStartWarningReview={() => startWarningReview(selectedFcpId)}
           />
         )}
         {level === 'photo' &&
@@ -124,11 +139,13 @@ export function ProjectMapView({
               fcpCode={fcpCode}
               photoIndex={photoIndex}
               photoTotal={navigablePhotos.length}
+              reviewQueueMode={reviewQueueMode}
               onBack={() => {
                 setLevel('fcp');
               }}
               onPrev={() => stepPhoto(-1)}
               onNext={() => stepPhoto(1)}
+              onReviewSaved={handleReviewSaved}
             />
           )}
       </MapDetailColumn>
