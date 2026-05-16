@@ -7,7 +7,6 @@ import argparse
 import sys
 from collections import Counter
 from datetime import date
-from io import BytesIO
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -18,17 +17,19 @@ from sqlmodel import Session, col, select
 from scripts.seed_fixtures import (
     GEOJSON_BASE,
     SEED_SCENARIOS,
-    apply_scenario_to_row,
     build_seed_locations,
     expected_category_counts,
 )
+from scripts.seed_persist import persist_geojson_file, persist_image
 from src.api.database import engine
 from src.api.helpers.photo_documentation_category import automated_category
 from src.api.helpers.time import utc_now
-from src.api.models import AssetKind, PhotoAnalysis, Project, ProjectAsset, ProjectStatus
-from src.api.services.project_asset_service import (
-    save_project_geojson,
-    save_project_image,
+from src.api.models import (
+    AssetKind,
+    PhotoAnalysis,
+    Project,
+    ProjectAsset,
+    ProjectStatus,
 )
 from src.api.services.project_service import create_project
 
@@ -52,14 +53,7 @@ def _upload_geojson(
     path = geojson_dir / filename
     if not path.is_file():
         raise FileNotFoundError(f"GeoJSON not found: {path}")
-    with path.open("rb") as stream:
-        save_project_geojson(
-            session,
-            project_id=project_id,
-            upload_filename=filename,
-            original_label=filename,
-            stream=stream,
-        )
+    persist_geojson_file(session, project_id=project_id, path=path)
 
 
 def _upload_images(
@@ -77,17 +71,21 @@ def _upload_images(
     for index, scenario in enumerate(SEED_SCENARIOS, start=1):
         label = f"{index:02d}_{EXAMPLE_IMAGE_STEM}"
         gps = locations[scenario.location_index]
-        asset = save_project_image(
+        asset = persist_image(
             session,
             project_id=project_id,
-            upload_filename=label,
-            original_label=label,
-            stream=BytesIO(image_bytes),
+            filename=label,
+            content=image_bytes,
         )
-        row = session.get(PhotoAnalysis, asset.id)
-        if row is None:
-            raise RuntimeError(f"analysis missing after upload for asset {asset.id}")
-        apply_scenario_to_row(row, scenario, gps)
+        fields = scenario.to_analysis_fields(gps)
+        now = utc_now()
+        row = PhotoAnalysis(
+            asset_id=asset.id,
+            created_at=now,
+            updated_at=now,
+            **fields,
+        )
+        row.category = automated_category(row)
         session.add(row)
         session.commit()
 

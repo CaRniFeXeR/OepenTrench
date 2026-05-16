@@ -108,7 +108,6 @@ def build_seed_locations(geojson_dir: Path) -> list[dict[str, Any]]:
 class SeedScenario:
     """Analysis field overrides for one seeded photo."""
 
-    label_suffix: str
     location_index: int
     is_in_domain: bool = True
     has_white_paper: bool = True
@@ -160,33 +159,31 @@ def _reviewed() -> datetime:
 # 7 green, 5 red, 8 yellow — locations chosen so red off-route cases use indices 17–19.
 SEED_SCENARIOS: tuple[SeedScenario, ...] = (
     # --- green (7) ---
-    SeedScenario("good-unreviewed", 0),
-    SeedScenario("good-reviewed", 1, reviewed_at=_reviewed()),
-    SeedScenario("good-reviewed-2", 2, reviewed_at=_reviewed()),
-    SeedScenario("good-reviewed-3", 3, reviewed_at=_reviewed()),
-    SeedScenario("good-unreviewed-2", 4),
-    SeedScenario("good-reviewed-4", 5, reviewed_at=_reviewed()),
-    SeedScenario("good-unreviewed-3", 6),
+    SeedScenario(0),
+    SeedScenario(1, reviewed_at=_reviewed()),
+    SeedScenario(2, reviewed_at=_reviewed()),
+    SeedScenario(3, reviewed_at=_reviewed()),
+    SeedScenario(4),
+    SeedScenario(5, reviewed_at=_reviewed()),
+    SeedScenario(6),
     # --- red (5) ---
-    SeedScenario("failed-out-of-domain", 7, is_in_domain=False),
-    SeedScenario("failed-gps-off-route", 17, gps_matches_route=False),
-    SeedScenario("failed-both", 18, is_in_domain=False, gps_matches_route=False),
-    SeedScenario("failed-out-of-domain-2", 8, is_in_domain=False),
-    SeedScenario("failed-gps-off-route-2", 19, gps_matches_route=False),
+    SeedScenario(7, is_in_domain=False),
+    SeedScenario(17, gps_matches_route=False),
+    SeedScenario(18, is_in_domain=False, gps_matches_route=False),
+    SeedScenario(8, is_in_domain=False),
+    SeedScenario(19, gps_matches_route=False),
     # --- yellow (8) ---
-    SeedScenario("warn-no-ruler", 9, has_ruler=False),
-    SeedScenario("warn-no-duct", 10, has_duct=False, estimate_number_of_ducts=0),
-    SeedScenario("warn-gdpr", 11, has_gdpr_problems=True),
-    SeedScenario("warn-no-white-paper", 12, has_white_paper=False),
+    SeedScenario(9, has_ruler=False),
+    SeedScenario(10, has_duct=False, estimate_number_of_ducts=0),
+    SeedScenario(11, has_gdpr_problems=True),
+    SeedScenario(12, has_white_paper=False, has_ruler=False),
     SeedScenario(
-        "warn-reviewer-ruler",
         13,
         has_ruler=False,
         reviewer_has_ruler=True,
         reviewed_at=_reviewed(),
     ),
     SeedScenario(
-        "warn-override-green",
         14,
         has_ruler=False,
         has_duct=False,
@@ -194,14 +191,12 @@ SEED_SCENARIOS: tuple[SeedScenario, ...] = (
         reviewed_at=_reviewed(),
     ),
     SeedScenario(
-        "warn-reviewer-reviewed",
         15,
         has_gdpr_problems=True,
         reviewer_has_gdpr_problems=False,
         reviewed_at=_reviewed(),
     ),
     SeedScenario(
-        "warn-duplicate-partial",
         16,
         is_duplicated=True,
         has_ruler=False,
