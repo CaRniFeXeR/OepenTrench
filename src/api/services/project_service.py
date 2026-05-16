@@ -95,6 +95,18 @@ def project_asset_read(session: Session, asset: ProjectAsset) -> ProjectAssetRea
     return _project_asset_to_read(asset, analysis)
 
 
+def update_project(session: Session, project_id: str, *, name: str) -> Optional[Project]:
+    project = session.get(Project, project_id)
+    if project is None:
+        return None
+    project.name = name.strip()
+    project.updated_at = utc_now()
+    session.add(project)
+    session.commit()
+    session.refresh(project)
+    return project
+
+
 def list_projects(session: Session, *, limit: int, offset: int) -> list[Project]:
     statement = (
         select(Project)

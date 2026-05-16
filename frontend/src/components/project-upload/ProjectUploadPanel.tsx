@@ -6,6 +6,7 @@ import {
   readProjectGeojsonProjectsProjectIdGeojsonGet,
   type ProjectDetailRead,
 } from '../../api/client';
+import { EditableProjectName } from './EditableProjectName';
 import { GeoJsonUploadZone } from './GeoJsonUploadZone';
 import { PhotoUploadZone } from './PhotoUploadZone';
 import { UploadMapPreview } from './UploadMapPreview';
@@ -139,7 +140,11 @@ export function ProjectUploadPanel({
     <div className="grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
       <div className="flex flex-col gap-6 md:min-w-0">
         <header className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <h2 className="text-lg font-semibold text-slate-900">{project.name}</h2>
+          <EditableProjectName
+            projectId={project.id}
+            name={project.name}
+            onSaved={refresh}
+          />
           <dl className="mt-3 grid gap-2 text-xs text-slate-600 sm:grid-cols-2">
             <div>
               <dt className="text-slate-500">Region</dt>
@@ -163,8 +168,8 @@ export function ProjectUploadPanel({
             </div>
           </dl>
           <p className="mt-3 text-xs text-slate-500">
-            Editing title, region, and date requires a project update API — not
-            available yet.
+            Double-click the project name to rename. Region and date editing are
+            not available yet.
           </p>
         </header>
 

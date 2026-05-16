@@ -113,6 +113,10 @@ class ProjectCreate(SQLModel):
     project_date: date | None = Field(default=None)
 
 
+class ProjectUpdate(SQLModel):
+    name: str = Field(max_length=500, min_length=1)
+
+
 class ProjectRead(SQLModel):
     id: str
     name: str

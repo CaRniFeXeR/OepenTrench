@@ -13,6 +13,7 @@ from src.api.models import (
     ProjectCreate,
     ProjectDetailRead,
     ProjectRead,
+    ProjectUpdate,
 )
 from src.api.services import project_service
 from src.api.services import photo_analysis_service
@@ -57,6 +58,18 @@ def list_projects_route(
     off = clamp_offset(offset)
     rows = project_service.list_projects(session, limit=lim, offset=off)
     return [ProjectRead.model_validate(r) for r in rows]
+
+
+@router.patch("/{project_id}", response_model=ProjectRead)
+def update_project_route(
+    project_id: str,
+    payload: ProjectUpdate,
+    session: Annotated[Session, Depends(get_session)],
+) -> ProjectRead:
+    project = project_service.update_project(session, project_id, name=payload.name)
+    if project is None:
+        raise HTTPException(status_code=404, detail="project not found")
+    return ProjectRead.model_validate(project)
 
 
 @router.get("/{project_id}", response_model=ProjectDetailRead)

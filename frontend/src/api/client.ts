@@ -10,6 +10,7 @@ export {
   listProjectsRouteProjectsGet,
   readProjectGeojsonProjectsProjectIdGeojsonGet,
   readProjectProjectsProjectIdGet,
+  updateProjectRouteProjectsProjectIdPatch,
   uploadProjectGeojsonProjectsProjectIdGeojsonPost,
   uploadProjectImageProjectsProjectIdImagesPost,
 } from './generated/sdk.gen';
