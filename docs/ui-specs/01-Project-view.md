@@ -56,6 +56,8 @@ A responsive grid displaying:
 
 Each existing project is represented as a clickable card.
 
+**Domain note:** A dashboard **Project** is the same geographic entity as a **cluster** in the planning GeoJSON (`clusterName` on FCP features, boundary from `*_SiteCluster_Polygons.geojson`). The map (Screen 3) opens at this project / cluster level before drilling into FCPs and individual trench images.
+
 ## Card Content
 
 ### Project Name

@@ -67,15 +67,26 @@ If photos lack GPS data, a collapsible warning list appears: "The following [Cou
 
 ### 2.3 GeoJSON Upload Zone
 
-A dedicated section below the photo upload zone for the route file.
+A dedicated section below the photo upload zone for route / planning GeoJSON files.
 
-**Default State:** A drag-and-drop area or button specifically for the `.geojson` file.
+**Required files (backend):** Filenames must end with:
 
-**Missing File Warning (Persistent):** If no GeoJSON is uploaded, display a prominent yellow warning banner:
+- `*Trenches.geojson` — trench route `LineString`s
+- `*FCP_Polygons.geojson` — FCP area polygons (map Level 2 units)
 
-> ⚠ GeoJSON route file is missing. The map view cannot be generated until this file is added. You can upload it now or return to this project later.
+**Optional supplementary files** (improve the Screen 3 skeleton when present):
 
-**Uploaded State (Success):** Display a green confirmation (e.g., "✓ Route file loaded — 12.4 km, 6 segments detected"). Optionally show a mini static map thumbnail of the route line to confirm the correct file was uploaded.
+- `*SiteCluster_Polygons.geojson` — project / cluster boundary
+- `*FCPs.geojson` — FCP point markers
+- `*POP.geojson` — POP hub (may be empty)
+
+**Default State:** A drag-and-drop area or button for `.geojson` files (one or more per project).
+
+**Missing File Warning (Persistent):** If required GeoJSON is missing, display a prominent yellow warning banner:
+
+> ⚠ Required GeoJSON is missing (`Trenches.geojson` and `FCP_Polygons.geojson`). The map view cannot be generated until both are added. You can upload them now or return to this project later.
+
+**Uploaded State (Success):** Display a green confirmation when both required files are present (e.g., "✓ Route loaded — 19.6 km, 9 FCP areas"). Optionally show a mini static map thumbnail with FCP polygons and trench lines.
 
 ### 2.4 Live Map Preview (Right Column)
 
@@ -86,8 +97,8 @@ This is the most important new element of the upload experience. As photos and G
 | State | What Is Shown |
 | --- | --- |
 | Before any upload | A grey placeholder with text: "Your map will appear here as files are uploaded." |
-| GeoJSON uploaded, photos processing | The route skeleton appears as a grey/neutral line on the map. Segments begin turning Green, Yellow, or Red as photos are matched and validated. |
-| Upload in progress | The map animates — segments light up progressively as each batch of photos is geo-matched. A subtle pulsing animation on the route line indicates active processing. |
+| GeoJSON uploaded, photos processing | FCP polygons and trench lines appear (neutral/grey). Areas and segments begin turning Green, Yellow, or Red as photos are assigned to FCPs and analysed. |
+| Upload in progress | The map animates — FCP areas and trench segments light up progressively as each batch is processed. A subtle pulsing animation on the route indicates active processing. |
 | Upload complete | The full color-coded map is shown. The preview panel displays a visible "View Full Map →" button or becomes fully clickable. |
 
 **Clickable State (Post-Upload):** Once the upload and processing are complete, the entire map preview panel becomes an active, clickable element. Clicking it navigates the user directly to Screen 3 (Map View). A clear call-to-action overlay appears on hover: "Open Full Map View →".
@@ -125,6 +136,6 @@ A status indicator sits next to the buttons: "Ready to analyse ✓" or "Missing 
 These notes keep Screen 2 in sync with the API / persistence layer (see `Project`, `ProjectAsset`, `PhotoAnalysis` in [`src/api/models.py`](../../src/api/models.py)):
 
 - **Project date (`project_date`):** The editable header date maps to **`project_date`**, distinct from **`created_at`** (record creation timestamp) and **`updated_at`** (last modification).
-- **GeoJSON uploads:** Stored as **`geojson` assets (`AssetKind.geojson`)** with **no persisted subtype / role** in the database — multiple `.geojson` files are differentiated only by uploads and downstream parsing. Derived values such as **route length** and **segment count** may be stored or computed **on the project** after processing (not separate asset-kind enums).
-- **Photo GPS at upload:** The live “GPS found / Missing GPS” counters come from **EXIF at upload**. Whether a photo matches the routed geometry is a separate **pipeline field** (**`gps_matches_route`** on `PhotoAnalysis`, see Screen 3.2 / data model appendix there).
+- **GeoJSON uploads:** Stored as **`geojson` assets (`AssetKind.geojson`)** with **no persisted subtype / role** in the database — required vs optional files are recognized by **filename suffix** (`Trenches.geojson`, `FCP_Polygons.geojson`, etc.; see [`project_asset_service.py`](../../src/api/services/project_asset_service.py)). Derived values such as **route length** and **FCP count** may be stored or computed **on the project** after processing.
+- **Photo GPS at upload:** The live “GPS found / Missing GPS” counters come from **EXIF at upload**. Whether a photo matches the routed geometry is a separate **pipeline field** (**`gps_matches_route`** on `PhotoAnalysis`, see [03.2 — TrenchImage Detail](./03.2-trenchimage-view.md)).
 - **Duplicates (post-summary):** The UI duplicate list should align with the persisted **`is_duplicated`** flag on **`PhotoAnalysis`** once analysis runs — same concept as “duplicate filenames” in the UX copy.
