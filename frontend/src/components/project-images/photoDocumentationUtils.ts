@@ -41,6 +41,7 @@ export type PhotoDocumentationCounts = {
   red: number;
   pending: number;
   warningNeedsReview: number;
+  duplicateCount: number;
 };
 
 export function categoryCountsFromAssets(assets: ProjectAssetRead[]): PhotoDocumentationCounts {
@@ -50,6 +51,7 @@ export function categoryCountsFromAssets(assets: ProjectAssetRead[]): PhotoDocum
     red: 0,
     pending: 0,
     warningNeedsReview: 0,
+    duplicateCount: 0,
   };
   for (const asset of assets) {
     if (asset.kind !== 'image') continue;
@@ -62,6 +64,7 @@ export function categoryCountsFromAssets(assets: ProjectAssetRead[]): PhotoDocum
     else if (cat === 'yellow') counts.yellow += 1;
     else if (cat === 'red') counts.red += 1;
     if (photoNeedsReview(asset.analysis)) counts.warningNeedsReview += 1;
+    if (asset.analysis.effective_is_duplicated) counts.duplicateCount += 1;
   }
   return counts;
 }

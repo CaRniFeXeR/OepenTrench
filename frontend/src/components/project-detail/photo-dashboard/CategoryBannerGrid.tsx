@@ -1,7 +1,7 @@
 import type { PhotoDocumentationCategory } from '../../../api/client';
 import { PHOTO_DOC_CATEGORIES } from '../../project-images/photoDocumentationCategories';
 import { categoryPercentages } from '../../ui/DocumentationStatusBar';
-import { warningApprovalLabel } from './photoDashboardMessages';
+import { duplicateCountLabel, warningApprovalLabel } from './photoDashboardMessages';
 
 export function CategoryBannerGrid({
   counts,
@@ -13,6 +13,7 @@ export function CategoryBannerGrid({
     yellow: number;
     red: number;
     warningNeedsReview: number;
+    duplicateCount: number;
   };
   selectedCategory: PhotoDocumentationCategory;
   onSelectCategory: (category: PhotoDocumentationCategory) => void;
@@ -51,6 +52,11 @@ export function CategoryBannerGrid({
               {banner.id === 'yellow' && counts.warningNeedsReview > 0 && (
                 <p className="mt-1 text-xs font-medium text-orange-800">
                   {warningApprovalLabel(counts.warningNeedsReview, counts.yellow)}
+                </p>
+              )}
+              {banner.id === 'red' && counts.duplicateCount > 0 && (
+                <p className="mt-1 text-xs font-medium text-red-800">
+                  {duplicateCountLabel(counts.duplicateCount)}
                 </p>
               )}
             </div>

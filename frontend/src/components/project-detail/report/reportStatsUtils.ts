@@ -16,6 +16,7 @@ export type ReportCategoryStats = {
   yellow: number;
   red: number;
   pending: number;
+  duplicateCount: number;
   greenPct: number;
   yellowPct: number;
   redPct: number;
@@ -61,6 +62,7 @@ export function buildCategoryStats(assets: ProjectAssetRead[]): ReportCategorySt
     yellow: counts.yellow,
     red: counts.red,
     pending: counts.pending,
+    duplicateCount: counts.duplicateCount,
     greenPct,
     yellowPct,
     redPct,
