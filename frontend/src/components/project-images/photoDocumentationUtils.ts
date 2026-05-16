@@ -26,8 +26,9 @@ export function categoryCountsFromAssets(assets: ProjectAssetRead[]): {
   yellow: number;
   red: number;
   pending: number;
+  warningNeedsReview: number;
 } {
-  const counts = { green: 0, yellow: 0, red: 0, pending: 0 };
+  const counts = { green: 0, yellow: 0, red: 0, pending: 0, warningNeedsReview: 0 };
   for (const asset of assets) {
     if (asset.kind !== 'image') continue;
     if (!asset.analysis) {
@@ -38,6 +39,7 @@ export function categoryCountsFromAssets(assets: ProjectAssetRead[]): {
     if (cat === 'green') counts.green += 1;
     else if (cat === 'yellow') counts.yellow += 1;
     else if (cat === 'red') counts.red += 1;
+    if (photoNeedsReview(asset.analysis)) counts.warningNeedsReview += 1;
   }
   return counts;
 }

@@ -43,6 +43,14 @@ const CATEGORY_BANNERS: {
   },
 ];
 
+function warningApprovalLabel(needsReview: number, yellowTotal: number): string {
+  const noun = needsReview === 1 ? 'needs' : 'need';
+  if (needsReview < yellowTotal) {
+    return `${needsReview} of ${yellowTotal} ${noun} approval`;
+  }
+  return `${needsReview} ${noun} approval`;
+}
+
 function emptyMessage(
   category: PhotoDocumentationCategory,
   unreviewedOnly: boolean,
@@ -119,6 +127,11 @@ export function ProjectPhotoDashboard({
                 <p className="mt-0.5 text-xs text-slate-600">
                   {count === 1 ? 'photo' : 'photos'}
                 </p>
+                {banner.id === 'yellow' && counts.warningNeedsReview > 0 && (
+                  <p className="mt-1 text-xs font-medium text-orange-800">
+                    {warningApprovalLabel(counts.warningNeedsReview, counts.yellow)}
+                  </p>
+                )}
               </button>
             );
           })}
