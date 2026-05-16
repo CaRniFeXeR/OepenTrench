@@ -1,12 +1,18 @@
 from __future__ import annotations
 
 from src.api.models.common import AssetKind, GpsCoordinates, PhotoDocumentationCategory
+from src.api.models.fcp_coverage import (
+    FcpCoverageCompartment,
+    FcpCoverageSummary,
+    ProjectFcpCoverage,
+)
 from src.api.models.map import (
     FcpCoverageCompartmentRead,
     FcpCoverageRead,
     FcpCoverageSummaryRead,
     MapPhotoMarkerRead,
     MapPhotosRead,
+    ProjectCoverageSummaryRead,
 )
 from src.api.models.online_learning import (
     OnlineLearningDisagreementsPage,
@@ -36,9 +42,13 @@ from src.api.models.project import (
 
 __all__ = [
     "AssetKind",
+    "FcpCoverageCompartment",
     "FcpCoverageCompartmentRead",
     "FcpCoverageRead",
+    "FcpCoverageSummary",
     "FcpCoverageSummaryRead",
+    "ProjectCoverageSummaryRead",
+    "ProjectFcpCoverage",
     "GeojsonStatus",
     "GpsCoordinates",
     "MapPhotoMarkerRead",

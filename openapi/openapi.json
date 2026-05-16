@@ -357,6 +357,46 @@
       }
     },
     "/projects/{project_id}/fcp-coverage": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Read Project Fcp Coverage",
+        "operationId": "read_project_fcp_coverage_projects__project_id__fcp_coverage_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FcpCoverageRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "tags": [
           "projects"
@@ -371,22 +411,6 @@
             "schema": {
               "type": "string",
               "title": "Project Id"
-            }
-          },
-          {
-            "name": "fcp_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Fcp Id"
             }
           }
         ],
@@ -868,6 +892,9 @@
       },
       "FcpCoverageRead": {
         "properties": {
+          "project": {
+            "$ref": "#/components/schemas/ProjectCoverageSummaryRead"
+          },
           "compartments": {
             "items": {
               "$ref": "#/components/schemas/FcpCoverageCompartmentRead"
@@ -885,6 +912,7 @@
         },
         "type": "object",
         "required": [
+          "project",
           "compartments",
           "summaries"
         ],
@@ -1673,6 +1701,47 @@
           "created_at"
         ],
         "title": "ProjectAssetRead"
+      },
+      "ProjectCoverageSummaryRead": {
+        "properties": {
+          "compartment_count": {
+            "type": "integer",
+            "title": "Compartment Count"
+          },
+          "covered_count": {
+            "type": "integer",
+            "title": "Covered Count"
+          },
+          "coverage_ratio": {
+            "type": "number",
+            "title": "Coverage Ratio"
+          },
+          "fcp_count": {
+            "type": "integer",
+            "title": "Fcp Count"
+          },
+          "computed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Computed At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "compartment_count",
+          "covered_count",
+          "coverage_ratio",
+          "fcp_count",
+          "computed_at"
+        ],
+        "title": "ProjectCoverageSummaryRead"
       },
       "ProjectCreate": {
         "properties": {

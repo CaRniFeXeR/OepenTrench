@@ -7,6 +7,7 @@ client.setConfig({
 export { client };
 export {
   calculateProjectFcpCoverageProjectsProjectIdFcpCoveragePost,
+  readProjectFcpCoverageProjectsProjectIdFcpCoverageGet,
   createProjectProjectsPost,
   listDisagreementsOnlineLearningDisagreementsGet,
   listTrainingsOnlineLearningTrainingsGet,
@@ -24,6 +25,7 @@ export type {
   FcpCoverageCompartmentRead,
   FcpCoverageRead,
   FcpCoverageSummaryRead,
+  ProjectCoverageSummaryRead,
   GeojsonStatus,
   MapPhotoMarkerRead,
   OnlineLearningDisagreementsPage,

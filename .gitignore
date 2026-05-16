@@ -226,3 +226,4 @@ daa/
 .claude/
 /*.pt
 data/uploads/**
+data/oepentrench_api.db

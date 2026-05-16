@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from datetime import datetime
 
 from pyproj import Transformer
 from shapely.geometry import LineString, MultiLineString, Point, mapping, shape
@@ -10,15 +11,20 @@ from shapely.ops import substring, transform
 from shapely.strtree import STRtree
 from sqlmodel import Session, col, select
 
+from src.api.helpers.time import utc_now
 from src.api.models import (
     AssetKind,
+    FcpCoverageCompartment,
     FcpCoverageCompartmentRead,
     FcpCoverageRead,
+    FcpCoverageSummary,
     FcpCoverageSummaryRead,
     GeojsonStatus,
     PhotoAnalysis,
     Project,
     ProjectAsset,
+    ProjectCoverageSummaryRead,
+    ProjectFcpCoverage,
 )
 from src.api.services.project_asset_service import (
     FCP_POLYGONS_SUFFIX,
@@ -371,27 +377,163 @@ def photo_matches_route(
     return False
 
 
-def compute_fcp_coverage(
-    session: Session,
-    project_id: str,
+def aggregate_project_summary(
+    summaries: list[FcpCoverageSummaryRead],
     *,
-    fcp_id: str | None = None,
-) -> FcpCoverageRead:
+    computed_at: datetime | None,
+) -> ProjectCoverageSummaryRead:
+    compartment_count = sum(s.compartment_count for s in summaries)
+    covered_count = sum(s.covered_count for s in summaries)
+    return ProjectCoverageSummaryRead(
+        compartment_count=compartment_count,
+        covered_count=covered_count,
+        coverage_ratio=covered_count / compartment_count if compartment_count else 0.0,
+        fcp_count=len(summaries),
+        computed_at=computed_at,
+    )
+
+
+def _empty_fcp_coverage_read() -> FcpCoverageRead:
+    return FcpCoverageRead(
+        project=aggregate_project_summary([], computed_at=None),
+        compartments=[],
+        summaries=[],
+    )
+
+
+def save_fcp_coverage(session: Session, project_id: str, result: FcpCoverageRead) -> None:
+    computed_at = result.project.computed_at or utc_now()
+
+    for row in session.exec(
+        select(FcpCoverageCompartment).where(
+            FcpCoverageCompartment.project_id == project_id,
+        )
+    ).all():
+        session.delete(row)
+    for row in session.exec(
+        select(FcpCoverageSummary).where(FcpCoverageSummary.project_id == project_id)
+    ).all():
+        session.delete(row)
+
+    meta = session.get(ProjectFcpCoverage, project_id)
+    if meta is None:
+        session.add(ProjectFcpCoverage(project_id=project_id, computed_at=computed_at))
+    else:
+        meta.computed_at = computed_at
+        session.add(meta)
+
+    for summary in result.summaries:
+        session.add(
+            FcpCoverageSummary(
+                project_id=project_id,
+                fcp_id=summary.fcp_id,
+                fcp_code=summary.fcp_code,
+                fcp_label=summary.fcp_label,
+                compartment_count=summary.compartment_count,
+                covered_count=summary.covered_count,
+                coverage_ratio=summary.coverage_ratio,
+            )
+        )
+
+    for comp in result.compartments:
+        session.add(
+            FcpCoverageCompartment(
+                id=comp.id,
+                project_id=project_id,
+                fcp_id=comp.fcp_id,
+                covered=comp.covered,
+                length_m=comp.length_m,
+                center={"coordinates": [comp.center[0], comp.center[1]]},
+                geometry=comp.geometry,
+            )
+        )
+
+    session.commit()
+
+
+def load_fcp_coverage(session: Session, project_id: str) -> FcpCoverageRead:
+    _require_project_geojson_ready(session, project_id)
+
+    meta = session.get(ProjectFcpCoverage, project_id)
+    if meta is None:
+        return _empty_fcp_coverage_read()
+
+    summary_rows = session.exec(
+        select(FcpCoverageSummary)
+        .where(FcpCoverageSummary.project_id == project_id)
+        .order_by(FcpCoverageSummary.fcp_id)
+    ).all()
+    summaries = [
+        FcpCoverageSummaryRead(
+            fcp_id=row.fcp_id,
+            fcp_code=row.fcp_code,
+            fcp_label=row.fcp_label,
+            compartment_count=row.compartment_count,
+            covered_count=row.covered_count,
+            coverage_ratio=row.coverage_ratio,
+        )
+        for row in summary_rows
+    ]
+
+    compartment_rows = session.exec(
+        select(FcpCoverageCompartment).where(
+            FcpCoverageCompartment.project_id == project_id,
+        )
+    ).all()
+    compartments = [_compartment_row_to_read(row) for row in compartment_rows]
+
+    return FcpCoverageRead(
+        project=aggregate_project_summary(summaries, computed_at=meta.computed_at),
+        compartments=compartments,
+        summaries=summaries,
+    )
+
+
+def _compartment_row_to_read(row: FcpCoverageCompartment) -> FcpCoverageCompartmentRead:
+    center_data = row.center if isinstance(row.center, dict) else {}
+    coords = center_data.get("coordinates")
+    if isinstance(coords, (list, tuple)) and len(coords) >= 2:
+        center = (float(coords[0]), float(coords[1]))
+    else:
+        center = (0.0, 0.0)
+    geometry = row.geometry if isinstance(row.geometry, dict) else {}
+    return FcpCoverageCompartmentRead(
+        id=row.id,
+        fcp_id=row.fcp_id,
+        covered=row.covered,
+        length_m=row.length_m,
+        center=center,
+        geometry=geometry,
+    )
+
+
+def _require_project_geojson_ready(session: Session, project_id: str) -> Project:
     project = session.get(Project, project_id)
     if project is None:
         raise LookupError("project not found")
     if project.geojson_status != GeojsonStatus.ready:
         raise ValueError("required GeoJSON files are not ready")
+    return project
+
+
+def compute_fcp_coverage(session: Session, project_id: str) -> FcpCoverageRead:
+    _require_project_geojson_ready(session, project_id)
 
     fcp_features = _load_geojson_features(session, project_id, FCP_POLYGONS_SUFFIX)
     fcp_contexts = _load_fcp_contexts(fcp_features)
-    if fcp_id is not None:
-        fcp_contexts = [c for c in fcp_contexts if c.fcp_id == fcp_id]
 
-    compartments = _build_compartments(session, project_id, fcp_id_filter=fcp_id)
+    compartments = _build_compartments(session, project_id)
     summaries = _summaries_from_compartments(compartments, fcp_contexts)
+    computed_at = utc_now()
 
     return FcpCoverageRead(
+        project=aggregate_project_summary(summaries, computed_at=computed_at),
         compartments=[_compartment_to_read(c) for c in compartments],
         summaries=summaries,
     )
+
+
+def calculate_and_save_fcp_coverage(session: Session, project_id: str) -> FcpCoverageRead:
+    result = compute_fcp_coverage(session, project_id)
+    save_fcp_coverage(session, project_id, result)
+    return result

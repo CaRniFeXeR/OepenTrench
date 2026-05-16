@@ -2,7 +2,11 @@ import { useMemo, useRef } from 'react';
 import type { FeatureCollection } from 'geojson';
 import type { MapRef } from 'react-map-gl/maplibre';
 
-import type { MapPhotoMarkerRead, ProjectDetailRead } from '../../api/client';
+import type {
+  FcpCoverageRead,
+  MapPhotoMarkerRead,
+  ProjectDetailRead,
+} from '../../api/client';
 import { imageAssets } from '../project-images/projectImageListUtils';
 import { MapView } from '../map/MapView';
 import { useMapFitToFeatureCollection } from '../map/useMapFitToFeatureCollection';
@@ -12,7 +16,6 @@ import { MapOverlayPanels } from './MapOverlayPanels';
 import { ProjectMapLayers } from './ProjectMapLayers';
 import { TrenchImageDetailPanel } from './TrenchImageDetailPanel';
 import { buildCoverageCompartmentCollection } from './coverageCompartmentUtils';
-import { useFcpCoverage } from './useFcpCoverage';
 import { useProjectMapData } from './useProjectMapData';
 import { useProjectMapNavigation } from './useProjectMapNavigation';
 
@@ -21,21 +24,25 @@ export function ProjectMapView({
   mapData,
   onProjectRefresh,
   embedded = false,
+  className,
   mapPhotos: mapPhotosProp,
   mapPhotosLoading = false,
   selectedFcpId,
   onSelectedFcpIdChange,
-  mapPhotosRefreshKey = 0,
+  coverage = null,
+  coverageLoading = false,
 }: {
   project: ProjectDetailRead;
   mapData: FeatureCollection;
   onProjectRefresh: () => Promise<void>;
   embedded?: boolean;
+  className?: string;
   mapPhotos?: MapPhotoMarkerRead[];
   mapPhotosLoading?: boolean;
   selectedFcpId?: string | null;
   onSelectedFcpIdChange?: (fcpId: string | null) => void;
-  mapPhotosRefreshKey?: number;
+  coverage?: FcpCoverageRead | null;
+  coverageLoading?: boolean;
 }) {
   const mapRef = useRef<MapRef | null>(null);
   const projectImageAssets = useMemo(() => imageAssets(project.assets), [project.assets]);
@@ -44,21 +51,6 @@ export function ProjectMapView({
   const internalMapData = useProjectMapData(project.id, imageCount);
   const mapPhotos = mapPhotosProp ?? internalMapData.mapPhotos;
   const photosLoading = mapPhotosProp != null ? mapPhotosLoading : internalMapData.loading;
-
-  const routeReady = project.geojson_status === 'ready';
-  const { coverage, loading: coverageLoading, error: coverageError } = useFcpCoverage(
-    project.id,
-    selectedFcpId ?? null,
-    routeReady,
-    mapPhotosRefreshKey,
-  );
-  const coverageCompartments = useMemo(
-    () =>
-      coverage
-        ? buildCoverageCompartmentCollection(coverage.compartments)
-        : null,
-    [coverage],
-  );
 
   const navigation = useProjectMapNavigation({
     mapRef,
@@ -103,14 +95,28 @@ export function ProjectMapView({
     );
   }, [coverage, resolvedSelectedFcpId]);
 
+  const coverageCompartments = useMemo(() => {
+    if (!coverage || !resolvedSelectedFcpId) return null;
+    const filtered = coverage.compartments.filter(
+      (comp) => comp.fcp_id === resolvedSelectedFcpId,
+    );
+    return filtered.length > 0 ? buildCoverageCompartmentCollection(filtered) : null;
+  }, [coverage, resolvedSelectedFcpId]);
+
   const handleReviewSaved = async () => {
     await onProjectRefresh();
   };
 
+  const rootClassName = [
+    'flex min-h-[480px] flex-1 flex-col',
+    embedded ? 'min-h-0' : 'lg:flex-row lg:min-h-0',
+    className,
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return (
-    <div
-      className={`flex min-h-[480px] flex-1 flex-col ${embedded ? 'min-h-0' : 'lg:flex-row lg:min-h-0'}`}
-    >
+    <div className={rootClassName}>
       <div
         className={`relative min-h-[480px] flex-1 overflow-hidden bg-slate-100 ${embedded ? 'min-h-0' : 'lg:min-h-0'}`}
       >
@@ -142,15 +148,15 @@ export function ProjectMapView({
           />
         )}
 
-        {(photosLoading || coverageLoading) && (
+        {photosLoading && (
           <div className="pointer-events-none absolute left-1/2 top-3 z-10 -translate-x-1/2 rounded-full bg-white/90 px-3 py-1 text-xs text-slate-600 shadow">
-            {coverageLoading ? 'Calculating trench coverage…' : 'Loading photo markers…'}
+            Loading photo markers…
           </div>
         )}
 
-        {coverageError && resolvedSelectedFcpId && (
-          <div className="pointer-events-none absolute left-1/2 top-10 z-10 -translate-x-1/2 rounded-full bg-red-50 px-3 py-1 text-xs text-red-700 shadow">
-            {coverageError}
+        {coverageLoading && (
+          <div className="pointer-events-none absolute left-1/2 top-10 z-10 -translate-x-1/2 rounded-full bg-white/90 px-3 py-1 text-xs text-slate-600 shadow">
+            Calculating trench coverage…
           </div>
         )}
       </div>

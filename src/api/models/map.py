@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime
+
 from pydantic import BaseModel, ConfigDict
 
 from src.api.models.common import PhotoDocumentationCategory
@@ -38,6 +40,15 @@ class FcpCoverageSummaryRead(BaseModel):
     coverage_ratio: float
 
 
+class ProjectCoverageSummaryRead(BaseModel):
+    compartment_count: int
+    covered_count: int
+    coverage_ratio: float
+    fcp_count: int
+    computed_at: datetime | None
+
+
 class FcpCoverageRead(BaseModel):
+    project: ProjectCoverageSummaryRead
     compartments: list[FcpCoverageCompartmentRead]
     summaries: list[FcpCoverageSummaryRead]

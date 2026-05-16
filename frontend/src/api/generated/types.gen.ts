@@ -76,6 +76,7 @@ export type FcpCoverageCompartmentRead = {
  * FcpCoverageRead
  */
 export type FcpCoverageRead = {
+    project: ProjectCoverageSummaryRead;
     /**
      * Compartments
      */
@@ -505,6 +506,32 @@ export type ProjectAssetRead = {
 };
 
 /**
+ * ProjectCoverageSummaryRead
+ */
+export type ProjectCoverageSummaryRead = {
+    /**
+     * Compartment Count
+     */
+    compartment_count: number;
+    /**
+     * Covered Count
+     */
+    covered_count: number;
+    /**
+     * Coverage Ratio
+     */
+    coverage_ratio: number;
+    /**
+     * Fcp Count
+     */
+    fcp_count: number;
+    /**
+     * Computed At
+     */
+    computed_at: string | null;
+};
+
+/**
  * ProjectCreate
  */
 export type ProjectCreate = {
@@ -876,6 +903,36 @@ export type ReadProjectMapPhotosProjectsProjectIdMapPhotosGetResponses = {
 
 export type ReadProjectMapPhotosProjectsProjectIdMapPhotosGetResponse = ReadProjectMapPhotosProjectsProjectIdMapPhotosGetResponses[keyof ReadProjectMapPhotosProjectsProjectIdMapPhotosGetResponses];
 
+export type ReadProjectFcpCoverageProjectsProjectIdFcpCoverageGetData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/projects/{project_id}/fcp-coverage';
+};
+
+export type ReadProjectFcpCoverageProjectsProjectIdFcpCoverageGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ReadProjectFcpCoverageProjectsProjectIdFcpCoverageGetError = ReadProjectFcpCoverageProjectsProjectIdFcpCoverageGetErrors[keyof ReadProjectFcpCoverageProjectsProjectIdFcpCoverageGetErrors];
+
+export type ReadProjectFcpCoverageProjectsProjectIdFcpCoverageGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: FcpCoverageRead;
+};
+
+export type ReadProjectFcpCoverageProjectsProjectIdFcpCoverageGetResponse = ReadProjectFcpCoverageProjectsProjectIdFcpCoverageGetResponses[keyof ReadProjectFcpCoverageProjectsProjectIdFcpCoverageGetResponses];
+
 export type CalculateProjectFcpCoverageProjectsProjectIdFcpCoveragePostData = {
     body?: never;
     path: {
@@ -884,12 +941,7 @@ export type CalculateProjectFcpCoverageProjectsProjectIdFcpCoveragePostData = {
          */
         project_id: string;
     };
-    query?: {
-        /**
-         * Fcp Id
-         */
-        fcp_id?: string | null;
-    };
+    query?: never;
     url: '/projects/{project_id}/fcp-coverage';
 };
 
