@@ -1,0 +1,35 @@
+# Labelling profile — Grounding DINO Base served from the VM on :8000.
+#
+# Used via `scripts/label.py --config configs/labelling/grounding-dino.yaml`.
+# Spec: docs/superpowers/specs/2026-05-15-labelling-harness-v3-design.md §6.5.
+#
+# The harness assumes the operator has set up an SSH local-forward tunnel:
+#   ssh -L 8000:localhost:8000 threenicorn
+# and that the corpus (Fotos/ + Beispiele/) is rsync'd to remote_image_root.
+
+name: grounding-dino
+mode: remote-vlm
+endpoint: http://localhost:8000
+model: grounding-dino-base
+
+remote_image_root: /home/threenicorn/data
+local_image_root: ./project-resources
+
+classes: [duct, ruler, whitepaper, sitetag]
+
+prompts:
+  duct: "HDPE conduit . Schutzrohr . fibre optic cable . bundled coloured ducts . end caps . corrugated black pipe in trench"
+  ruler: "folding rule . Zollstock . Meterstab . tape measure . levelling rod . painted ruler stake"
+  whitepaper: "paper or card held in frame showing a printed or handwritten address . postal address slip . coordinates on paper"
+  sitetag: "small paper card with F-number site code . DataMatrix barcode slip . contractor site identifier"
+
+per_class_threshold:
+  duct: 0.25
+  ruler: 0.20
+  whitepaper: 0.30
+  sitetag: 0.25
+
+iou_nms: 0.5
+max_detections_per_class: 5
+timeout_seconds: 60.0
+retries: 2

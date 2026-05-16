@@ -392,3 +392,39 @@ Minimum bar: 2 options, 1 chosen, explicit reasoning.
 - **Affected files:** `src/labelling/compare.py`
 - **Commit:** pending
 - **Supersedes:** —
+
+---
+
+### D-018: Manifest path resolution — CLI flag with dataset-rooted default
+
+- **Timestamp:** 2026-05-16 14:30 (local)
+- **Task:** Task 6 — CLI entry point
+- **Trigger:** Spec §5.6 / §6.5 are silent on where `manifest.csv` lives. The CLI needs to load it; the path can be (a) hardcoded, (b) a field on `LabellerConfig`, (c) a CLI flag.
+- **Spec anchors:** §5.6 (CLI flags), §6.5 (config schema — does NOT include manifest_csv)
+- **Options considered:**
+  1. Add `manifest_csv` to `LabellerConfig`. Couples the profile to the dataset. The same Grounding DINO profile would need a different config to label a different dataset.
+  2. Hardcode the path. Fastest but invisible.
+  3. Add `--manifest` CLI flag defaulting to `<repo>/project-resources/custom-datasets/duct-and-ruler/detection/labelling/manifest.csv`. The dataset is a CLI concern; the model profile is content-agnostic.
+- **Chosen:** Option 3 (CLI flag with default).
+- **Reasoning:** Manifest is a dataset property and the profile YAML should stay portable (same profile, different dataset). Putting it on the CLI keeps that separation and gives operators an obvious knob if they ever label a different sampled set. Default makes the common case zero-touch. Same reasoning applies to `--out` (dataset-rooted default).
+- **Out-of-scope alternatives deferred:** Auto-discovering the manifest from `data.yaml`'s `path:` field — coupling the harness to Ultralytics-shaped configs is more than this hackathon needs.
+- **Affected files:** `scripts/label.py`
+- **Commit:** pending
+- **Supersedes:** —
+
+### D-019: `_resolve_image` accepts both `local_image_root=project-resources` and `local_image_root=project-resources/Fotos`
+
+- **Timestamp:** 2026-05-16 14:35 (local)
+- **Task:** Task 6 — CLI entry point
+- **Trigger:** The manifest's `filename` column has bare names (e.g. `WhatsApp Image 2024-11-21 at 20_25_53.jpeg`); the files actually live under `project-resources/Fotos/`. The config's `local_image_root` could either point at `project-resources/` (parent, expecting `Fotos/` subdir) or at `project-resources/Fotos/` directly. Either is a reasonable operator interpretation.
+- **Spec anchors:** §6.5 (`local_image_root`), §13 ("Image-root path on the VM" gap — local mirror needed too)
+- **Options considered:**
+  1. Strict — operator must set `local_image_root=project-resources/Fotos`. The remote and local roots then mismatch in structure (remote has `Fotos/<filename>`, local has `<filename>`) — confusing.
+  2. Strict — operator must set `local_image_root=project-resources` (parent), and the resolver always prepends `Fotos/`. Mirrors the remote layout but hardcodes the `Fotos/` segment.
+  3. Try both — `Fotos/<filename>` first, then `<filename>`. The resolver does the right thing under both operator interpretations; the missing-image error is deferred to `label()` which fails with a clear message.
+- **Chosen:** Option 3.
+- **Reasoning:** Hackathon-friendly: zero operator surprise either way. The `_to_remote_path` translation logic on the labeller side uses `local_image_root` as a prefix-to-strip, so as long as the chosen path is under that root, the remote path computes correctly. The two-candidate resolver maps to the same remote URL in both setups because the remote upload mirrors the local subtree (Fotos under remote_image_root either way).
+- **Out-of-scope alternatives deferred:** Reading filenames from `manifest.csv` that already contain a `Fotos/` prefix — manifest format is fixed (§14 non-goal "don't change manifest.csv structure").
+- **Affected files:** `scripts/label.py`
+- **Commit:** pending
+- **Supersedes:** —
