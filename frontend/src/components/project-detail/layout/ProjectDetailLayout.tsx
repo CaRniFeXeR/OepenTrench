@@ -3,9 +3,8 @@ import { imageAssets } from '../../project-images/projectImageListUtils';
 import { useProjectMapData } from '../../project-map/useProjectMapData';
 import { ProjectMapView } from '../../project-map/ProjectMapView';
 import { UploadMapPreview } from '../../project-upload/UploadMapPreview';
-import { ProjectPhotoDashboard } from '../photo-dashboard/ProjectPhotoDashboard';
+import { DetailWorkspaceTabs } from '../DetailWorkspaceTabs';
 import { ProjectSummaryBar } from '../ProjectSummaryBar';
-import { UploadDrawer } from '../UploadDrawer';
 import { useProjectMapGeojson } from '../useProjectMapGeojson';
 import { useProjectDetailLayoutState } from './useProjectDetailLayoutState';
 
@@ -21,8 +20,8 @@ export function ProjectDetailLayout({
   onUploadsBusyChange: (busy: boolean) => void;
 }) {
   const {
-    uploadDrawerOpen,
-    setUploadDrawerOpen,
+    activeTab,
+    setActiveTab,
     selectedFcpId,
     setSelectedFcpId,
     mapPhotosRefreshKey,
@@ -42,32 +41,24 @@ export function ProjectDetailLayout({
     <>
       <ProjectSummaryBar
         project={project}
-        uploadDrawerOpen={uploadDrawerOpen}
-        onToggleUploadDrawer={() => setUploadDrawerOpen((o) => !o)}
         uploadsBusy={uploadsBusy}
         onNameSaved={handleRefresh}
       />
 
       <div className="flex min-h-[calc(100vh-8rem)] flex-1 flex-col lg:min-h-[calc(100vh-10rem)]">
         <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-          <UploadDrawer
-            open={uploadDrawerOpen}
+          <DetailWorkspaceTabs
             project={project}
+            activeTab={activeTab}
+            onActiveTabChange={setActiveTab}
+            mapData={mapData}
+            mapPhotos={mapPhotos}
+            selectedFcpId={selectedFcpId}
+            onSelectedFcpIdChange={setSelectedFcpId}
             onRefresh={handleRefresh}
             onUploadsBusyChange={onUploadsBusyChange}
             onMergeMapData={mergeMapData}
           />
-
-          <div className="flex min-h-0 min-w-0 flex-[2] flex-col border-b border-slate-200 lg:border-b-0 lg:border-r">
-            <ProjectPhotoDashboard
-              project={project}
-              mapData={mapData}
-              mapPhotos={mapPhotos}
-              selectedFcpId={selectedFcpId}
-              onSelectedFcpIdChange={setSelectedFcpId}
-              onRefresh={handleRefresh}
-            />
-          </div>
 
           <div className="flex min-h-[480px] min-w-0 flex-1 flex-col">
             {routeReady && mapData ? (

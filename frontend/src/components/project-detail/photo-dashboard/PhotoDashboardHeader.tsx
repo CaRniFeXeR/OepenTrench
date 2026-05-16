@@ -1,28 +1,15 @@
 import type { PhotoDocumentationCategory } from '../../../api/client';
-import { FcpPhotoTable } from '../FcpPhotoTable';
-import type { FcpPhotoRow } from '../fcpPhotoTableUtils';
+import type { PhotoDocumentationCounts } from '../../project-images/photoDocumentationUtils';
 import { CategoryBannerGrid } from './CategoryBannerGrid';
 
 export function PhotoDashboardHeader({
   counts,
-  fcpRows,
-  selectedFcpId,
-  onSelectFcp,
   selectedCategory,
   onSelectCategory,
   unreviewedOnly,
   onUnreviewedOnlyChange,
 }: {
-  counts: {
-    green: number;
-    yellow: number;
-    red: number;
-    pending: number;
-    warningNeedsReview: number;
-  };
-  fcpRows: FcpPhotoRow[];
-  selectedFcpId: string | null;
-  onSelectFcp: (fcpId: string | null) => void;
+  counts: PhotoDocumentationCounts;
   selectedCategory: PhotoDocumentationCategory;
   onSelectCategory: (category: PhotoDocumentationCategory) => void;
   unreviewedOnly: boolean;
@@ -39,12 +26,6 @@ export function PhotoDashboardHeader({
         counts={counts}
         selectedCategory={selectedCategory}
         onSelectCategory={onSelectCategory}
-      />
-
-      <FcpPhotoTable
-        rows={fcpRows}
-        selectedFcpId={selectedFcpId}
-        onSelectFcp={onSelectFcp}
       />
 
       {counts.pending > 0 && (

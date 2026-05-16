@@ -1,6 +1,7 @@
 import type { FeatureCollection } from 'geojson';
 
 import type { MapPhotoMarkerRead, ProjectDetailRead } from '../../../api/client';
+import { FcpSidePanel } from '../FcpSidePanel';
 import { PhotoReviewCard } from '../PhotoReviewCard';
 import { emptyMessage } from './photoDashboardMessages';
 import { PhotoDashboardHeader } from './PhotoDashboardHeader';
@@ -37,35 +38,42 @@ export function ProjectPhotoDashboard({
   };
 
   return (
-    <section className="flex min-h-0 flex-1 flex-col overflow-hidden bg-slate-50">
-      <PhotoDashboardHeader
-        counts={counts}
-        fcpRows={fcpRows}
+    <section className="flex min-h-0 flex-1 overflow-hidden bg-slate-50">
+      <FcpSidePanel
+        projectName={project.name}
+        rows={fcpRows}
         selectedFcpId={selectedFcpId}
         onSelectFcp={onSelectedFcpIdChange}
-        selectedCategory={selectedCategory}
-        onSelectCategory={setSelectedCategory}
-        unreviewedOnly={unreviewedOnly}
-        onUnreviewedOnlyChange={setUnreviewedOnly}
+        onClearFcpFilter={() => onSelectedFcpIdChange(null)}
       />
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6">
-        {filteredAssets.length === 0 ? (
-          <p className="py-12 text-center text-sm text-slate-500">
-            {emptyMessage(selectedCategory, unreviewedOnly, selectedFcpCode)}
-          </p>
-        ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {filteredAssets.map((asset) => (
-              <PhotoReviewCard
-                key={asset.id}
-                projectId={project.id}
-                asset={asset}
-                onSaved={handleReviewSaved}
-              />
-            ))}
-          </div>
-        )}
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <PhotoDashboardHeader
+          counts={counts}
+          selectedCategory={selectedCategory}
+          onSelectCategory={setSelectedCategory}
+          unreviewedOnly={unreviewedOnly}
+          onUnreviewedOnlyChange={setUnreviewedOnly}
+        />
+
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6">
+          {filteredAssets.length === 0 ? (
+            <p className="py-12 text-center text-sm text-slate-500">
+              {emptyMessage(selectedCategory, unreviewedOnly, selectedFcpCode)}
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {filteredAssets.map((asset) => (
+                <PhotoReviewCard
+                  key={asset.id}
+                  projectId={project.id}
+                  asset={asset}
+                  onSaved={handleReviewSaved}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </section>
   );

@@ -21,14 +21,22 @@ export function isUnreviewed(analysis: PhotoAnalysisRead | null | undefined): bo
   return analysis.reviewed_at == null;
 }
 
-export function categoryCountsFromAssets(assets: ProjectAssetRead[]): {
+export type PhotoDocumentationCounts = {
   green: number;
   yellow: number;
   red: number;
   pending: number;
   warningNeedsReview: number;
-} {
-  const counts = { green: 0, yellow: 0, red: 0, pending: 0, warningNeedsReview: 0 };
+};
+
+export function categoryCountsFromAssets(assets: ProjectAssetRead[]): PhotoDocumentationCounts {
+  const counts: PhotoDocumentationCounts = {
+    green: 0,
+    yellow: 0,
+    red: 0,
+    pending: 0,
+    warningNeedsReview: 0,
+  };
   for (const asset of assets) {
     if (asset.kind !== 'image') continue;
     if (!asset.analysis) {
@@ -42,6 +50,17 @@ export function categoryCountsFromAssets(assets: ProjectAssetRead[]): {
     if (photoNeedsReview(asset.analysis)) counts.warningNeedsReview += 1;
   }
   return counts;
+}
+
+export function categoryCountsFromAssetsForFcp(
+  assets: ProjectAssetRead[],
+  fcpId: string,
+  assetFcpMap: Map<string, string>,
+): PhotoDocumentationCounts {
+  const filtered = assets.filter(
+    (asset) => asset.kind === 'image' && assetFcpMap.get(asset.id) === fcpId,
+  );
+  return categoryCountsFromAssets(filtered);
 }
 
 export function filterAssetsForDashboard(

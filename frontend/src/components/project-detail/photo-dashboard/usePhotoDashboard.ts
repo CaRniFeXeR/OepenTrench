@@ -9,6 +9,7 @@ import type {
 import { imageAssets } from '../../project-images/projectImageListUtils';
 import {
   categoryCountsFromAssets,
+  categoryCountsFromAssetsForFcp,
   filterAssetsForDashboard,
 } from '../../project-images/photoDocumentationUtils';
 import {
@@ -33,8 +34,13 @@ export function usePhotoDashboard({
   const [unreviewedOnly, setUnreviewedOnly] = useState(false);
 
   const images = useMemo(() => imageAssets(project.assets), [project.assets]);
-  const counts = useMemo(() => categoryCountsFromAssets(project.assets), [project.assets]);
   const assetFcpMap = useMemo(() => assetIdToFcpId(mapPhotos), [mapPhotos]);
+  const counts = useMemo(() => {
+    if (selectedFcpId != null) {
+      return categoryCountsFromAssetsForFcp(project.assets, selectedFcpId, assetFcpMap);
+    }
+    return categoryCountsFromAssets(project.assets);
+  }, [project.assets, selectedFcpId, assetFcpMap]);
   const fcpRows = useMemo(
     () => buildFcpPhotoRows({ assets: project.assets, mapPhotos, mapData }),
     [project.assets, mapPhotos, mapData],

@@ -1,7 +1,9 @@
 import { useCallback, useState } from 'react';
 
+export type DetailWorkspaceTab = 'files' | 'analysis';
+
 export function useProjectDetailLayoutState(onRefresh: () => Promise<void>) {
-  const [uploadDrawerOpen, setUploadDrawerOpen] = useState(true);
+  const [activeTab, setActiveTab] = useState<DetailWorkspaceTab>('files');
   const [selectedFcpId, setSelectedFcpId] = useState<string | null>(null);
   const [mapPhotosRefreshKey, setMapPhotosRefreshKey] = useState(0);
 
@@ -11,8 +13,8 @@ export function useProjectDetailLayoutState(onRefresh: () => Promise<void>) {
   }, [onRefresh]);
 
   return {
-    uploadDrawerOpen,
-    setUploadDrawerOpen,
+    activeTab,
+    setActiveTab,
     selectedFcpId,
     setSelectedFcpId,
     mapPhotosRefreshKey,

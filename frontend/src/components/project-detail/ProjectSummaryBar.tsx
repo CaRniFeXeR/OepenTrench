@@ -11,14 +11,10 @@ import { RouteUploadStatus } from './RouteUploadStatus';
 
 export function ProjectSummaryBar({
   project,
-  uploadDrawerOpen,
-  onToggleUploadDrawer,
   uploadsBusy,
   onNameSaved,
 }: {
   project: ProjectDetailRead;
-  uploadDrawerOpen: boolean;
-  onToggleUploadDrawer: () => void;
   uploadsBusy: boolean;
   onNameSaved: () => Promise<void>;
 }) {
@@ -69,25 +65,12 @@ export function ProjectSummaryBar({
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <RouteUploadStatus
-            routeReady={routeReady}
-            uploadsBusy={uploadsBusy}
-            assets={project.assets}
-            variant="inline"
-          />
-          <button
-            type="button"
-            onClick={onToggleUploadDrawer}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-800 hover:bg-slate-50"
-            aria-expanded={uploadDrawerOpen}
-          >
-            {uploadDrawerOpen ? 'Hide uploads' : 'Show uploads'}
-            <span className="ml-1" aria-hidden>
-              {uploadDrawerOpen ? '◀' : '▶'}
-            </span>
-          </button>
-        </div>
+        <RouteUploadStatus
+          routeReady={routeReady}
+          uploadsBusy={uploadsBusy}
+          assets={project.assets}
+          variant="inline"
+        />
       </div>
     </div>
   );
