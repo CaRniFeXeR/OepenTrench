@@ -1,35 +1,61 @@
 import type { PhotoDocumentationCategory } from '../../../api/client';
-import type {
-  PhotoDocumentationCounts,
-  TriStateFilter,
+import { aiChip, PHOTO_REVIEW_CRITERIA } from '../../photo-review/photoReviewCriteria';
+import {
+  cycleTriStateFilter,
+  type PhotoDocumentationCounts,
+  type TriStateFilter,
 } from '../../project-images/photoDocumentationUtils';
 import { CategoryBannerGrid } from './CategoryBannerGrid';
 
-const selectClassName =
-  'rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 shadow-sm focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500';
+const DASHBOARD_FILTER_KEYS = ['duct', 'ruler', 'privacy'] as const;
 
-function CriteriaFilterSelect({
+function filterStateLabel(value: TriStateFilter): string {
+  if (value === 'all') return 'any';
+  if (value === 'yes') return 'yes';
+  return 'no';
+}
+
+function CriteriaFilterBadge({
+  emoji,
+  name,
   label,
   value,
   onChange,
 }: {
+  emoji: string;
+  name: string;
   label: string;
   value: TriStateFilter;
   onChange: (value: TriStateFilter) => void;
 }) {
+  const chip = value === 'yes' ? aiChip(true) : value === 'no' ? aiChip(false) : null;
+  const stateLabel = filterStateLabel(value);
+
   return (
-    <label className="flex items-center gap-2 text-sm text-slate-700">
-      <span className="whitespace-nowrap">{label}</span>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value as TriStateFilter)}
-        className={selectClassName}
-      >
-        <option value="all">Any</option>
-        <option value="yes">Yes</option>
-        <option value="no">No</option>
-      </select>
-    </label>
+    <button
+      type="button"
+      onClick={() => onChange(cycleTriStateFilter(value))}
+      aria-pressed={value !== 'all'}
+      aria-label={`${label}: ${stateLabel}. Click to cycle filter.`}
+      title={`${label}: ${stateLabel}. Click to cycle.`}
+      className={`inline-flex items-center gap-1.5 rounded-lg border px-2 py-1.5 text-sm transition-colors ${
+        value === 'all'
+          ? 'border-transparent bg-transparent hover:bg-slate-50'
+          : ''
+      }`}
+    >
+      <span className="text-lg" aria-hidden>
+        {emoji}
+      </span>
+      <span className="font-medium text-slate-700">{name}</span>
+      {chip && (
+        <span
+          className={`rounded-md border px-1.5 py-0.5 text-xs font-medium ${chip.className}`}
+        >
+          {chip.label}
+        </span>
+      )}
+    </button>
   );
 }
 
@@ -58,6 +84,21 @@ export function PhotoDashboardHeader({
   privacyClear: TriStateFilter;
   onPrivacyClearChange: (value: TriStateFilter) => void;
 }) {
+  const filterValues: Record<(typeof DASHBOARD_FILTER_KEYS)[number], TriStateFilter> = {
+    duct: ductVisible,
+    ruler: rulerVisible,
+    privacy: privacyClear,
+  };
+
+  const filterOnChange: Record<
+    (typeof DASHBOARD_FILTER_KEYS)[number],
+    (value: TriStateFilter) => void
+  > = {
+    duct: onDuctVisibleChange,
+    ruler: onRulerVisibleChange,
+    privacy: onPrivacyClearChange,
+  };
+
   return (
     <div className="border-b border-slate-200 bg-white px-4 py-4 sm:px-6">
       <h2 className="text-lg font-semibold text-slate-900">Photo documentation</h2>
@@ -90,22 +131,21 @@ export function PhotoDashboardHeader({
         )}
       </label>
 
-      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-        <CriteriaFilterSelect
-          label="Duct visible"
-          value={ductVisible}
-          onChange={onDuctVisibleChange}
-        />
-        <CriteriaFilterSelect
-          label="Ruler visible"
-          value={rulerVisible}
-          onChange={onRulerVisibleChange}
-        />
-        <CriteriaFilterSelect
-          label="Privacy"
-          value={privacyClear}
-          onChange={onPrivacyClearChange}
-        />
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        {DASHBOARD_FILTER_KEYS.map((key) => {
+          const criterion = PHOTO_REVIEW_CRITERIA.find((c) => c.key === key);
+          if (!criterion) return null;
+          return (
+            <CriteriaFilterBadge
+              key={key}
+              emoji={criterion.emoji}
+              name={criterion.shortLabel}
+              label={criterion.label}
+              value={filterValues[key]}
+              onChange={filterOnChange[key]}
+            />
+          );
+        })}
       </div>
     </div>
   );

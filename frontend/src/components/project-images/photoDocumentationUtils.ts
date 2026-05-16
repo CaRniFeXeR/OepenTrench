@@ -12,6 +12,12 @@ export function isUnassociatedFcpId(id: string | null): boolean {
 
 export type TriStateFilter = 'all' | 'yes' | 'no';
 
+export function cycleTriStateFilter(value: TriStateFilter): TriStateFilter {
+  if (value === 'all') return 'yes';
+  if (value === 'yes') return 'no';
+  return 'all';
+}
+
 export function analysisEffectiveCategory(
   analysis: PhotoAnalysisRead | null | undefined,
 ): PhotoDocumentationCategory | 'unknown' {
