@@ -126,8 +126,8 @@ function effectivePass(choice: OverrideChoice, aiOk: boolean): boolean {
 
 function aiChip(ok: boolean): { label: string; className: string } {
   return ok
-    ? { label: 'Pass', className: 'border-emerald-200 bg-emerald-50 text-emerald-800' }
-    : { label: 'Fail', className: 'border-red-200 bg-red-50 text-red-800' };
+    ? { label: '✓', className: 'border-emerald-200 bg-emerald-50 text-emerald-800' }
+    : { label: '✗', className: 'border-red-200 bg-red-50 text-red-800' };
 }
 
 function CriterionReviewRow({
@@ -236,25 +236,11 @@ export function PhotoReviewSection({
     await onSaved();
   };
 
-  const aiCategoryLabel = analysis.category
-    ? CATEGORY_LABELS[analysis.category]
-    : '—';
 
   return (
     <div className="mt-3">
       <p className={`font-semibold text-slate-900 ${compact ? 'text-xs' : 'text-sm'}`}>
         Review
-      </p>
-      <p className={`mt-0.5 text-slate-600 ${compact ? 'text-[10px]' : 'text-xs'}`}>
-        AI category: <span className="font-medium">{aiCategoryLabel}</span>
-        {analysis.reviewed_at && (
-          <span className="ml-2 text-slate-500">
-            · Reviewed {new Date(analysis.reviewed_at).toLocaleString()}
-          </span>
-        )}
-      </p>
-      <p className={`mt-1 text-slate-500 ${compact ? 'text-[10px]' : 'text-xs'}`}>
-        Tap a row to disagree with AI; tap again to reset.
       </p>
 
       <ul className={`mt-2 space-y-1.5 ${compact ? 'space-y-1' : ''}`}>
