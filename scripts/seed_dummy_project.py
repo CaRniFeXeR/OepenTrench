@@ -144,7 +144,7 @@ def seed_dummy_project(
         if project is None:
             raise RuntimeError("project disappeared after seeding")
         project.photo_count = len(SEED_SCENARIOS)
-        project.status = ProjectStatus.complete
+        project.status = ProjectStatus.draft
         project.updated_at = utc_now()
         session.add(project)
         session.commit()
