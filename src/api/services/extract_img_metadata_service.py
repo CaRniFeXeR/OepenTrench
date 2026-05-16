@@ -268,11 +268,41 @@ def _read_ocr_lines(path: Path) -> list[str] | None:
         return None
 
 def _read_ocr_lines_from_json(path: Path, image_path: Path) -> list[str] | None:
-    with open(path, 'r') as f:
+    with open(path, encoding="utf-8") as f:
         data = json.load(f)
+    image_path_str = str(image_path)
     for item in data["images"]:
-        if image_path in item['path']:
-            return item['lines']
+        item_path = item["path"]
+        if image_path_str in item_path or image_path.name in item_path:
+            # #region agent log
+            try:
+                import time as _time
+
+                with open(
+                    "/root/git/OepenTrench/.cursor/debug-ebdde5.log",
+                    "a",
+                    encoding="utf-8",
+                ) as _dbg:
+                    _dbg.write(
+                        json.dumps(
+                            {
+                                "sessionId": "ebdde5",
+                                "hypothesisId": "H2",
+                                "location": "extract_img_metadata_service.py:_read_ocr_lines_from_json",
+                                "message": "ocr_dump_match",
+                                "data": {
+                                    "image_path": image_path_str,
+                                    "item_path": item_path,
+                                },
+                                "timestamp": int(_time.time() * 1000),
+                            }
+                        )
+                        + "\n"
+                    )
+            except Exception:
+                pass
+            # #endregion
+            return item["lines"]
     return None
 
 

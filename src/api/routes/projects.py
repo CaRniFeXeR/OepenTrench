@@ -194,6 +194,34 @@ def upload_project_image(
         filename,
         file.content_type,
     )
+    # #region agent log
+    try:
+        import json as _json
+        import time as _time
+
+        with open(
+            "/root/git/OepenTrench/.cursor/debug-ebdde5.log", "a", encoding="utf-8"
+        ) as _dbg:
+            _dbg.write(
+                _json.dumps(
+                    {
+                        "sessionId": "ebdde5",
+                        "hypothesisId": "H1",
+                        "location": "projects.py:upload_project_image",
+                        "message": "upload_handler_enter",
+                        "data": {
+                            "project_id": project_id,
+                            "filename": filename,
+                            "label": original_label,
+                        },
+                        "timestamp": int(_time.time() * 1000),
+                    }
+                )
+                + "\n"
+            )
+    except Exception:
+        pass
+    # #endregion
     try:
         asset = save_project_image(
             session,

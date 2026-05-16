@@ -219,6 +219,30 @@ def analyze_image_asset(
     else:
         # Stage 1: trench gate. If not a trench, hard-zero the in-domain flags
         # and skip the YOLO detector entirely.
+        # #region agent log
+        try:
+            import json as _json
+            import time as _time
+
+            with open(
+                "/root/git/OepenTrench/.cursor/debug-ebdde5.log", "a", encoding="utf-8"
+            ) as _dbg:
+                _dbg.write(
+                    _json.dumps(
+                        {
+                            "sessionId": "ebdde5",
+                            "hypothesisId": "H1",
+                            "location": "photo_analysis_service.py:analyze_image_asset",
+                            "message": "before_trench_classifier_import",
+                            "data": {"asset_id": asset_id, "image_path": str(image_path)},
+                            "timestamp": int(_time.time() * 1000),
+                        }
+                    )
+                    + "\n"
+                )
+        except Exception:
+            pass
+        # #endregion
         from src.api.services.trench_classifier_service import is_trench
 
         if is_trench(image_path):
