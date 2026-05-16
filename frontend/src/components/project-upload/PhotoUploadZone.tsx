@@ -10,7 +10,7 @@ import {
   isAllowedImageFile,
 } from './constants';
 
-const UPLOAD_CONCURRENCY = 4;
+const UPLOAD_CONCURRENCY = 1;
 
 const WAIT_MESSAGES = [
   'Uploading takes a while — time for a short break.',
