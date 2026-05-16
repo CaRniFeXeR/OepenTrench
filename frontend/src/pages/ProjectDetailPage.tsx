@@ -1,9 +1,7 @@
 import { useParams } from 'react-router-dom';
 
-import {
-  ProjectDetailHeader,
-  ProjectDetailLayout,
-} from '../components/project-detail/ProjectDetailLayout';
+import { ProjectDetailLayout } from '../components/project-detail/layout/ProjectDetailLayout';
+import { ProjectDetailHeader } from '../components/project-detail/layout/ProjectDetailHeader';
 import { useProjectDetail } from '../components/project-detail/useProjectDetail';
 
 export function ProjectDetailPage() {

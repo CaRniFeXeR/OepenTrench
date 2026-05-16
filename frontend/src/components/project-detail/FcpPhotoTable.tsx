@@ -1,14 +1,5 @@
+import { PHOTO_DOC_CATEGORIES } from '../project-images/photoDocumentationCategories';
 import type { FcpPhotoRow } from './fcpPhotoTableUtils';
-import { CATEGORY_COLORS } from '../project-map/photoMarkerPaint';
-
-const COLUMN_HEADERS: {
-  key: 'green' | 'yellow' | 'red';
-  label: string;
-}[] = [
-  { key: 'green', label: 'Good' },
-  { key: 'yellow', label: 'Warning' },
-  { key: 'red', label: 'Failed' },
-];
 
 export function FcpPhotoTable({
   rows,
@@ -35,12 +26,12 @@ export function FcpPhotoTable({
             <th className="px-3 py-2" scope="col">
               FCP
             </th>
-            {COLUMN_HEADERS.map((col) => (
-              <th key={col.key} className="px-3 py-2 text-right tabular-nums" scope="col">
+            {PHOTO_DOC_CATEGORIES.map((col) => (
+              <th key={col.id} className="px-3 py-2 text-right tabular-nums" scope="col">
                 <span className="inline-flex items-center justify-end gap-1.5">
                   <span
                     className="inline-block h-2 w-2 shrink-0 rounded-full"
-                    style={{ backgroundColor: CATEGORY_COLORS[col.key] }}
+                    style={{ backgroundColor: col.color }}
                     aria-hidden
                   />
                   <span className="sr-only">{col.label}</span>

@@ -1,7 +1,7 @@
 import type { ProjectAssetRead } from '../../api/client';
+import { PhotoReviewSection } from '../photo-review/PhotoReviewSection';
 import { qualityBadge } from '../project-images/analysisDisplay';
 import { projectImageContentUrl } from '../project-map/imageContentUrl';
-import { PhotoReviewSection } from '../project-map/PhotoReviewSection';
 
 export function PhotoReviewCard({
   projectId,

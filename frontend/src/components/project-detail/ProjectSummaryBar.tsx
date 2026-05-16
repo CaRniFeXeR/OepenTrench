@@ -5,8 +5,9 @@ import {
   statusChipClass,
   statusLabel,
 } from '../../lib/projectFormatters';
+import { imageAssets } from '../project-images/projectImageListUtils';
 import { EditableProjectName } from '../project-upload/EditableProjectName';
-import { missingGeojsonMessage } from './routeStatus';
+import { RouteUploadStatus } from './RouteUploadStatus';
 
 export function ProjectSummaryBar({
   project,
@@ -21,9 +22,8 @@ export function ProjectSummaryBar({
   uploadsBusy: boolean;
   onNameSaved: () => Promise<void>;
 }) {
-  const imageCount = project.assets.filter((a) => a.kind === 'image').length;
+  const imageCount = imageAssets(project.assets).length;
   const routeReady = project.geojson_status === 'ready';
-  const statusMessage = missingGeojsonMessage(routeReady, project.assets);
 
   return (
     <div className="border-b border-slate-200 bg-white px-4 py-3 sm:px-6">
@@ -70,15 +70,12 @@ export function ProjectSummaryBar({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          {!routeReady && !uploadsBusy && statusMessage && (
-            <span className="max-w-xs text-xs font-medium text-amber-800">{statusMessage}</span>
-          )}
-          {routeReady && !uploadsBusy && (
-            <span className="text-xs font-medium text-emerald-700">Route ready ✓</span>
-          )}
-          {uploadsBusy && (
-            <span className="text-xs text-slate-600">Upload in progress…</span>
-          )}
+          <RouteUploadStatus
+            routeReady={routeReady}
+            uploadsBusy={uploadsBusy}
+            assets={project.assets}
+            variant="inline"
+          />
           <button
             type="button"
             onClick={onToggleUploadDrawer}

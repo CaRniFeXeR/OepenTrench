@@ -3,7 +3,7 @@ import { qualityBadge } from '../project-images/analysisDisplay';
 import { PanelBackLink } from '../ui/PanelBackLink';
 import { PhotoStepper } from '../ui/PhotoStepper';
 import { projectImageContentUrl } from './imageContentUrl';
-import { PhotoReviewSection } from './PhotoReviewSection';
+import { PhotoReviewSection } from '../photo-review/PhotoReviewSection';
 
 export function TrenchImageDetailPanel({
   projectId,

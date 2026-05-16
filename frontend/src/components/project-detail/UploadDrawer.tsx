@@ -4,8 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import type { ProjectDetailRead } from '../../api/client';
 import { GeoJsonUploadZone } from '../project-upload/GeoJsonUploadZone';
 import { PhotoUploadZone } from '../project-upload/PhotoUploadZone';
+import { RouteUploadStatus } from './RouteUploadStatus';
 import { useUploadGuard } from './useUploadGuard';
-import { missingGeojsonMessage } from './routeStatus';
 
 export function UploadDrawer({
   open,
@@ -32,8 +32,6 @@ export function UploadDrawer({
   const uploadsBusy = photosBusy || geoBusy;
 
   useUploadGuard(uploadsBusy, onUploadsBusyChange);
-
-  const statusMessage = missingGeojsonMessage(routeReady, project.assets);
 
   return (
     <aside
@@ -65,13 +63,12 @@ export function UploadDrawer({
         <footer className="mt-auto rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="flex flex-col gap-3">
             <p className="text-xs text-slate-600">
-              {routeReady && !uploadsBusy ? (
-                <span className="font-medium text-emerald-700">Route files ready ✓</span>
-              ) : uploadsBusy ? (
-                <span>Upload in progress…</span>
-              ) : (
-                <span className="font-medium text-amber-800">{statusMessage}</span>
-              )}
+              <RouteUploadStatus
+                routeReady={routeReady}
+                uploadsBusy={uploadsBusy}
+                assets={project.assets}
+                variant="footer"
+              />
             </p>
             <div className="flex flex-wrap gap-2">
               <button

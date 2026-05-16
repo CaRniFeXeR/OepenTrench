@@ -3,6 +3,7 @@ import type { MapRef } from 'react-map-gl/maplibre';
 import type { FeatureCollection } from 'geojson';
 
 import type { MapPhotoMarkerRead, ProjectDetailRead } from '../../api/client';
+import { imageAssets } from '../project-images/projectImageListUtils';
 import { MapView } from '../map/MapView';
 import { useMapFitToFeatureCollection } from '../map/useMapFitToFeatureCollection';
 import { FcpSummaryPanel } from './FcpSummaryPanel';
@@ -33,11 +34,8 @@ export function ProjectMapView({
   onSelectedFcpIdChange?: (fcpId: string | null) => void;
 }) {
   const mapRef = useRef<MapRef | null>(null);
-  const imageCount = project.assets.filter((a) => a.kind === 'image').length;
-  const imageAssets = useMemo(
-    () => project.assets.filter((a) => a.kind === 'image'),
-    [project.assets],
-  );
+  const projectImageAssets = useMemo(() => imageAssets(project.assets), [project.assets]);
+  const imageCount = projectImageAssets.length;
 
   const internalMapData = useProjectMapData(project.id, imageCount);
   const mapPhotos = mapPhotosProp ?? internalMapData.mapPhotos;
@@ -47,7 +45,7 @@ export function ProjectMapView({
     mapRef,
     mapData,
     mapPhotos,
-    imageAssets,
+    imageAssets: projectImageAssets,
     selectedFcpId,
     onSelectedFcpIdChange,
   });

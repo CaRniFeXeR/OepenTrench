@@ -1,14 +1,13 @@
-import { useCallback, useState } from 'react';
-import { Link } from 'react-router-dom';
-
-import type { ProjectDetailRead } from '../../api/client';
-import { useProjectMapData } from '../project-map/useProjectMapData';
-import { ProjectMapView } from '../project-map/ProjectMapView';
-import { UploadMapPreview } from '../project-upload/UploadMapPreview';
-import { ProjectPhotoDashboard } from './ProjectPhotoDashboard';
-import { ProjectSummaryBar } from './ProjectSummaryBar';
-import { UploadDrawer } from './UploadDrawer';
-import { useProjectMapGeojson } from './useProjectMapGeojson';
+import type { ProjectDetailRead } from '../../../api/client';
+import { imageAssets } from '../../project-images/projectImageListUtils';
+import { useProjectMapData } from '../../project-map/useProjectMapData';
+import { ProjectMapView } from '../../project-map/ProjectMapView';
+import { UploadMapPreview } from '../../project-upload/UploadMapPreview';
+import { ProjectPhotoDashboard } from '../photo-dashboard/ProjectPhotoDashboard';
+import { ProjectSummaryBar } from '../ProjectSummaryBar';
+import { UploadDrawer } from '../UploadDrawer';
+import { useProjectMapGeojson } from '../useProjectMapGeojson';
+import { useProjectDetailLayoutState } from './useProjectDetailLayoutState';
 
 export function ProjectDetailLayout({
   project,
@@ -21,22 +20,23 @@ export function ProjectDetailLayout({
   onRefresh: () => Promise<void>;
   onUploadsBusyChange: (busy: boolean) => void;
 }) {
-  const [uploadDrawerOpen, setUploadDrawerOpen] = useState(true);
-  const [selectedFcpId, setSelectedFcpId] = useState<string | null>(null);
-  const [mapPhotosRefreshKey, setMapPhotosRefreshKey] = useState(0);
+  const {
+    uploadDrawerOpen,
+    setUploadDrawerOpen,
+    selectedFcpId,
+    setSelectedFcpId,
+    mapPhotosRefreshKey,
+    handleRefresh,
+  } = useProjectDetailLayoutState(onRefresh);
+
   const routeReady = project.geojson_status === 'ready';
   const { mapData, mergeMapData } = useProjectMapGeojson(project.id, project.geojson_status);
-  const imageCount = project.assets.filter((a) => a.kind === 'image').length;
+  const imageCount = imageAssets(project.assets).length;
   const { mapPhotos, loading: mapPhotosLoading } = useProjectMapData(
     project.id,
     imageCount,
     mapPhotosRefreshKey,
   );
-
-  const handleRefresh = useCallback(async () => {
-    await onRefresh();
-    setMapPhotosRefreshKey((k) => k + 1);
-  }, [onRefresh]);
 
   return (
     <>
@@ -90,30 +90,5 @@ export function ProjectDetailLayout({
         </div>
       </div>
     </>
-  );
-}
-
-export function ProjectDetailHeader({
-  uploadsBusy,
-}: {
-  uploadsBusy: boolean;
-}) {
-  return (
-    <header className="border-b border-slate-200 bg-white">
-      <div className="px-4 py-4 sm:px-6">
-        <Link
-          to="/"
-          aria-disabled={uploadsBusy}
-          onClick={(e) => {
-            if (uploadsBusy) e.preventDefault();
-          }}
-          className={`text-sm font-medium text-slate-600 hover:text-slate-900 ${
-            uploadsBusy ? 'pointer-events-none opacity-50' : ''
-          }`}
-        >
-          ← Back to projects
-        </Link>
-      </div>
-    </header>
   );
 }
