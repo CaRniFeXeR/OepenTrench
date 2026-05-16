@@ -29,7 +29,7 @@ from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DATA = (
-    REPO_ROOT / "project-resources/custom-datasets/duct-and-ruler/detection/data.yaml"
+    REPO_ROOT / "project-resources/custom-datasets/duct-and-ruler-manual/detection/data.yaml"
 )
 WEIGHTS_ROOT = REPO_ROOT / "project-resources/weights/duct-ruler-whitepaper-coarse"
 

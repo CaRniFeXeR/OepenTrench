@@ -368,12 +368,26 @@ def _safe_stem(p: Path) -> str:
 
 
 def filter_done(images: list[Path], dataset_root: Path, split: str) -> tuple[list[Path], int]:
-    """Drop images that already have a label file in the target split."""
-    labels_dir = dataset_root / "labels" / split
+    """Drop images that already have a label file in ANY split under labels/.
+
+    The ``split`` argument is accepted for callsite compatibility but is no
+    longer used for filtering: an image labelled in any split (train, test, …)
+    is treated as "done". This prevents items previously moved to test from
+    re-appearing in a labelling session and being silently duplicated back
+    into train.
+    """
+    labels_root = dataset_root / "labels"
+    done_stems: set[str] = set()
+    if labels_root.exists():
+        for split_dir in labels_root.iterdir():
+            if not split_dir.is_dir():
+                continue
+            for p in split_dir.glob("*.txt"):
+                done_stems.add(p.stem)
     todo: list[Path] = []
     done = 0
     for p in images:
-        if (labels_dir / f"{_safe_stem(p)}.txt").exists():
+        if _safe_stem(p) in done_stems:
             done += 1
             continue
         todo.append(p)
@@ -398,6 +412,16 @@ def save_outputs(
     skipped = 0
     valid_ids = set(class_names.keys())
 
+    # Stems already present in any OTHER split — never write a duplicate.
+    other_split_stems: set[str] = set()
+    labels_root = dataset_root / "labels"
+    if labels_root.exists():
+        for split_dir in labels_root.iterdir():
+            if not split_dir.is_dir() or split_dir.name == split:
+                continue
+            for p in split_dir.glob("*.txt"):
+                other_split_stems.add(p.stem)
+
     for i, entry in enumerate(payload):
         src = images[i]
         boxes = entry.get("boxes") or []
@@ -407,6 +431,11 @@ def save_outputs(
             continue
 
         stem = _safe_stem(src)
+        if stem in other_split_stems:
+            print(f"warn: {stem} already labelled in another split — refusing to duplicate",
+                  file=sys.stderr)
+            skipped += 1
+            continue
         # write YOLO label (xc, yc, w, h normalised — clipped to [0, 1])
         lines: list[str] = []
         for b in boxes:
