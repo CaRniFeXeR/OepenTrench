@@ -19,6 +19,8 @@ dependencies = [
     "pillow>=11,<12",
     # OWLv2's image processor needs scipy for its high-quality resize step.
     "scipy>=1.13,<2",
+    # SAM 3 (and SAM 2 if used) via Ultralytics.
+    "ultralytics>=8.4,<9",
 ]
 
 [[tool.uv.index]]

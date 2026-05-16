@@ -1,0 +1,34 @@
+# Labelling profile — SAM 3 (facebook/sam3) served from the VM on :8000.
+#
+# Pure text-prompt mode; bboxes are derived from segmentation mask boundaries
+# (pixel-tight by construction). SAM 3's `bboxes=` argument is a SAM-style box
+# prompt on the target image, NOT few-shot exemplars — so the whitepaper
+# exemplar crops at /home/user/data/Beispiele/whitepaper/ are unused here.
+#
+# Spec: docs/superpowers/specs/2026-05-15-labelling-harness-v3-design.md §6.5.
+
+name: sam3
+mode: remote-vlm
+endpoint: http://localhost:8000
+model: sam3
+
+remote_image_root: /home/user/data
+local_image_root: ./project-resources
+
+classes: [duct, ruler, whitepaper]
+
+prompts:
+  duct: "HDPE conduit or fibre cable in trench"
+  ruler: "folding rule or tape measure"
+  whitepaper: "paper note or card displaying a site code or address"
+
+per_class_threshold:
+  # Iteration 2: whitepaper raised 0.15 → 0.30 to filter digital-overlay FPs.
+  duct: 0.25
+  ruler: 0.25
+  whitepaper: 0.30
+
+iou_nms: 0.5
+max_detections_per_class: 5
+timeout_seconds: 60.0
+retries: 2
