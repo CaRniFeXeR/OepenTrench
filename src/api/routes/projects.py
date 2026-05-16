@@ -8,12 +8,14 @@ from sqlmodel import Session
 from src.api.database import get_session
 from src.api.helpers.pagination import clamp_limit, clamp_offset
 from src.api.models import (
+    ProjectAsset,
     ProjectAssetRead,
     ProjectCreate,
     ProjectDetailRead,
     ProjectRead,
 )
 from src.api.services import project_service
+from src.api.services import photo_analysis_service
 from src.api.services.project_asset_service import (
     PayloadTooLarge,
     load_merged_project_geojson,
@@ -117,6 +119,32 @@ def upload_project_image(
         raise _payload_too_large_response(exc) from exc
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return project_service.project_asset_read(session, asset)
+
+
+@router.post(
+    "/{project_id}/images/{asset_id}/analyze",
+    response_model=ProjectAssetRead,
+)
+def analyze_project_image(
+    project_id: str,
+    asset_id: str,
+    session: Annotated[Session, Depends(get_session)],
+) -> ProjectAssetRead:
+    try:
+        photo_analysis_service.analyze_image_asset(
+            session,
+            project_id=project_id,
+            asset_id=asset_id,
+        )
+        session.commit()
+    except LookupError:
+        raise HTTPException(status_code=404, detail="not found") from None
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    asset = session.get(ProjectAsset, asset_id)
+    if asset is None:
+        raise HTTPException(status_code=404, detail="asset not found")
     return project_service.project_asset_read(session, asset)
 
 

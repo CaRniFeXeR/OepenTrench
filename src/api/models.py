@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from enum import Enum
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
+from sqlalchemy import Column, JSON
 from sqlmodel import Field, SQLModel
 
 from src.api.helpers.time import utc_now
@@ -51,6 +53,11 @@ class PhotoDocumentationCategory(str, Enum):
     red = "red"
 
 
+class GpsCoordinates(BaseModel):
+    type: Literal["Point"] = "Point"
+    coordinates: tuple[float, float]  # [longitude, latitude]
+
+
 class Project(SQLModel, table=True):
     id: str = Field(primary_key=True, max_length=64)
     name: str = Field(max_length=500, index=True)
@@ -95,6 +102,7 @@ class PhotoAnalysis(SQLModel, table=True):
     date_valid: bool = Field(default=False)
     is_false_call: bool = Field(default=False)
     reviewer_override_category: PhotoDocumentationCategory | None = Field(default=None)
+    gps_coordinates: dict | None = Field(default=None, sa_column=Column(JSON))
     created_at: datetime = Field(default_factory=utc_now)
     updated_at: datetime = Field(default_factory=utc_now)
 
@@ -136,6 +144,7 @@ class PhotoAnalysisRead(BaseModel):
     date_valid: bool
     is_false_call: bool
     reviewer_override_category: PhotoDocumentationCategory | None
+    gps_coordinates: GpsCoordinates | None
     created_at: datetime
     updated_at: datetime
 

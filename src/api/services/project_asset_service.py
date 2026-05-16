@@ -9,6 +9,7 @@ from sqlmodel import Session, col, select
 from src.api.helpers.time import utc_now
 from src.api.ids import new_nanoid
 from src.api.models import AssetKind, GeojsonStatus, Project, ProjectAsset
+from src.api.services import photo_analysis_service
 from src.api.uploads import (
     ensure_upload_root_exists,
     normalize_geojson_extension,
@@ -292,6 +293,12 @@ def _persist_asset(
             created_at=utc_now(),
         )
         session.add(row)
+        if kind == AssetKind.image:
+            photo_analysis_service.analyze_image_asset(
+                session,
+                project_id=project_id,
+                asset_id=asset_id,
+            )
         session.commit()
         session.refresh(row)
         return row
