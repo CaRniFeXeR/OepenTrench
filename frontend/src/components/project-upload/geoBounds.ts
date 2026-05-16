@@ -1,4 +1,8 @@
 import type { FeatureCollection } from 'geojson';
+import type { LngLatBoundsLike, Map as MaplibreMap } from 'maplibre-gl';
+
+export const MAP_FIT_PADDING = 48;
+export const MAP_FIT_MAX_ZOOM = 15;
 
 function expandBounds(
   bounds: [number, number, number, number],
@@ -73,4 +77,41 @@ export function featureCollectionBounds(
   }
 
   return b;
+}
+
+export function boundsToLngLatBoundsLike(
+  box: [number, number, number, number],
+): LngLatBoundsLike {
+  const [w, s, e, n] = box;
+  return [
+    [w, s],
+    [e, n],
+  ];
+}
+
+export function fitMapToFeatureCollection(
+  map: MaplibreMap,
+  fc: FeatureCollection,
+  options?: { duration?: number },
+): void {
+  const box = featureCollectionBounds(fc);
+  if (!box) return;
+
+  const [w, s, e, n] = box;
+  const duration = options?.duration ?? 600;
+
+  if (w === e && s === n) {
+    map.easeTo({
+      center: [w, s],
+      zoom: 14,
+      duration: Math.min(duration, 500),
+    });
+    return;
+  }
+
+  map.fitBounds(boundsToLngLatBoundsLike(box), {
+    padding: MAP_FIT_PADDING,
+    maxZoom: MAP_FIT_MAX_ZOOM,
+    duration,
+  });
 }

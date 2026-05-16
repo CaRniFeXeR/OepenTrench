@@ -1,5 +1,5 @@
 import { Layer, Source } from 'react-map-gl/maplibre';
-import { useEffect, useRef, useId } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useId } from 'react';
 import type { MapRef } from 'react-map-gl/maplibre';
 import type { FeatureCollection } from 'geojson';
 import type {
@@ -10,7 +10,13 @@ import type {
 } from '@maplibre/maplibre-gl-style-spec';
 
 import { MapView } from '../MapView';
-import { featureCollectionBounds } from './geoBounds';
+import {
+  boundsToLngLatBoundsLike,
+  featureCollectionBounds,
+  fitMapToFeatureCollection,
+  MAP_FIT_MAX_ZOOM,
+  MAP_FIT_PADDING,
+} from './geoBounds';
 
 const ROUTE_BLUE = '#3b82f6';
 
@@ -54,6 +60,11 @@ const circlePaint = {
   'circle-stroke-color': '#1e293b',
 } as NonNullable<CircleLayerSpecification['paint']>;
 
+const INITIAL_FIT_OPTIONS = {
+  padding: MAP_FIT_PADDING,
+  maxZoom: MAP_FIT_MAX_ZOOM,
+} as const;
+
 function PreviewLayers({ fc, sourceId }: { fc: FeatureCollection; sourceId: string }) {
   return (
     <Source id={sourceId} type="geojson" data={fc}>
@@ -91,26 +102,42 @@ export function UploadMapPreview({
   const reactId = useId();
   const sourceId = `upload-preview-${reactId.replace(/:/g, '')}`;
 
+  const initialBounds = useMemo(() => {
+    if (!featureCollection) return undefined;
+    const box = featureCollectionBounds(featureCollection);
+    if (!box) return undefined;
+    return boundsToLngLatBoundsLike(box);
+  }, [featureCollection]);
+
+  const fitWhenReady = useCallback(() => {
+    const map = mapRef.current?.getMap();
+    if (!map || !featureCollection) return;
+
+    const runFit = () => fitMapToFeatureCollection(map, featureCollection);
+
+    if (map.isStyleLoaded()) {
+      runFit();
+      return;
+    }
+
+    map.once('load', runFit);
+  }, [featureCollection]);
+
   useEffect(() => {
     const map = mapRef.current?.getMap();
     if (!map || !featureCollection) return;
 
-    const box = featureCollectionBounds(featureCollection);
-    if (!box) return;
+    const runFit = () => fitMapToFeatureCollection(map, featureCollection);
 
-    const [w, s, e, n] = box;
-    if (w === e && s === n) {
-      map.easeTo({ center: [w, s], zoom: 14, duration: 500 });
+    if (map.isStyleLoaded()) {
+      runFit();
       return;
     }
 
-    map.fitBounds(
-      [
-        [w, s],
-        [e, n],
-      ],
-      { padding: 48, maxZoom: 15, duration: 600 },
-    );
+    map.once('load', runFit);
+    return () => {
+      map.off('load', runFit);
+    };
   }, [featureCollection]);
 
   return (
@@ -120,6 +147,9 @@ export function UploadMapPreview({
           ref={mapRef}
           className="overflow-hidden rounded-xl"
           height={height}
+          bounds={initialBounds}
+          fitBoundsOptions={INITIAL_FIT_OPTIONS}
+          onLoad={fitWhenReady}
         >
           <PreviewLayers fc={featureCollection} sourceId={sourceId} />
         </MapView>
