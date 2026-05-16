@@ -70,34 +70,6 @@ export type HttpValidationError = {
 };
 
 /**
- * ItemCreate
- */
-export type ItemCreate = {
-    /**
-     * Name
-     */
-    name: string;
-};
-
-/**
- * ItemRead
- */
-export type ItemRead = {
-    /**
-     * Id
-     */
-    id: number;
-    /**
-     * Name
-     */
-    name: string;
-    /**
-     * Created At
-     */
-    created_at: string;
-};
-
-/**
  * MapPhotoMarkerRead
  */
 export type MapPhotoMarkerRead = {
@@ -401,67 +373,6 @@ export type HealthHealthGetResponses = {
 };
 
 export type HealthHealthGetResponse = HealthHealthGetResponses[keyof HealthHealthGetResponses];
-
-export type ListItemsItemsGetData = {
-    body?: never;
-    path?: never;
-    query?: {
-        /**
-         * Limit
-         */
-        limit?: number;
-        /**
-         * Offset
-         */
-        offset?: number;
-    };
-    url: '/items';
-};
-
-export type ListItemsItemsGetErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type ListItemsItemsGetError = ListItemsItemsGetErrors[keyof ListItemsItemsGetErrors];
-
-export type ListItemsItemsGetResponses = {
-    /**
-     * Response List Items Items Get
-     *
-     * Successful Response
-     */
-    200: Array<ItemRead>;
-};
-
-export type ListItemsItemsGetResponse = ListItemsItemsGetResponses[keyof ListItemsItemsGetResponses];
-
-export type CreateItemItemsPostData = {
-    body: ItemCreate;
-    path?: never;
-    query?: never;
-    url: '/items';
-};
-
-export type CreateItemItemsPostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type CreateItemItemsPostError = CreateItemItemsPostErrors[keyof CreateItemItemsPostErrors];
-
-export type CreateItemItemsPostResponses = {
-    /**
-     * Successful Response
-     */
-    200: ItemRead;
-};
-
-export type CreateItemItemsPostResponse = CreateItemItemsPostResponses[keyof CreateItemItemsPostResponses];
 
 export type ListProjectsRouteProjectsGetData = {
     body?: never;

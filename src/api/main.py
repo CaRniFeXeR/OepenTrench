@@ -10,7 +10,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.routes.health import router as health_router
-from src.api.routes.items import router as items_router
 from src.api.routes.projects import router as projects_router
 
 logger = logging.getLogger("oepentrench.api")
@@ -68,5 +67,4 @@ app.add_middleware(
 )
 
 app.include_router(health_router)
-app.include_router(items_router)
 app.include_router(projects_router)
