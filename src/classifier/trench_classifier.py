@@ -83,6 +83,11 @@ class TrenchClassifier:
         artifact_dir = Path(artifact_dir)
         meta = ClassifierMeta(**json.loads((artifact_dir / "meta.json").read_text(encoding="utf-8")))
         head: LogisticRegression = joblib.load(artifact_dir / "head.joblib")
+        # Cross-sklearn-version compat: sklearn ≥1.8 removed `multi_class`, but
+        # older predict_proba implementations still read it. "auto" picks the
+        # correct branch for binary LR with any solver.
+        if not hasattr(head, "multi_class"):
+            head.multi_class = "auto"
         return cls(
             model_id=meta.model_id,
             head=head,

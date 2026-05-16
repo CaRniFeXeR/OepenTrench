@@ -103,7 +103,7 @@ def main() -> None:
                 print(f"  {cls} → {pred_cls} (score={sc:.3f})  {path.relative_to(REPO)}")
 
     # Append eval metrics to artifact for traceability.
-    out = Path(args.artifact) / "eval.json"
+    out = (Path(args.artifact) / "eval.json").resolve()
     payload = {
         "test_size": len(items),
         "pr_auc": float(pr_auc),

@@ -72,29 +72,65 @@ def list_class_images(root: Path) -> dict[str, list[Path]]:
     return out
 
 
+class _EmbedDataset(torch.utils.data.Dataset):
+    """Loads + optionally augments + processor-preprocesses on worker processes."""
+
+    def __init__(self, items, processor, augment):
+        self.items = items
+        self.processor = processor
+        self.augment = augment
+
+    def __len__(self) -> int:
+        return len(self.items)
+
+    def __getitem__(self, idx):
+        path, cls, aug = self.items[idx]
+        img = Image.open(path).convert("RGB")
+        if aug:
+            img = self.augment(img)
+        pixel_values = self.processor(images=img, return_tensors="pt")["pixel_values"][0]
+        return pixel_values, cls
+
+
+def _collate(batch):
+    px = torch.stack([b[0] for b in batch])
+    classes = [b[1] for b in batch]
+    return px, classes
+
+
 @torch.inference_mode()
 def embed_images(
-    paths_with_labels: list[tuple[Path, str, bool]],  # (path, class, augment)
+    paths_with_labels: list[tuple[Path, str, bool]],
     model: torch.nn.Module,
     processor,
     device: torch.device,
     dtype: torch.dtype,
     augment: torch.nn.Module,
+    batch_size: int = 64,
+    num_workers: int = 4,
 ) -> tuple[np.ndarray, list[str]]:
-    """Embed each input. If augment flag is True, apply augment transform first."""
+    """Embed in GPU batches with parallel CPU-side image loading."""
+    ds = _EmbedDataset(paths_with_labels, processor, augment)
+    loader = torch.utils.data.DataLoader(
+        ds,
+        batch_size=batch_size,
+        num_workers=num_workers,
+        shuffle=False,
+        collate_fn=_collate,
+        pin_memory=device.type == "cuda",
+    )
     embs: list[np.ndarray] = []
     labels: list[str] = []
-    for path, cls, aug in tqdm(paths_with_labels, desc="embedding"):
-        img = Image.open(path).convert("RGB")
-        if aug:
-            img = augment(img)
-        inputs = processor(images=img, return_tensors="pt")
-        pixel_values = inputs["pixel_values"].to(device, dtype=dtype)
+    pbar = tqdm(total=len(paths_with_labels), desc="embedding")
+    for pixel_values, classes in loader:
+        pixel_values = pixel_values.to(device, dtype=dtype, non_blocking=True)
         out = model(pixel_values=pixel_values)
-        emb = out.pooler_output[0] if getattr(out, "pooler_output", None) is not None else out.last_hidden_state[0, 0]
-        embs.append(emb.float().cpu().numpy())
-        labels.append(cls)
-    return np.stack(embs), labels
+        batch_embs = out.pooler_output if getattr(out, "pooler_output", None) is not None else out.last_hidden_state[:, 0]
+        embs.append(batch_embs.float().cpu().numpy())
+        labels.extend(classes)
+        pbar.update(len(classes))
+    pbar.close()
+    return np.concatenate(embs, axis=0), labels
 
 
 def build_training_set(class_imgs: dict[str, list[Path]], cfg: TrainConfig) -> list[tuple[Path, str, bool]]:
@@ -135,42 +171,85 @@ def pick_threshold(y_true: np.ndarray, y_score: np.ndarray, target_precision: fl
     return tau, {"precision_at_threshold": prec, "recall_at_threshold": rec, "pr_auc": pr_auc}
 
 
+DEFAULT_LR_PARAMS: dict = {"C": 1.0, "penalty": "l2", "solver": "lbfgs", "class_weight": "balanced"}
+
+# Grid for HP search. Each entry is a complete LR config (so penalty/solver stay consistent).
+LR_GRID: list[dict] = [
+    *({"C": c, "penalty": "l2", "solver": "lbfgs", "class_weight": "balanced"} for c in [0.01, 0.1, 1.0, 10.0, 100.0]),
+    *({"C": c, "penalty": "l1", "solver": "liblinear", "class_weight": "balanced"} for c in [0.01, 0.1, 1.0, 10.0, 100.0]),
+    # Control: no class weighting, to see if the augmented oversampling alone suffices.
+    {"C": 1.0, "penalty": "l2", "solver": "lbfgs", "class_weight": None},
+    {"C": 10.0, "penalty": "l2", "solver": "lbfgs", "class_weight": None},
+]
+
+
+def cv_oof_predictions(
+    embs: np.ndarray,
+    y: np.ndarray,
+    is_real: np.ndarray,
+    lr_params: dict,
+    cfg: TrainConfig,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Stratified K-fold over REAL samples only.
+
+    Augmented samples land in every training fold but never appear in a val fold —
+    their distribution is shifted by the augmentation transform, so trusting them
+    for the operating-point decision would be optimistic.
+    """
+    real_embs = embs[is_real]
+    real_y = y[is_real]
+    real_positions = np.where(is_real)[0]
+    skf = StratifiedKFold(n_splits=cfg.n_splits, shuffle=True, random_state=cfg.seed)
+    oof = np.zeros_like(real_y, dtype=float)
+    for train_idx, val_idx in skf.split(real_embs, real_y):
+        full_train_mask = np.zeros(embs.shape[0], dtype=bool)
+        full_train_mask[real_positions[train_idx]] = True
+        full_train_mask[~is_real] = True
+        clf = LogisticRegression(**lr_params, max_iter=2000, random_state=cfg.seed)
+        clf.fit(embs[full_train_mask], y[full_train_mask])
+        trench_idx = list(clf.classes_).index(1)
+        oof[val_idx] = clf.predict_proba(real_embs[val_idx])[:, trench_idx]
+    return real_y, oof
+
+
 def cross_validate_threshold(
     embs: np.ndarray,
     y: np.ndarray,
     is_real: np.ndarray,
     cfg: TrainConfig,
+    lr_params: dict = None,
 ) -> tuple[float, dict[str, float]]:
-    """Run stratified K-fold CV over the REAL (non-augmented) samples only.
-
-    Augmented samples are used for training but not for threshold calibration —
-    their distribution is shifted by the augmentation transform, so trusting
-    them for the operating-point decision would be optimistic.
-    """
-    real_embs = embs[is_real]
-    real_y = y[is_real]
-    skf = StratifiedKFold(n_splits=cfg.n_splits, shuffle=True, random_state=cfg.seed)
-    oof = np.zeros_like(real_y, dtype=float)
-    for train_idx, val_idx in skf.split(real_embs, real_y):
-        # Train LR on REAL train fold + ALL aug embeddings whose corresponding real image is in train.
-        # Simpler approach: train on all augmented + real-train-fold. To keep it tight,
-        # we just train on real-train-fold + the aug embeddings (which correspond to the
-        # minority class globally — they don't overlap with the val fold by construction
-        # because val_idx indexes real samples only).
-        train_real_mask = np.zeros_like(real_y, dtype=bool)
-        train_real_mask[train_idx] = True
-        # Build the actual training set indices in the full (real + aug) array.
-        full_train_mask = np.zeros(embs.shape[0], dtype=bool)
-        # Index map: real positions → original positions.
-        real_positions = np.where(is_real)[0]
-        full_train_mask[real_positions[train_idx]] = True
-        full_train_mask[~is_real] = True  # all augmented samples are training-only
-        clf = LogisticRegression(class_weight="balanced", C=1.0, max_iter=2000, random_state=cfg.seed)
-        clf.fit(embs[full_train_mask], y[full_train_mask])
-        trench_idx = list(clf.classes_).index(1)
-        oof[val_idx] = clf.predict_proba(real_embs[val_idx])[:, trench_idx]
+    real_y, oof = cv_oof_predictions(embs, y, is_real, lr_params or DEFAULT_LR_PARAMS, cfg)
     tau, metrics = pick_threshold(real_y, oof, cfg.target_precision)
     return tau, metrics
+
+
+def hp_search(
+    embs: np.ndarray,
+    y: np.ndarray,
+    is_real: np.ndarray,
+    cfg: TrainConfig,
+) -> tuple[dict, float, dict[str, float]]:
+    """Sweep LR hyperparameters, pick best by CV PR-AUC. Returns (best_params, tau, metrics)."""
+    print(f"\nHP search over {len(LR_GRID)} LR configs (K-fold over real samples only):")
+    print(f"{'C':<8}{'penalty':<10}{'cw':<12}{'PR-AUC':<10}{'P@τ':<8}{'R@τ':<8}{'τ':<8}")
+    rows: list[tuple[float, dict, float, dict]] = []
+    for params in LR_GRID:
+        real_y, oof = cv_oof_predictions(embs, y, is_real, params, cfg)
+        pr_auc = float(average_precision_score(real_y, oof))
+        tau, metrics = pick_threshold(real_y, oof, cfg.target_precision)
+        rows.append((pr_auc, params, tau, metrics))
+        cw = str(params.get("class_weight") or "None")
+        print(
+            f"{params['C']:<8}{params['penalty']:<10}{cw:<12}"
+            f"{pr_auc:<10.4f}{metrics['precision_at_threshold']:<8.3f}"
+            f"{metrics['recall_at_threshold']:<8.3f}{tau:<8.4f}"
+        )
+    rows.sort(reverse=True, key=lambda r: r[0])
+    best_pr_auc, best_params, best_tau, best_metrics = rows[0]
+    print(f"\nBest: PR-AUC={best_pr_auc:.4f}, params={best_params}")
+    best_metrics["pr_auc"] = best_pr_auc
+    return best_params, best_tau, best_metrics
 
 
 def main() -> None:
@@ -180,6 +259,9 @@ def main() -> None:
     parser.add_argument("--target-precision", type=float, default=0.97)
     parser.add_argument("--device", default=None, help="cuda|mps|cpu (autodetect if omitted)")
     parser.add_argument("--no-fp16", action="store_true")
+    parser.add_argument("--batch-size", type=int, default=64)
+    parser.add_argument("--num-workers", type=int, default=4)
+    parser.add_argument("--hp-tune", action="store_true", help="sweep LR hyperparameters by CV PR-AUC")
     parser.add_argument("--out", default=str(ARTIFACTS))
     args = parser.parse_args()
 
@@ -208,7 +290,10 @@ def main() -> None:
     items = build_training_set(class_imgs, cfg)
     print(f"items to embed: {len(items)} (real + augmented)")
 
-    embs, labels = embed_images(items, model, processor, device, dtype, augment)
+    embs, labels = embed_images(
+        items, model, processor, device, dtype, augment,
+        batch_size=args.batch_size, num_workers=args.num_workers,
+    )
     y = np.array([1 if c == "trench" else 0 for c in labels])
     is_real = np.array([not aug for _, _, aug in items])
 
@@ -216,22 +301,26 @@ def main() -> None:
     print(f"real samples: {is_real.sum()} (trench={int(y[is_real].sum())}, no-trench={int((y[is_real]==0).sum())})")
     print(f"augmented samples (minority class only): {(~is_real).sum()}")
 
-    # CV threshold calibration on real samples only.
-    tau, cv_metrics = cross_validate_threshold(embs, y, is_real, cfg)
-    print(
-        f"CV @ target_precision={cfg.target_precision}: "
-        f"threshold={tau:.4f}, precision={cv_metrics['precision_at_threshold']:.3f}, "
-        f"recall={cv_metrics['recall_at_threshold']:.3f}, PR-AUC={cv_metrics['pr_auc']:.3f}"
-    )
+    # CV threshold calibration on real samples only — optionally with HP search.
+    if args.hp_tune:
+        best_params, tau, cv_metrics = hp_search(embs, y, is_real, cfg)
+    else:
+        best_params = DEFAULT_LR_PARAMS
+        tau, cv_metrics = cross_validate_threshold(embs, y, is_real, cfg, lr_params=best_params)
+        print(
+            f"CV @ target_precision={cfg.target_precision}: "
+            f"threshold={tau:.4f}, precision={cv_metrics['precision_at_threshold']:.3f}, "
+            f"recall={cv_metrics['recall_at_threshold']:.3f}, PR-AUC={cv_metrics['pr_auc']:.3f}"
+        )
 
-    # Final fit on ALL samples (real + augmented).
-    final = LogisticRegression(class_weight="balanced", C=1.0, max_iter=2000, random_state=cfg.seed)
+    # Final fit on ALL samples (real + augmented) with the chosen LR params.
+    final = LogisticRegression(**best_params, max_iter=2000, random_state=cfg.seed)
     final.fit(embs, y)
     # Sklearn keeps integer labels; we want string labels at inference. Map them.
     label_for = {0: "no-trench", 1: "trench"}
     final.classes_ = np.array([label_for[c] for c in final.classes_])
 
-    out_dir = Path(args.out)
+    out_dir = Path(args.out).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
     joblib.dump(final, out_dir / "head.joblib")
     meta = ClassifierMeta(
@@ -243,7 +332,8 @@ def main() -> None:
         cv_metrics={**cv_metrics, "target_precision": cfg.target_precision},
         notes=(
             f"Augmented minority class with factor={cfg.minority_aug_factor}. "
-            f"Threshold picked on real-only OOF PR curve, target precision = {cfg.target_precision}."
+            f"Threshold picked on real-only OOF PR curve, target precision = {cfg.target_precision}. "
+            f"LR params: {best_params}."
         ),
     )
     (out_dir / "meta.json").write_text(json.dumps(asdict(meta), indent=2), encoding="utf-8")
