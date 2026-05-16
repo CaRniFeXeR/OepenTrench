@@ -428,3 +428,39 @@ Minimum bar: 2 options, 1 chosen, explicit reasoning.
 - **Affected files:** `scripts/label.py`
 - **Commit:** pending
 - **Supersedes:** —
+
+---
+
+### D-020: Test fixtures created inline; no checked-in image binaries
+
+- **Timestamp:** 2026-05-16 15:00 (local)
+- **Task:** Task 7 — Local tests
+- **Trigger:** Spec §13 "Test fixtures" gap mentions using "2–3 small JPEGs from `Beispiele/duct/`" with a < 50 KB cap. In practice the labeller code path never decodes the image — it only passes the path to the server. The runner writes only the `.txt` / `.json` outputs based on `LabelOutput` (which is fully synthesisable). No need for real image bytes anywhere in the unit + mocked-integration tests.
+- **Spec anchors:** §10 (testing strategy), §13 ("Test fixtures" gap)
+- **Options considered:**
+  1. Check in 2–3 small JPEGs from `Beispiele/duct/` and reference them in tests. Requires the dataset to be present (it's gitignored in `project-resources/`), so CI without the dataset would fail.
+  2. Tests synthesise file path stubs via `tmp_path.write_bytes(b"...")` — file exists with a fake JPEG header, never decoded, never read. Tests can run on any checkout.
+  3. Add a `tests/data/` directory of tiny synthetic JPEGs created at conftest time. More machinery; no benefit over option 2.
+- **Chosen:** Option 2 (in-test synthesis via `tmp_path`).
+- **Reasoning:** None of the unit/mocked-integration tests need real image bytes — the harness's image-aware code lives on the VM. Synthetic paths keep tests self-contained, fast, and CI-portable. If a smoke test that actually opens a JPEG is ever added, it can fall back to a real Beispiele file at that time.
+- **Out-of-scope alternatives deferred:** A real end-to-end smoke test that hits a live local FastAPI process; that's an operator gate, not a unit test.
+- **Affected files:** `tests/labelling/test_resume.py`, `tests/labelling/test_remote_integration.py`
+- **Commit:** pending
+- **Supersedes:** —
+
+### D-021: Backoff function monkeypatched in tests to skip real sleeps
+
+- **Timestamp:** 2026-05-16 15:05 (local)
+- **Task:** Task 7 — Local tests
+- **Trigger:** The retry path uses `time.sleep(_backoff_seconds(attempt))` for 1 s and 2 s delays. Running unit tests against that path would add ≥3 s wall-clock per retry test and make `pytest -q` painful at hackathon iteration speed.
+- **Spec anchors:** §8 (retry policy with 1 s / 2 s backoff), §10 (testing strategy)
+- **Options considered:**
+  1. Use `time.monotonic` mocks or `unittest.mock.patch("time.sleep")`. Mocks the entire `time` module surface; brittle.
+  2. Extract `_backoff_seconds` as a module-level function and `monkeypatch` it to `lambda _: 0.0` in retry tests. The function is the single seam between policy and sleeping; monkeypatching it skips the wait without disabling sleep globally.
+  3. Configure `retries: 0` in test configs. Bypasses the retry path entirely — can't verify the retry behaviour at all.
+- **Chosen:** Option 2 (monkeypatch the named seam).
+- **Reasoning:** Keeps the production retry timings exact (no test-only branching in `label()`) while giving deterministic, instant tests. The seam is small and named, so the test's intent reads cleanly: "retry, but with zero delay so the test stays under a millisecond". The actual retry behaviour (count, conditions, exception types) is still exercised at full fidelity.
+- **Out-of-scope alternatives deferred:** Test-double clock / `freezegun` — overkill for one function.
+- **Affected files:** `src/labelling/remote_labeller.py` (extracted `_backoff_seconds`), `tests/labelling/test_remote_integration.py`
+- **Commit:** pending
+- **Supersedes:** —
