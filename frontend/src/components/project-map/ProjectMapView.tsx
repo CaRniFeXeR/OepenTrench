@@ -17,10 +17,12 @@ export function ProjectMapView({
   project,
   mapData,
   onProjectRefresh,
+  embedded = false,
 }: {
   project: ProjectDetailRead;
   mapData: FeatureCollection;
   onProjectRefresh: () => Promise<void>;
+  embedded?: boolean;
 }) {
   const mapRef = useRef<MapRef | null>(null);
   const [mapPhotosRefreshKey, setMapPhotosRefreshKey] = useState(0);
@@ -76,8 +78,12 @@ export function ProjectMapView({
   };
 
   return (
-    <div className="flex min-h-[480px] flex-1 flex-col lg:flex-row lg:min-h-0">
-      <div className="relative min-h-[480px] flex-1 overflow-hidden bg-slate-100 lg:min-h-0">
+    <div
+      className={`flex min-h-[480px] flex-1 flex-col ${embedded ? 'min-h-0' : 'lg:flex-row lg:min-h-0'}`}
+    >
+      <div
+        className={`relative min-h-[480px] flex-1 overflow-hidden bg-slate-100 ${embedded ? 'min-h-0' : 'lg:min-h-0'}`}
+      >
         <MapView
           ref={mapRef}
           className="h-full w-full"
@@ -94,7 +100,7 @@ export function ProjectMapView({
           />
         </MapView>
 
-        {level === 'project' && (
+        {(embedded || level === 'project') && (
           <MapOverlayPanels
             projectName={project.name}
             fcpCount={fcpPolygons.features.length}
@@ -109,46 +115,48 @@ export function ProjectMapView({
         )}
       </div>
 
-      <MapDetailColumn open={detailOpen}>
-        {level === 'fcp' && selectedFcpId && (
-          <FcpSummaryPanel
-            fcpLabel={fcpLabel}
-            fcpCode={fcpCode}
-            projectName={project.name}
-            photos={fcpPhotos}
-            highlightedPhotoId={highlightedPhotoIdResolved}
-            warningReviewCount={warningReviewCount}
-            onBack={goToProject}
-            onPrevPhoto={() => stepPhoto(-1)}
-            onNextPhoto={() => stepPhoto(1)}
-            onOpenPhoto={() => {
-              if (highlightedPhotoIdResolved) {
-                goToPhoto(highlightedPhotoIdResolved, selectedFcpId);
-              }
-            }}
-            onStartWarningReview={() => startWarningReview(selectedFcpId)}
-          />
-        )}
-        {level === 'photo' &&
-          activeAsset &&
-          highlightedPhotoIdResolved &&
-          photoIndex >= 0 && (
-            <TrenchImageDetailPanel
-              projectId={project.id}
-              asset={activeAsset}
+      {!embedded && (
+        <MapDetailColumn open={detailOpen}>
+          {level === 'fcp' && selectedFcpId && (
+            <FcpSummaryPanel
+              fcpLabel={fcpLabel}
               fcpCode={fcpCode}
-              photoIndex={photoIndex}
-              photoTotal={navigablePhotos.length}
-              reviewQueueMode={reviewQueueMode}
-              onBack={() => {
-                setLevel('fcp');
+              projectName={project.name}
+              photos={fcpPhotos}
+              highlightedPhotoId={highlightedPhotoIdResolved}
+              warningReviewCount={warningReviewCount}
+              onBack={goToProject}
+              onPrevPhoto={() => stepPhoto(-1)}
+              onNextPhoto={() => stepPhoto(1)}
+              onOpenPhoto={() => {
+                if (highlightedPhotoIdResolved) {
+                  goToPhoto(highlightedPhotoIdResolved, selectedFcpId);
+                }
               }}
-              onPrev={() => stepPhoto(-1)}
-              onNext={() => stepPhoto(1)}
-              onReviewSaved={handleReviewSaved}
+              onStartWarningReview={() => startWarningReview(selectedFcpId)}
             />
           )}
-      </MapDetailColumn>
+          {level === 'photo' &&
+            activeAsset &&
+            highlightedPhotoIdResolved &&
+            photoIndex >= 0 && (
+              <TrenchImageDetailPanel
+                projectId={project.id}
+                asset={activeAsset}
+                fcpCode={fcpCode}
+                photoIndex={photoIndex}
+                photoTotal={navigablePhotos.length}
+                reviewQueueMode={reviewQueueMode}
+                onBack={() => {
+                  setLevel('fcp');
+                }}
+                onPrev={() => stepPhoto(-1)}
+                onNext={() => stepPhoto(1)}
+                onReviewSaved={handleReviewSaved}
+              />
+            )}
+        </MapDetailColumn>
+      )}
     </div>
   );
 }

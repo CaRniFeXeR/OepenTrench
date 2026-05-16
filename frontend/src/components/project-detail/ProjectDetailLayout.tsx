@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import type { ProjectDetailRead } from '../../api/client';
-import { ProjectImagesPanel } from '../project-images/ProjectImagesPanel';
 import { ProjectMapView } from '../project-map/ProjectMapView';
 import { UploadMapPreview } from '../project-upload/UploadMapPreview';
+import { ProjectPhotoDashboard } from './ProjectPhotoDashboard';
 import { ProjectSummaryBar } from './ProjectSummaryBar';
 import { UploadDrawer } from './UploadDrawer';
 import { useProjectMapGeojson } from './useProjectMapGeojson';
@@ -44,9 +44,14 @@ export function ProjectDetailLayout({
             onMergeMapData={mergeMapData}
           />
 
-          <div className="flex min-h-[480px] min-w-0 flex-1 flex-col border-b border-slate-200 lg:border-b-0">
+          <div className="flex min-h-0 min-w-0 flex-[2] flex-col border-b border-slate-200 lg:border-b-0 lg:border-r">
+            <ProjectPhotoDashboard project={project} onRefresh={onRefresh} />
+          </div>
+
+          <div className="flex min-h-[480px] min-w-0 flex-1 flex-col">
             {routeReady && mapData ? (
               <ProjectMapView
+                embedded
                 project={project}
                 mapData={mapData}
                 onProjectRefresh={onRefresh}
@@ -59,10 +64,6 @@ export function ProjectDetailLayout({
           </div>
         </div>
       </div>
-
-      <section className="px-4 py-8 sm:px-6">
-        <ProjectImagesPanel projectId={project.id} assets={project.assets} />
-      </section>
     </>
   );
 }
