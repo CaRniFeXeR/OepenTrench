@@ -11,7 +11,7 @@
 
 PORT ?= 8000
 HOST ?= 0.0.0.0
-IMAGE_ROOT ?= /home/threenicorn/data
+IMAGE_ROOT ?= /home/user/data
 UV ?= uv
 PID_FILE := .server.pid
 
@@ -58,4 +58,6 @@ stop:
 	    kill $$(cat $(PID_FILE)) 2>/dev/null || true ; rm -f $(PID_FILE) ; \
 	    echo "stopped" ; \
 	fi
-	@pkill -f "uvicorn server.main" 2>/dev/null || true
+	@# Use process-name match (NOT `-f` / full command line) so the recipe
+	@# shell doesn't self-match on its own argv (which contains the pattern).
+	@pkill uvicorn 2>/dev/null || true
