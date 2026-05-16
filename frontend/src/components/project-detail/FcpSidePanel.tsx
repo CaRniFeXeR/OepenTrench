@@ -1,3 +1,5 @@
+import { useMemo } from 'react';
+
 import { PHOTO_DOC_CATEGORIES } from '../project-images/photoDocumentationCategories';
 import type { FcpPhotoRow } from './fcpPhotoTableUtils';
 
@@ -18,6 +20,15 @@ export function FcpSidePanel({
   onClearFcpFilter: () => void;
 }) {
   const projectSelected = selectedFcpId === null;
+  const sortedRows = useMemo(
+    () =>
+      [...rows].sort((a, b) => {
+        const problematicDiff = b.yellow + b.red - (a.yellow + a.red);
+        if (problematicDiff !== 0) return problematicDiff;
+        return a.fcpCode.localeCompare(b.fcpCode, undefined, { sensitivity: 'base' });
+      }),
+    [rows],
+  );
 
   return (
     <aside className="flex w-56 shrink-0 flex-col border-r border-slate-200 bg-white">
@@ -39,13 +50,13 @@ export function FcpSidePanel({
       </button>
 
       <div className="min-h-0 flex-1 overflow-y-auto p-2">
-        {rows.length === 0 ? (
+        {sortedRows.length === 0 ? (
           <p className="px-2 py-3 text-xs text-slate-500">
             Upload FCP polygons to see per-FCP breakdown.
           </p>
         ) : (
           <ul className="flex flex-col gap-1.5">
-            {rows.map((row) => {
+            {sortedRows.map((row) => {
               const selected = selectedFcpId === row.fcpId;
               return (
                 <li key={row.fcpId}>

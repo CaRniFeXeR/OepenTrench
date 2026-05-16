@@ -55,7 +55,7 @@ export function PhotoReviewSection({
           compact ? 'px-3 py-1.5 text-xs' : 'px-3 py-2 text-sm'
         }`}
       >
-        {saving ? 'Saving…' : 'Approve'}
+        {saving ? 'Saving…' : 'Submit'}
       </button>
     </div>
   );
