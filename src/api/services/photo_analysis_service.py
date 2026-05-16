@@ -3,12 +3,17 @@ from __future__ import annotations
 from sqlmodel import Session
 
 from src.api.helpers.geojson_sampling import random_point_in_geojson_bounds
+from src.api.helpers.photo_documentation_category import (
+    REVIEWER_CLEAR_ATTRS,
+    automated_category,
+)
 from src.api.helpers.time import utc_now
 from src.api.models import (
     AssetKind,
     GeojsonStatus,
     GpsCoordinates,
     PhotoAnalysis,
+    PhotoAnalysisReviewUpdate,
     PhotoDocumentationCategory,
     Project,
     ProjectAsset,
@@ -27,13 +32,9 @@ def _dummy_analysis_fields() -> dict:
         "estimate_number_of_ducts": 1,
         "has_gdpr_problems": False,
         "is_duplicated": False,
-        "category": PhotoDocumentationCategory.green,
-        "has_sand_bedding": True,
-        "has_pipe_end_seal": True,
         "gps_matches_route": True,
         "date_valid": True,
         "is_false_call": False,
-        "reviewer_override_category": None,
     }
 
 
@@ -70,6 +71,11 @@ def _validate_image_asset(
     return asset, project
 
 
+def _clear_reviewer_state(row: PhotoAnalysis) -> None:
+    for attr in REVIEWER_CLEAR_ATTRS:
+        setattr(row, attr, None)
+
+
 def analyze_image_asset(
     session: Session,
     *,
@@ -86,7 +92,10 @@ def analyze_image_asset(
     fields["gps_coordinates"] = _resolve_gps_coordinates(
         session, project=project, extracted=extracted
     )
-    return _upsert_analysis(session, asset_id=asset_id, fields=fields)
+    row = _upsert_analysis(session, asset_id=asset_id, fields=fields, reanalyze=True)
+    row.category = automated_category(row)
+    session.add(row)
+    return row
 
 
 def analyze_image_asset_by_id(session: Session, asset_id: str) -> PhotoAnalysis:
@@ -100,12 +109,44 @@ def analyze_image_asset_by_id(session: Session, asset_id: str) -> PhotoAnalysis:
     )
 
 
+def review_image_analysis(
+    session: Session,
+    *,
+    project_id: str,
+    asset_id: str,
+    payload: PhotoAnalysisReviewUpdate,
+) -> PhotoAnalysis:
+    _validate_image_asset(session, project_id=project_id, asset_id=asset_id)
+    existing = session.get(PhotoAnalysis, asset_id)
+    if existing is None:
+        raise LookupError("analysis not found")
+
+    updates = payload.model_dump(exclude_unset=True)
+    mark_reviewed = updates.pop("mark_reviewed", True)
+
+    for key, value in updates.items():
+        setattr(existing, key, value)
+
+    if mark_reviewed:
+        existing.reviewed_at = utc_now()
+
+    existing.updated_at = utc_now()
+    session.add(existing)
+    return existing
+
+
 def _upsert_analysis(
-    session: Session, *, asset_id: str, fields: dict
+    session: Session,
+    *,
+    asset_id: str,
+    fields: dict,
+    reanalyze: bool = False,
 ) -> PhotoAnalysis:
     now = utc_now()
     existing = session.get(PhotoAnalysis, asset_id)
     if existing is not None:
+        if reanalyze:
+            _clear_reviewer_state(existing)
         for key, value in fields.items():
             setattr(existing, key, value)
         existing.updated_at = now
@@ -116,6 +157,7 @@ def _upsert_analysis(
         asset_id=asset_id,
         created_at=now,
         updated_at=now,
+        category=PhotoDocumentationCategory.yellow,
         **fields,
     )
     session.add(row)

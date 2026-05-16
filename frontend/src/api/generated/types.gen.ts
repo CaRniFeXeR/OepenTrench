@@ -70,31 +70,43 @@ export type HttpValidationError = {
 };
 
 /**
- * ItemCreate
+ * MapPhotoMarkerRead
  */
-export type ItemCreate = {
+export type MapPhotoMarkerRead = {
     /**
-     * Name
+     * Asset Id
      */
-    name: string;
+    asset_id: string;
+    /**
+     * Coordinates
+     */
+    coordinates: [
+        number,
+        number
+    ];
+    category: PhotoDocumentationCategory | null;
+    /**
+     * Fcp Id
+     */
+    fcp_id: string | null;
+    /**
+     * Fcp Code
+     */
+    fcp_code: string | null;
+    /**
+     * Fcp Label
+     */
+    fcp_label: string | null;
 };
 
 /**
- * ItemRead
+ * MapPhotosRead
  */
-export type ItemRead = {
+export type MapPhotosRead = {
     /**
-     * Id
+     * Photos
      */
-    id: number;
-    /**
-     * Name
-     */
-    name: string;
-    /**
-     * Created At
-     */
-    created_at: string;
+    photos: Array<MapPhotoMarkerRead>;
 };
 
 /**
@@ -139,14 +151,6 @@ export type PhotoAnalysisRead = {
     is_duplicated: boolean;
     category: PhotoDocumentationCategory | null;
     /**
-     * Has Sand Bedding
-     */
-    has_sand_bedding: boolean;
-    /**
-     * Has Pipe End Seal
-     */
-    has_pipe_end_seal: boolean;
-    /**
      * Gps Matches Route
      */
     gps_matches_route: boolean;
@@ -159,6 +163,30 @@ export type PhotoAnalysisRead = {
      */
     is_false_call: boolean;
     reviewer_override_category: PhotoDocumentationCategory | null;
+    /**
+     * Reviewer Has Duct
+     */
+    reviewer_has_duct: boolean | null;
+    /**
+     * Reviewer Has Ruler
+     */
+    reviewer_has_ruler: boolean | null;
+    /**
+     * Reviewer Is In Domain
+     */
+    reviewer_is_in_domain: boolean | null;
+    /**
+     * Reviewer Has Gdpr Problems
+     */
+    reviewer_has_gdpr_problems: boolean | null;
+    /**
+     * Reviewer Gps Matches Route
+     */
+    reviewer_gps_matches_route: boolean | null;
+    /**
+     * Reviewed At
+     */
+    reviewed_at: string | null;
     gps_coordinates: GpsCoordinates | null;
     /**
      * Created At
@@ -168,12 +196,66 @@ export type PhotoAnalysisRead = {
      * Updated At
      */
     updated_at: string;
+    /**
+     * Effective Has Duct
+     */
+    effective_has_duct: boolean;
+    /**
+     * Effective Has Ruler
+     */
+    effective_has_ruler: boolean;
+    /**
+     * Effective Is In Domain
+     */
+    effective_is_in_domain: boolean;
+    /**
+     * Effective Has Gdpr Problems
+     */
+    effective_has_gdpr_problems: boolean;
+    /**
+     * Effective Gps Matches Route
+     */
+    effective_gps_matches_route: boolean;
+    effective_category: PhotoDocumentationCategory | null;
+};
+
+/**
+ * PhotoAnalysisReviewUpdate
+ */
+export type PhotoAnalysisReviewUpdate = {
+    /**
+     * Reviewer Has Duct
+     */
+    reviewer_has_duct?: boolean | null;
+    /**
+     * Reviewer Has Ruler
+     */
+    reviewer_has_ruler?: boolean | null;
+    /**
+     * Reviewer Is In Domain
+     */
+    reviewer_is_in_domain?: boolean | null;
+    /**
+     * Reviewer Has Gdpr Problems
+     */
+    reviewer_has_gdpr_problems?: boolean | null;
+    /**
+     * Reviewer Gps Matches Route
+     */
+    reviewer_gps_matches_route?: boolean | null;
+    reviewer_override_category?: PhotoDocumentationCategory | null;
+    /**
+     * Mark Reviewed
+     */
+    mark_reviewed?: boolean;
 };
 
 /**
  * PhotoDocumentationCategory
  *
  * Per-photo documentation quality (map node/segment rollup), not workflow status.
+ *
+ * Rules and review workflow: docs/photo-documentation-category.md
  */
 export type PhotoDocumentationCategory = 'green' | 'yellow' | 'red';
 
@@ -362,67 +444,6 @@ export type HealthHealthGetResponses = {
 
 export type HealthHealthGetResponse = HealthHealthGetResponses[keyof HealthHealthGetResponses];
 
-export type ListItemsItemsGetData = {
-    body?: never;
-    path?: never;
-    query?: {
-        /**
-         * Limit
-         */
-        limit?: number;
-        /**
-         * Offset
-         */
-        offset?: number;
-    };
-    url: '/items';
-};
-
-export type ListItemsItemsGetErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type ListItemsItemsGetError = ListItemsItemsGetErrors[keyof ListItemsItemsGetErrors];
-
-export type ListItemsItemsGetResponses = {
-    /**
-     * Response List Items Items Get
-     *
-     * Successful Response
-     */
-    200: Array<ItemRead>;
-};
-
-export type ListItemsItemsGetResponse = ListItemsItemsGetResponses[keyof ListItemsItemsGetResponses];
-
-export type CreateItemItemsPostData = {
-    body: ItemCreate;
-    path?: never;
-    query?: never;
-    url: '/items';
-};
-
-export type CreateItemItemsPostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type CreateItemItemsPostError = CreateItemItemsPostErrors[keyof CreateItemItemsPostErrors];
-
-export type CreateItemItemsPostResponses = {
-    /**
-     * Successful Response
-     */
-    200: ItemRead;
-};
-
-export type CreateItemItemsPostResponse = CreateItemItemsPostResponses[keyof CreateItemItemsPostResponses];
-
 export type ListProjectsRouteProjectsGetData = {
     body?: never;
     path?: never;
@@ -608,6 +629,68 @@ export type UploadProjectGeojsonProjectsProjectIdGeojsonPostResponses = {
 
 export type UploadProjectGeojsonProjectsProjectIdGeojsonPostResponse = UploadProjectGeojsonProjectsProjectIdGeojsonPostResponses[keyof UploadProjectGeojsonProjectsProjectIdGeojsonPostResponses];
 
+export type ReadProjectMapPhotosProjectsProjectIdMapPhotosGetData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/projects/{project_id}/map-photos';
+};
+
+export type ReadProjectMapPhotosProjectsProjectIdMapPhotosGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ReadProjectMapPhotosProjectsProjectIdMapPhotosGetError = ReadProjectMapPhotosProjectsProjectIdMapPhotosGetErrors[keyof ReadProjectMapPhotosProjectsProjectIdMapPhotosGetErrors];
+
+export type ReadProjectMapPhotosProjectsProjectIdMapPhotosGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: MapPhotosRead;
+};
+
+export type ReadProjectMapPhotosProjectsProjectIdMapPhotosGetResponse = ReadProjectMapPhotosProjectsProjectIdMapPhotosGetResponses[keyof ReadProjectMapPhotosProjectsProjectIdMapPhotosGetResponses];
+
+export type ReadProjectImageContentProjectsProjectIdImagesAssetIdContentGetData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Asset Id
+         */
+        asset_id: string;
+    };
+    query?: never;
+    url: '/projects/{project_id}/images/{asset_id}/content';
+};
+
+export type ReadProjectImageContentProjectsProjectIdImagesAssetIdContentGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ReadProjectImageContentProjectsProjectIdImagesAssetIdContentGetError = ReadProjectImageContentProjectsProjectIdImagesAssetIdContentGetErrors[keyof ReadProjectImageContentProjectsProjectIdImagesAssetIdContentGetErrors];
+
+export type ReadProjectImageContentProjectsProjectIdImagesAssetIdContentGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
 export type UploadProjectImageProjectsProjectIdImagesPostData = {
     body: BodyUploadProjectImageProjectsProjectIdImagesPost;
     path: {
@@ -671,3 +754,37 @@ export type AnalyzeProjectImageProjectsProjectIdImagesAssetIdAnalyzePostResponse
 };
 
 export type AnalyzeProjectImageProjectsProjectIdImagesAssetIdAnalyzePostResponse = AnalyzeProjectImageProjectsProjectIdImagesAssetIdAnalyzePostResponses[keyof AnalyzeProjectImageProjectsProjectIdImagesAssetIdAnalyzePostResponses];
+
+export type ReviewProjectImageAnalysisProjectsProjectIdImagesAssetIdAnalysisPatchData = {
+    body: PhotoAnalysisReviewUpdate;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+        /**
+         * Asset Id
+         */
+        asset_id: string;
+    };
+    query?: never;
+    url: '/projects/{project_id}/images/{asset_id}/analysis';
+};
+
+export type ReviewProjectImageAnalysisProjectsProjectIdImagesAssetIdAnalysisPatchErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ReviewProjectImageAnalysisProjectsProjectIdImagesAssetIdAnalysisPatchError = ReviewProjectImageAnalysisProjectsProjectIdImagesAssetIdAnalysisPatchErrors[keyof ReviewProjectImageAnalysisProjectsProjectIdImagesAssetIdAnalysisPatchErrors];
+
+export type ReviewProjectImageAnalysisProjectsProjectIdImagesAssetIdAnalysisPatchResponses = {
+    /**
+     * Successful Response
+     */
+    200: ProjectAssetRead;
+};
+
+export type ReviewProjectImageAnalysisProjectsProjectIdImagesAssetIdAnalysisPatchResponse = ReviewProjectImageAnalysisProjectsProjectIdImagesAssetIdAnalysisPatchResponses[keyof ReviewProjectImageAnalysisProjectsProjectIdImagesAssetIdAnalysisPatchResponses];

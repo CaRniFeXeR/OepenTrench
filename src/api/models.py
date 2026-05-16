@@ -11,24 +11,6 @@ from sqlmodel import Field, SQLModel
 from src.api.helpers.time import utc_now
 
 
-class Item(SQLModel, table=True):
-    """Example table; all SQLModel tables live in this module."""
-
-    id: int | None = Field(default=None, primary_key=True)
-    name: str = Field(max_length=500, index=True)
-    created_at: datetime
-
-
-class ItemCreate(SQLModel):
-    name: str = Field(max_length=500, min_length=1)
-
-
-class ItemRead(SQLModel):
-    id: int
-    name: str
-    created_at: datetime
-
-
 class AssetKind(str, Enum):
     image = "image"
     geojson = "geojson"
@@ -46,7 +28,10 @@ class GeojsonStatus(str, Enum):
 
 
 class PhotoDocumentationCategory(str, Enum):
-    """Per-photo documentation quality (map node/segment rollup), not workflow status."""
+    """Per-photo documentation quality (map node/segment rollup), not workflow status.
+
+    Rules and review workflow: docs/photo-documentation-category.md
+    """
 
     green = "green"
     yellow = "yellow"
@@ -96,12 +81,16 @@ class PhotoAnalysis(SQLModel, table=True):
     has_gdpr_problems: bool = Field(default=False)
     is_duplicated: bool = Field(default=False)
     category: PhotoDocumentationCategory | None = Field(default=None)
-    has_sand_bedding: bool = Field(default=False)
-    has_pipe_end_seal: bool = Field(default=False)
     gps_matches_route: bool = Field(default=False)
     date_valid: bool = Field(default=False)
     is_false_call: bool = Field(default=False)
     reviewer_override_category: PhotoDocumentationCategory | None = Field(default=None)
+    reviewer_has_duct: bool | None = Field(default=None)
+    reviewer_has_ruler: bool | None = Field(default=None)
+    reviewer_is_in_domain: bool | None = Field(default=None)
+    reviewer_has_gdpr_problems: bool | None = Field(default=None)
+    reviewer_gps_matches_route: bool | None = Field(default=None)
+    reviewed_at: datetime | None = Field(default=None)
     gps_coordinates: dict | None = Field(default=None, sa_column=Column(JSON))
     created_at: datetime = Field(default_factory=utc_now)
     updated_at: datetime = Field(default_factory=utc_now)
@@ -130,7 +119,7 @@ class ProjectRead(SQLModel):
 
 
 class PhotoAnalysisRead(BaseModel):
-    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+    model_config = ConfigDict(use_enum_values=True)
 
     asset_id: str
     is_in_domain: bool
@@ -142,15 +131,35 @@ class PhotoAnalysisRead(BaseModel):
     has_gdpr_problems: bool
     is_duplicated: bool
     category: PhotoDocumentationCategory | None
-    has_sand_bedding: bool
-    has_pipe_end_seal: bool
     gps_matches_route: bool
     date_valid: bool
     is_false_call: bool
     reviewer_override_category: PhotoDocumentationCategory | None
+    reviewer_has_duct: bool | None
+    reviewer_has_ruler: bool | None
+    reviewer_is_in_domain: bool | None
+    reviewer_has_gdpr_problems: bool | None
+    reviewer_gps_matches_route: bool | None
+    reviewed_at: datetime | None
     gps_coordinates: GpsCoordinates | None
     created_at: datetime
     updated_at: datetime
+    effective_has_duct: bool
+    effective_has_ruler: bool
+    effective_is_in_domain: bool
+    effective_has_gdpr_problems: bool
+    effective_gps_matches_route: bool
+    effective_category: PhotoDocumentationCategory | None
+
+
+class PhotoAnalysisReviewUpdate(BaseModel):
+    reviewer_has_duct: bool | None = None
+    reviewer_has_ruler: bool | None = None
+    reviewer_is_in_domain: bool | None = None
+    reviewer_has_gdpr_problems: bool | None = None
+    reviewer_gps_matches_route: bool | None = None
+    reviewer_override_category: PhotoDocumentationCategory | None = None
+    mark_reviewed: bool = True
 
 
 class ProjectAssetRead(SQLModel):
@@ -174,3 +183,18 @@ class ProjectDetailRead(SQLModel):
     geojson_status: GeojsonStatus
     project_date: date | None
     assets: list[ProjectAssetRead]
+
+
+class MapPhotoMarkerRead(BaseModel):
+    model_config = ConfigDict(use_enum_values=True)
+
+    asset_id: str
+    coordinates: tuple[float, float]
+    category: PhotoDocumentationCategory | None
+    fcp_id: str | None
+    fcp_code: str | None
+    fcp_label: str | None
+
+
+class MapPhotosRead(BaseModel):
+    photos: list[MapPhotoMarkerRead]

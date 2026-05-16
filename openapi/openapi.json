@@ -30,104 +30,6 @@
         }
       }
     },
-    "/items": {
-      "post": {
-        "tags": [
-          "items"
-        ],
-        "summary": "Create Item",
-        "operationId": "create_item_items_post",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ItemCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ItemRead"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "get": {
-        "tags": [
-          "items"
-        ],
-        "summary": "List Items",
-        "operationId": "list_items_items_get",
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "default": 50,
-              "title": "Limit"
-            }
-          },
-          {
-            "name": "offset",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "default": 0,
-              "title": "Offset"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ItemRead"
-                  },
-                  "title": "Response List Items Items Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/projects": {
       "post": {
         "tags": [
@@ -412,6 +314,97 @@
         }
       }
     },
+    "/projects/{project_id}/map-photos": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Read Project Map Photos",
+        "operationId": "read_project_map_photos_projects__project_id__map_photos_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MapPhotosRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/images/{asset_id}/content": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Read Project Image Content",
+        "operationId": "read_project_image_content_projects__project_id__images__asset_id__content_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "asset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Asset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/projects/{project_id}/images": {
       "post": {
         "tags": [
@@ -491,6 +484,67 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectAssetRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{project_id}/images/{asset_id}/analysis": {
+      "patch": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Review Project Image Analysis",
+        "operationId": "review_project_image_analysis_projects__project_id__images__asset_id__analysis_patch",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "asset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Asset Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PhotoAnalysisReviewUpdate"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -626,44 +680,96 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
-      "ItemCreate": {
+      "MapPhotoMarkerRead": {
         "properties": {
-          "name": {
+          "asset_id": {
             "type": "string",
-            "maxLength": 500,
-            "minLength": 1,
-            "title": "Name"
+            "title": "Asset Id"
+          },
+          "coordinates": {
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Coordinates"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PhotoDocumentationCategory"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fcp_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fcp Id"
+          },
+          "fcp_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fcp Code"
+          },
+          "fcp_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fcp Label"
           }
         },
         "type": "object",
         "required": [
-          "name"
+          "asset_id",
+          "coordinates",
+          "category",
+          "fcp_id",
+          "fcp_code",
+          "fcp_label"
         ],
-        "title": "ItemCreate"
+        "title": "MapPhotoMarkerRead"
       },
-      "ItemRead": {
+      "MapPhotosRead": {
         "properties": {
-          "id": {
-            "type": "integer",
-            "title": "Id"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
+          "photos": {
+            "items": {
+              "$ref": "#/components/schemas/MapPhotoMarkerRead"
+            },
+            "type": "array",
+            "title": "Photos"
           }
         },
         "type": "object",
         "required": [
-          "id",
-          "name",
-          "created_at"
+          "photos"
         ],
-        "title": "ItemRead"
+        "title": "MapPhotosRead"
       },
       "PhotoAnalysisRead": {
         "properties": {
@@ -727,14 +833,6 @@
               }
             ]
           },
-          "has_sand_bedding": {
-            "type": "boolean",
-            "title": "Has Sand Bedding"
-          },
-          "has_pipe_end_seal": {
-            "type": "boolean",
-            "title": "Has Pipe End Seal"
-          },
           "gps_matches_route": {
             "type": "boolean",
             "title": "Gps Matches Route"
@@ -757,6 +855,73 @@
               }
             ]
           },
+          "reviewer_has_duct": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewer Has Duct"
+          },
+          "reviewer_has_ruler": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewer Has Ruler"
+          },
+          "reviewer_is_in_domain": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewer Is In Domain"
+          },
+          "reviewer_has_gdpr_problems": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewer Has Gdpr Problems"
+          },
+          "reviewer_gps_matches_route": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewer Gps Matches Route"
+          },
+          "reviewed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed At"
+          },
           "gps_coordinates": {
             "anyOf": [
               {
@@ -776,6 +941,36 @@
             "type": "string",
             "format": "date-time",
             "title": "Updated At"
+          },
+          "effective_has_duct": {
+            "type": "boolean",
+            "title": "Effective Has Duct"
+          },
+          "effective_has_ruler": {
+            "type": "boolean",
+            "title": "Effective Has Ruler"
+          },
+          "effective_is_in_domain": {
+            "type": "boolean",
+            "title": "Effective Is In Domain"
+          },
+          "effective_has_gdpr_problems": {
+            "type": "boolean",
+            "title": "Effective Has Gdpr Problems"
+          },
+          "effective_gps_matches_route": {
+            "type": "boolean",
+            "title": "Effective Gps Matches Route"
+          },
+          "effective_category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PhotoDocumentationCategory"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -790,17 +985,103 @@
           "has_gdpr_problems",
           "is_duplicated",
           "category",
-          "has_sand_bedding",
-          "has_pipe_end_seal",
           "gps_matches_route",
           "date_valid",
           "is_false_call",
           "reviewer_override_category",
+          "reviewer_has_duct",
+          "reviewer_has_ruler",
+          "reviewer_is_in_domain",
+          "reviewer_has_gdpr_problems",
+          "reviewer_gps_matches_route",
+          "reviewed_at",
           "gps_coordinates",
           "created_at",
-          "updated_at"
+          "updated_at",
+          "effective_has_duct",
+          "effective_has_ruler",
+          "effective_is_in_domain",
+          "effective_has_gdpr_problems",
+          "effective_gps_matches_route",
+          "effective_category"
         ],
         "title": "PhotoAnalysisRead"
+      },
+      "PhotoAnalysisReviewUpdate": {
+        "properties": {
+          "reviewer_has_duct": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewer Has Duct"
+          },
+          "reviewer_has_ruler": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewer Has Ruler"
+          },
+          "reviewer_is_in_domain": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewer Is In Domain"
+          },
+          "reviewer_has_gdpr_problems": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewer Has Gdpr Problems"
+          },
+          "reviewer_gps_matches_route": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewer Gps Matches Route"
+          },
+          "reviewer_override_category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PhotoDocumentationCategory"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "mark_reviewed": {
+            "type": "boolean",
+            "title": "Mark Reviewed",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "PhotoAnalysisReviewUpdate"
       },
       "PhotoDocumentationCategory": {
         "type": "string",
@@ -810,7 +1091,7 @@
           "red"
         ],
         "title": "PhotoDocumentationCategory",
-        "description": "Per-photo documentation quality (map node/segment rollup), not workflow status."
+        "description": "Per-photo documentation quality (map node/segment rollup), not workflow status.\n\nRules and review workflow: docs/photo-documentation-category.md"
       },
       "ProjectAssetRead": {
         "properties": {

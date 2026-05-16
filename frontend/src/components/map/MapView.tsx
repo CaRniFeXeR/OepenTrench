@@ -5,7 +5,12 @@ import {
 } from 'react';
 
 import Map, { type MapRef } from 'react-map-gl/maplibre';
-import type { LngLatBoundsLike, MapLibreEvent, PaddingOptions } from 'maplibre-gl';
+import type {
+  LngLatBoundsLike,
+  MapLayerMouseEvent,
+  MapLibreEvent,
+  PaddingOptions,
+} from 'maplibre-gl';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
 
@@ -34,6 +39,8 @@ export type MapViewProps = {
   bounds?: LngLatBoundsLike;
   fitBoundsOptions?: MapFitBoundsOptions;
   onLoad?: (e: MapLibreEvent) => void;
+  onClick?: (e: MapLayerMouseEvent) => void;
+  interactiveLayerIds?: string[];
   children?: ReactNode;
 };
 
@@ -47,6 +54,8 @@ export const MapView = forwardRef(function MapView(
     bounds,
     fitBoundsOptions,
     onLoad,
+    onClick,
+    interactiveLayerIds,
     children,
   }: MapViewProps,
   ref: ForwardedRef<MapRef | null>,
@@ -63,6 +72,8 @@ export const MapView = forwardRef(function MapView(
         style={{ width: '100%', height }}
         mapStyle={DEFAULT_STYLE}
         onLoad={onLoad}
+        onClick={onClick}
+        interactiveLayerIds={interactiveLayerIds}
       >
         {children}
       </Map>
