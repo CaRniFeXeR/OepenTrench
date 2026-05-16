@@ -663,3 +663,58 @@ Minimum bar: 2 options, 1 chosen, explicit reasoning.
   - `docs/labelling-harness.md` — "4-class schema" → "3-class schema"
 - **Commit:** pending
 - **Supersedes:** Brainstorming resolution in spec §14 ("Whitepaper class scope → two classes"). Also retires the sitetag-specific work in D-030 (prompt-overlap rewrite for sitetag) — D-030's matcher-disambiguation logic still applies to any future overlapping prompts, but the sitetag/whitepaper pair specifically no longer exists. D-031's over-detection note is partially mooted: of the four classes it analyses, sitetag is gone; the duct/ruler/whitepaper recall observations stand.
+
+---
+
+### D-033: OWLv2 Large adapter — image-query for duct/ruler, text-prompt fallback for whitepaper
+
+- **Timestamp:** 2026-05-16 19:30 (local)
+- **Task:** Post-audit iteration — Grounding DINO produced unusable bboxes for whitepaper; user asked for a better model.
+- **Trigger:** D-031's over-detection finding plus user feedback ("grounding dino is terrible, cannot detect whitepaper, bounding boxes off"). R14 §2.4 names OWLv2 image-query as the best open-vocab choice for fine-grained classes when visual exemplars exist.
+- **Spec anchors:** §4.4, §4.5 (adapter responsibility), §13 ("Exact Grounding DINO prompt strings per class" gap, broadened here to per-class detection strategy)
+- **Options considered:**
+  1. OWLv2 with pure text-prompt mode (same shape as Grounding DINO). Misses the image-query advantage; expected to over-detect similarly.
+  2. OWLv2 with image-query for ALL classes. Requires curated exemplars per class. No whitepaper exemplars on disk yet — would need manual curation or a Claude-driven scan of Fotos/.
+  3. Mixed mode per class: image-query where exemplars exist (duct from Beispiele/duct/, ruler from Beispiele/depth/), text-prompt fallback for classes without exemplars (whitepaper). Adapter branches per class; empty exemplar list → text-prompt path.
+- **Chosen:** Option 3.
+- **Reasoning:** Beispiele/duct/ has 105 candidates and Beispiele/depth/ has 114 — both usable without curation. Whitepaper has none, so text-prompt is the only available signal. Mixed mode means we don't block on whitepaper-exemplar curation to test duct/ruler quality. `EXEMPLARS` dict hardcoded to 4 paths per class for now (`/home/user/data/Beispiele/...`). Per-class forward pass: ~250–500 ms per exemplar at bf16 autocast on a 5090 → ~9 s/image with 4+4+1 image-guided + text passes.
+- **Out-of-scope alternatives deferred:** Curating 3–5 whitepaper exemplars from Fotos/ and switching whitepaper to image-query.
+- **Affected files:** `vm-server/server/adapters/owlv2.py` (rewritten from stub), `vm-server/pyproject.toml` (scipy dep — required by Owlv2ImageProcessor's high-quality resize), `configs/labelling/owlv2.yaml` (new profile).
+- **Commit:** pending
+- **Supersedes:** —
+
+### D-034: Makefile `stop` target — `pkill uvicorn` (argv[0] match), not `pkill -f "uvicorn server.main"`
+
+- **Timestamp:** 2026-05-16 19:35 (local)
+- **Task:** Bug fix to vm-server's Makefile uncovered by the user running `make grounding-dino` from a fresh shell.
+- **Trigger:** Operator reported `make grounding-dino` exited with `make: *** [Makefile:58: stop] Terminated`. Diagnosis: the `pkill -f "uvicorn server.main"` recipe line contains the pattern string in its argv. When sh exec'd the recipe, sh's argv[2] = the full pkill command including the search string. `pkill -f` matches the full command line, so it matched its parent sh and SIGTERM'd it.
+- **Spec anchors:** §11 (vm-server/Makefile), §12 AC #4 (server reachable via /health)
+- **Options considered:**
+  1. Read the pattern from a file or env var to keep it out of the recipe's expanded argv. Brittle.
+  2. Use `pkill uvicorn` without `-f` — matches process name (argv[0] / `comm`) only. The uvicorn binary IS named `uvicorn` (console_script in the venv). sh and pkill themselves don't self-match.
+  3. PID-file-only kill; lose the orphan-uvicorn fallback.
+- **Chosen:** Option 2 (`pkill uvicorn`).
+- **Reasoning:** Smallest correct change. `uvicorn` is unique-enough on the VM. PID-file path is unchanged and remains the primary kill mechanism; `pkill uvicorn` is the fallback for orphaned processes. Also fixed IMAGE_ROOT default from `/home/threenicorn/data` (ssh alias misread as home dir) to `/home/user/data`, which is the actual location of the rsync'd corpus.
+- **Out-of-scope alternatives deferred:** systemd unit migration.
+- **Affected files:** `vm-server/Makefile` (stop target rewritten; IMAGE_ROOT default corrected).
+- **Commit:** pending
+- **Supersedes:** —
+
+### D-035 (session note): Hybrid OWLv2 + Opus arbitration on batch_0 validates the workflow
+
+- **Timestamp:** 2026-05-16 19:45 (local)
+- **Task:** End-of-session verification of the operator-mediated hybrid workflow that spec §3 + §14 deferred to "the next session".
+- **Trigger:** OWLv2 alone over-detected everything (20/20 photos flagged for every class at recall-first thresholds, same failure mode as Grounding DINO). User chose hybrid arbitration on batch_0 over threshold tuning.
+- **Spec anchors:** §3 (operator paragraph), §4.1 (hybrid skeleton row), §14 ("Hybrid mode shape → per-image arbitration, built next session"), §12 AC #6/#7
+- **Options considered:** N/A (verification note, not a decision)
+- **Chosen:** Hybrid run produced at `labelling/runs/hybrid-owlv2_2026-05-16T09-48-50Z/` covering all 20 batch_0 photos via 5 parallel Opus agents (4 of the original 5 batches had stem-typo bugs in the controller's prompt construction; a corrective 6-photo dispatch closed the gap).
+- **Reasoning:** Per-batch numerics show the workflow does what the spec predicted:
+  - vs-v2-baseline class-presence agreement: **60.0% (hybrid)** vs **0.0% (OWLv2 raw)** vs **5.0% (Grounding DINO raw, D-031)**.
+  - duct mIoU when both present: **0.53 (hybrid)** vs **0.33 (OWLv2 raw)** vs **0.32 (Grounding DINO raw)**.
+  - ruler mIoU: **0.29 (hybrid)** vs **0.19 (OWLv2 raw)** vs **0.22 (Grounding DINO raw)**.
+  - whitepaper count on 20 photos: **5 (hybrid)** vs **20 (OWLv2 raw text-prompt over-detects on camera overlays)** vs **15–20 (Grounding DINO raw)**. v2 had 0 whitepaper labels, so hybrid's 5 are net-new ground truth.
+  Total hybrid bboxes: 33 (16 duct + 11 ruler + 6 whitepaper) across 20 photos vs OWLv2 raw's 200+. Over-detection collapses; bboxes tighten; whitepaper detection produces sensible volume.
+- **Out-of-scope alternatives deferred:** Running hybrid on the remaining 24 batches (480 photos) — user inspects batch_0 first. Curating whitepaper exemplars to swap OWLv2's text-prompt fallback for image-query — same gate. Bbox-quality concerns flagged by individual agents: borderline yellow strip / wooden stick / ambiguous levelling rod — three photos worth a human spot-check (each agent's per-photo rationale records them).
+- **Affected files:** `project-resources/custom-datasets/duct-and-ruler/detection/labelling/runs/hybrid-owlv2_2026-05-16T09-48-50Z/` (gitignored).
+- **Commit:** pending (this entry only; the run dir is gitignored).
+- **Supersedes:** Renders D-031's "still over-detects" conclusion actionable — the harness's over-detection has a defensible mitigation now (hybrid), not just "tune thresholds next session".
