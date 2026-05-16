@@ -78,8 +78,6 @@ class PhotoAnalysis(SQLModel, table=True):
     has_gdpr_problems: bool = Field(default=False)
     is_duplicated: bool = Field(default=False)
     category: PhotoDocumentationCategory | None = Field(default=None)
-    has_sand_bedding: bool = Field(default=False)
-    has_pipe_end_seal: bool = Field(default=False)
     gps_matches_route: bool = Field(default=False)
     date_valid: bool = Field(default=False)
     is_false_call: bool = Field(default=False)
@@ -124,8 +122,6 @@ class PhotoAnalysisRead(BaseModel):
     has_gdpr_problems: bool
     is_duplicated: bool
     category: PhotoDocumentationCategory | None
-    has_sand_bedding: bool
-    has_pipe_end_seal: bool
     gps_matches_route: bool
     date_valid: bool
     is_false_call: bool

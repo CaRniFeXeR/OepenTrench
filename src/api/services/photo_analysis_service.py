@@ -27,8 +27,6 @@ def _dummy_analysis_fields() -> dict:
         "has_gdpr_problems": False,
         "is_duplicated": False,
         "category": PhotoDocumentationCategory.green,
-        "has_sand_bedding": True,
-        "has_pipe_end_seal": True,
         "gps_matches_route": True,
         "date_valid": True,
         "is_false_call": False,

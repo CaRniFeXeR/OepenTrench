@@ -772,14 +772,6 @@
               }
             ]
           },
-          "has_sand_bedding": {
-            "type": "boolean",
-            "title": "Has Sand Bedding"
-          },
-          "has_pipe_end_seal": {
-            "type": "boolean",
-            "title": "Has Pipe End Seal"
-          },
           "gps_matches_route": {
             "type": "boolean",
             "title": "Gps Matches Route"
@@ -835,8 +827,6 @@
           "has_gdpr_problems",
           "is_duplicated",
           "category",
-          "has_sand_bedding",
-          "has_pipe_end_seal",
           "gps_matches_route",
           "date_valid",
           "is_false_call",

@@ -46,9 +46,7 @@ export function AnalysisTag({
 
 const ANALYSIS_TAGS = [
   { key: 'duct', full: 'Duct visible', short: 'Duct', ok: (a: PhotoAnalysisRead) => a.has_duct },
-  { key: 'sand', full: 'Sand bedding', short: 'Sand', ok: (a: PhotoAnalysisRead) => a.has_sand_bedding },
   { key: 'ruler', full: 'Burial depth / ruler', short: 'Ruler', ok: (a: PhotoAnalysisRead) => a.has_ruler },
-  { key: 'seal', full: 'Pipe end seal', short: 'Seal', ok: (a: PhotoAnalysisRead) => a.has_pipe_end_seal },
   { key: 'gps', full: 'GPS match', short: 'GPS', ok: (a: PhotoAnalysisRead) => a.gps_matches_route },
   { key: 'date', full: 'Date valid', short: 'Date', ok: (a: PhotoAnalysisRead) => a.date_valid },
   {

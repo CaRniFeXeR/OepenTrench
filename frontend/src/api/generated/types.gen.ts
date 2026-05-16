@@ -151,14 +151,6 @@ export type PhotoAnalysisRead = {
     is_duplicated: boolean;
     category: PhotoDocumentationCategory | null;
     /**
-     * Has Sand Bedding
-     */
-    has_sand_bedding: boolean;
-    /**
-     * Has Pipe End Seal
-     */
-    has_pipe_end_seal: boolean;
-    /**
      * Gps Matches Route
      */
     gps_matches_route: boolean;
