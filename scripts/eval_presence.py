@@ -94,7 +94,12 @@ def _div(num: float, den: float) -> float:
 def evaluate(
     gt_dir: Path, pred_dir: Path, class_names: list[str], targets: Iterable[str]
 ) -> tuple[int, dict[str, dict[str, int | float]]]:
-    gt_files = sorted(p for p in gt_dir.iterdir() if p.suffix == ".txt")
+    # Skip dotfiles (macOS `._*` resource-fork sidecars and similar) — they have
+    # a .txt suffix but binary content and crash UTF-8 decoding.
+    gt_files = sorted(
+        p for p in gt_dir.iterdir()
+        if p.suffix == ".txt" and not p.name.startswith(".")
+    )
     if not gt_files:
         raise SystemExit(f"no .txt label files found in {gt_dir}")
 
