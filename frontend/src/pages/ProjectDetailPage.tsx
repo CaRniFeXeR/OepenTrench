@@ -12,6 +12,7 @@ export function ProjectDetailPage() {
   const [project, setProject] = useState<ProjectDetailRead | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [uploadsBusy, setUploadsBusy] = useState(false);
 
   const load = useCallback(async (options?: { silent?: boolean }) => {
     if (!projectId) {
@@ -57,7 +58,13 @@ export function ProjectDetailPage() {
         <div className="mx-auto max-w-6xl px-6 py-4">
           <Link
             to="/"
-            className="text-sm font-medium text-slate-600 hover:text-slate-900"
+            aria-disabled={uploadsBusy}
+            onClick={(e) => {
+              if (uploadsBusy) e.preventDefault();
+            }}
+            className={`text-sm font-medium text-slate-600 hover:text-slate-900 ${
+              uploadsBusy ? 'pointer-events-none opacity-50' : ''
+            }`}
           >
             ← Back to projects
           </Link>
@@ -72,7 +79,11 @@ export function ProjectDetailPage() {
           </div>
         )}
         {!loading && !error && project && (
-          <ProjectUploadPanel project={project} onRefresh={refreshProject} />
+          <ProjectUploadPanel
+            project={project}
+            onRefresh={refreshProject}
+            onUploadsBusyChange={setUploadsBusy}
+          />
         )}
       </main>
     </div>

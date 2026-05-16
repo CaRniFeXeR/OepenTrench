@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useBlocker, useNavigate } from 'react-router-dom';
 import type { FeatureCollection } from 'geojson';
 
 import {
@@ -52,9 +52,11 @@ function mergeFeatureCollections(
 export function ProjectUploadPanel({
   project,
   onRefresh,
+  onUploadsBusyChange,
 }: {
   project: ProjectDetailRead;
   onRefresh: () => Promise<void>;
+  onUploadsBusyChange?: (busy: boolean) => void;
 }) {
   const navigate = useNavigate();
   const [mapData, setMapData] = useState<FeatureCollection | null>(null);
@@ -69,6 +71,34 @@ export function ProjectUploadPanel({
   const routeReady = project.geojson_status === 'ready';
   const uploadsBusy = photosBusy || geoBusy;
   const checklist = geojsonChecklistFromAssets(project.assets);
+
+  const blocker = useBlocker(uploadsBusy);
+
+  useEffect(() => {
+    onUploadsBusyChange?.(uploadsBusy);
+  }, [uploadsBusy, onUploadsBusyChange]);
+
+  useEffect(() => {
+    return () => onUploadsBusyChange?.(false);
+  }, [onUploadsBusyChange]);
+
+  useEffect(() => {
+    if (!uploadsBusy) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [uploadsBusy]);
+
+  useEffect(() => {
+    if (blocker.state !== 'blocked') return;
+    const leave = window.confirm(
+      'Uploads are still in progress. Leaving now may interrupt uploads. Leave anyway?',
+    );
+    if (leave) blocker.proceed();
+    else blocker.reset();
+  }, [blocker]);
 
   useEffect(() => {
     if (project.geojson_status !== 'ready') return;
@@ -167,8 +197,16 @@ export function ProjectUploadPanel({
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
-                onClick={() => navigate('/')}
-                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-800 hover:bg-slate-50"
+                disabled={uploadsBusy}
+                onClick={() => {
+                  if (!uploadsBusy) navigate('/');
+                }}
+                title={
+                  uploadsBusy
+                    ? 'Wait for uploads to finish before leaving.'
+                    : undefined
+                }
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-45"
               >
                 Save draft
               </button>
