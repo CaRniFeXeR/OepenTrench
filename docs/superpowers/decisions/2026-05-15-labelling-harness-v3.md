@@ -1,7 +1,7 @@
 # Labelling Harness v3 — Decision Journal
 
 **Spec:** `docs/superpowers/specs/2026-05-15-labelling-harness-v3-design.md`
-**Status:** Open
+**Status:** Audit passed (D-001..D-025 audited at commit `62e046e`, APPROVED with 0 silent gaps / 0 contradictions / 0 scope violations / 0 unmet ACs). D-026..D-031 added in response to a parallel-running non-blocking code-quality review and are scoped to its findings.
 **Branch/worktree:** `feat/labelling-harness-v3`
 
 ## Task Outline
