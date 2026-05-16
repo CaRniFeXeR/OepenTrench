@@ -20,8 +20,10 @@ classes: [duct, ruler, whitepaper, sitetag]
 prompts:
   duct: "HDPE conduit . Schutzrohr . fibre optic cable . bundled coloured ducts . end caps . corrugated black pipe in trench"
   ruler: "folding rule . Zollstock . Meterstab . tape measure . levelling rod . painted ruler stake"
-  whitepaper: "paper or card held in frame showing a printed or handwritten address . postal address slip . coordinates on paper"
-  sitetag: "small paper card with F-number site code . DataMatrix barcode slip . contractor site identifier"
+  # whitepaper / sitetag prompts authored to share no salient tokens —
+  # _match_label_to_class needs class-specific discriminators.
+  whitepaper: "handwritten address note . printed address sheet . postal address with street and city . typed coordinates lat lon"
+  sitetag: "F-number contractor code . DataMatrix barcode label . site identifier marker . contractor reference number"
 
 per_class_threshold:
   duct: 0.25

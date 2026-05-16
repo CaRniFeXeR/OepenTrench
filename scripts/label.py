@@ -150,52 +150,65 @@ def main() -> int:
         print(f"config error: {e}", file=sys.stderr)
         return 2
 
-    labeller = _build_labeller(config)
+    with _build_labeller(config) as labeller:
+        if args.health_check:
+            ok = labeller.health_check()
+            print(f"{labeller.config.endpoint}/health → {'ok' if ok else 'unreachable'}")
+            return 0 if ok else 3
 
-    if args.health_check:
-        ok = labeller.health_check()
-        print(f"{labeller.config.endpoint}/health → {'ok' if ok else 'unreachable'}")
-        return 0 if ok else 3
+        if not labeller.health_check():
+            print(
+                f"error: {labeller.config.endpoint}/health unreachable — "
+                f"is the SSH tunnel up?",
+                file=sys.stderr,
+            )
+            return 3
 
-    if not labeller.health_check():
+        if args.image_path is not None:
+            if not args.image_path.is_file():
+                print(f"error: --image-path not found: {args.image_path}", file=sys.stderr)
+                return 1
+            images = [args.image_path.resolve()]
+            batches_used: List[int] = []
+        else:
+            batches = _parse_batches(args.batches) if args.batches else None
+            try:
+                images = _load_manifest(
+                    args.manifest, batches, args.limit, Path(config.local_image_root),
+                )
+            except FileNotFoundError as e:
+                print(f"error: {e}", file=sys.stderr)
+                return 2
+            batches_used = sorted(batches) if batches else []
+
+        if not images:
+            print(
+                "error: zero images selected — check --batches / --limit / manifest",
+                file=sys.stderr,
+            )
+            return 1
+
+        result = run(
+            config=config,
+            labeller=labeller,
+            image_paths=images,
+            out_root=args.out,
+            repo_root=REPO_ROOT,
+            batches_selected=batches_used,
+            progress=not args.no_progress,
+        )
+
+    print(_summary_line(result), file=sys.stderr)
+    if result.errors:
+        kinds = ", ".join(
+            f"{k}={sum(1 for e in result.errors if e.kind == k)}"
+            for k in sorted({e.kind for e in result.errors})
+        )
         print(
-            f"error: {labeller.config.endpoint}/health unreachable — "
-            f"is the SSH tunnel up?",
+            f"WARNING: {len(result.errors)} non-fatal error(s) recorded ({kinds}) — "
+            f"see {result.run_dir.name}/run_manifest.json.errors[]",
             file=sys.stderr,
         )
-        return 3
-
-    if args.image_path is not None:
-        if not args.image_path.is_file():
-            print(f"error: --image-path not found: {args.image_path}", file=sys.stderr)
-            return 1
-        images = [args.image_path.resolve()]
-        batches_used: List[int] = []
-    else:
-        batches = _parse_batches(args.batches) if args.batches else None
-        try:
-            images = _load_manifest(
-                args.manifest, batches, args.limit, Path(config.local_image_root),
-            )
-        except FileNotFoundError as e:
-            print(f"error: {e}", file=sys.stderr)
-            return 2
-        batches_used = sorted(batches) if batches else []
-
-    if not images:
-        print("error: zero images selected — check --batches / --limit / manifest", file=sys.stderr)
-        return 1
-
-    result = run(
-        config=config,
-        labeller=labeller,
-        image_paths=images,
-        out_root=args.out,
-        repo_root=REPO_ROOT,
-        batches_selected=batches_used,
-        progress=not args.no_progress,
-    )
-    print(_summary_line(result), file=sys.stderr)
     return 0 if result.ok else 1
 
 

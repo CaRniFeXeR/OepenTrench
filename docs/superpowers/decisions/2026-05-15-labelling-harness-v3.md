@@ -534,3 +534,107 @@ Minimum bar: 2 options, 1 chosen, explicit reasoning.
 - **Affected files:** `vm-server/server/adapters/grounding_dino.py`
 - **Commit:** pending
 - **Supersedes:** —
+
+---
+
+### D-026: `_match_label_to_class` scored by longest substring + token, not first match
+
+- **Timestamp:** 2026-05-16 17:30 (local)
+- **Task:** Post-review fix (code-quality reviewer finding "Important — spec drift / correctness").
+- **Trigger:** Reviewer flagged that the original `_match_label_to_class` returned the first class whose prompt contained the label substring. For overlapping prompts (whitepaper and sitetag both originally mentioned "paper" and "card"), this assigned by dict iteration order rather than specificity. The function was well-named but unreliable for the actual configured prompts.
+- **Spec anchors:** §4.5 (adapter), §13 (prompt-authoring gap)
+- **Options considered:**
+  1. Anchor each class on a unique discriminator token in the function (e.g., require `"address"` for whitepaper, `"F-number"` for sitetag). Hardcodes class-specific tokens into the matcher — every new class needs a code change.
+  2. Score by longest contiguous substring match; tie-break by longest matched token. The class with the most-specific overlap wins; no class-specific knowledge in the matcher.
+  3. Compute token-set Jaccard between label and each class prompt; pick highest. More principled but slower; over-engineered for 4 short prompts.
+- **Chosen:** Option 2 (longest-substring + longest-token tiebreak).
+- **Reasoning:** Keeps the matcher generic across class names. Together with D-030's non-overlapping-prompt config rewrite, it produces deterministic assignments: "F-number" (4 chars in label) routes uniquely to sitetag; "address note" routes uniquely to whitepaper. Without D-030 the matcher still picks the longer specific token but can tie on shared tokens — the fix and the prompt rewrite are mutually reinforcing.
+- **Out-of-scope alternatives deferred:** Per-class anchor tokens as an explicit config field. Could be added if the longest-substring heuristic ever proves insufficient.
+- **Affected files:** `vm-server/server/adapters/grounding_dino.py`
+- **Commit:** pending
+- **Supersedes:** —
+
+### D-027: `_load_class_names` coerces dict keys to `int` before sorting
+
+- **Timestamp:** 2026-05-16 17:35 (local)
+- **Task:** Post-review fix (code-quality reviewer finding "Important — bug").
+- **Trigger:** Reviewer flagged that `_load_class_names` in `compare.py` used `sorted(names.keys())` for the dict branch. If a future `data.yaml` ships string keys (`"0"`, `"1"`, …, `"10"`), lexicographic sort gives `["0","1","10","2"]` which mis-orders class IDs ≥ 10. `scripts/inspect_labels.py:51-57` already handled this correctly by coercing through `int()`. The two code paths disagreed on identical input.
+- **Spec anchors:** §6.6 (compare data contract), §13 ("inspector extend-in-place" gap)
+- **Options considered:**
+  1. Leave as-is; document that YAML keys must be native ints. Fragile — the next operator authoring a yaml might write strings out of habit.
+  2. Coerce keys with `int()` before sorting; raise a clean `ValueError` if coercion fails. Mirrors the inspector's logic; consistent across the two readers.
+  3. Use `yaml.safe_load` with a custom Constructor that forces int keys. Solves it at parse time but adds a global yaml customisation that surprises every other yaml consumer in the project.
+- **Chosen:** Option 2.
+- **Reasoning:** One-line fix that brings the compare loader to parity with the inspector. Also added explicit error handling for malformed yaml (the function previously raised raw `yaml.YAMLError` or `KeyError` at the caller). New tests at `tests/labelling/test_compare_class_names.py` lock in the behaviour (int keys, string keys, list form, malformed yaml, missing names, non-numeric keys).
+- **Out-of-scope alternatives deferred:** A shared loader between inspector and compare — they have different downstream needs (inspector wants the names list for FiftyOne, compare wants the same list for index→name mapping).
+- **Affected files:** `src/labelling/compare.py`, `tests/labelling/test_compare_class_names.py`
+- **Commit:** pending
+- **Supersedes:** —
+
+### D-028: `scripts/label.py` uses `with` for `RemoteVlmLabeller` lifecycle
+
+- **Timestamp:** 2026-05-16 17:40 (local)
+- **Task:** Post-review fix (code-quality reviewer finding "Important — resource leak").
+- **Trigger:** Reviewer flagged that `RemoteVlmLabeller` defined `__enter__`/`__exit__`/`close()` but no caller used them — the httpx.Client was leaked until process exit. Benign for the CLI but dead code.
+- **Spec anchors:** §5.5 (Labeller interface)
+- **Options considered:**
+  1. Wrap construction in `scripts/label.py` with `with _build_labeller(config) as labeller:`. Single-line change; ownership lives at the CLI boundary where the lifecycle is obvious.
+  2. Push close into `runner.run()`. Spreads lifecycle ownership across two modules; the runner shouldn't own resources it doesn't construct.
+  3. Remove the context-manager methods from `RemoteVlmLabeller`. Doesn't fix the leak.
+- **Chosen:** Option 1 (with-statement at the CLI).
+- **Reasoning:** The CLI is the natural owner of the labeller's lifecycle. Wrapping at this level closes the client on every exit path (including the early `--health-check` and `not labeller.health_check()` returns) without touching the runner. The context-manager methods stop being dead code.
+- **Out-of-scope alternatives deferred:** Async httpx.AsyncClient for concurrent labelling — explicit §2 non-goal.
+- **Affected files:** `scripts/label.py`
+- **Commit:** pending
+- **Supersedes:** —
+
+### D-029: Prominent stderr warning when `manifest.errors` is non-empty
+
+- **Timestamp:** 2026-05-16 17:45 (local)
+- **Task:** Post-review fix (code-quality reviewer finding "Important — spec ambiguity / exit-code surprise").
+- **Trigger:** Reviewer flagged that with `MalformedResponseError` deliberately not bumping `images_failed` (per D-010, so resume works), an operator running `scripts/label.py … && downstream_script` could miss every-image malformed responses and exit 0 silently. The exit-code semantics are correct per D-010's reasoning but invisible to operators chaining commands.
+- **Spec anchors:** §7 (exit codes), §8 (error taxonomy), D-010
+- **Options considered:**
+  1. Change the exit code to 1 when any errors are recorded, regardless of kind. Defeats D-010's intent (resume-friendly empty output for malformed responses). Breaks back-compat with the spec.
+  2. Print a prominent stderr WARNING line when `result.errors` is non-empty, keep exit code per D-010. Operators chaining commands see the warning in stderr; automation that relies on exit codes is unchanged.
+  3. Add a `--strict` CLI flag that treats any error as exit-1. Adds CLI surface; defers the decision to every invocation.
+- **Chosen:** Option 2 (always-printed stderr warning + unchanged exit code).
+- **Reasoning:** Preserves D-010's resume guarantee while surfacing the problem operators are most likely to miss. Cost: one stderr line per non-clean run, formatted as `WARNING: N non-fatal error(s) recorded (kind1=A, kind2=B) — see <run_dir>/run_manifest.json.errors[]`. The line points at the canonical record so the operator can investigate.
+- **Out-of-scope alternatives deferred:** A `--strict` flag — can be added if a future automation actually needs it.
+- **Affected files:** `scripts/label.py`
+- **Commit:** pending
+- **Supersedes:** —
+
+### D-030: Whitepaper / sitetag prompts rewritten to share no salient tokens
+
+- **Timestamp:** 2026-05-16 17:50 (local)
+- **Task:** Post-review fix (paired with D-026).
+- **Trigger:** Reviewer noted that the original prompts both contained "paper", "card", "slip" — common tokens that defeated the label→class matcher's ability to disambiguate. The matcher fix in D-026 is necessary but not sufficient: even with longest-match scoring, two prompts that share a discriminative token still tie. The prompts themselves had to be rewritten to be class-distinctive.
+- **Spec anchors:** §13 ("Exact Grounding DINO prompt strings per class" gap)
+- **Options considered:**
+  1. Add a `class_token` config field that operators set per class. Adds schema surface; operators must understand the matcher internals.
+  2. Rewrite the prompts so the discriminator vocabulary is class-unique. `whitepaper` → "handwritten address note . printed address sheet . postal address . typed coordinates"; `sitetag` → "F-number contractor code . DataMatrix barcode label . site identifier marker . contractor reference number". No "paper"/"card"/"slip" shared between them. Operator-transparent.
+  3. Leave the prompts; accept the matcher misclassification. Per the reviewer this would produce confusing per-class breakdowns the moment more than a couple of images run. Visible exactly in AC #7's pre-fix output.
+- **Chosen:** Option 2.
+- **Reasoning:** Cleanest mechanism: the matcher is generic; class-uniqueness lives where operators already author the prompts. Documents the constraint inline via a YAML comment so future edits don't reintroduce overlap.
+- **Out-of-scope alternatives deferred:** Option 1's `class_token` field — possible if §13's prompt-iteration gap ever needs more structure.
+- **Affected files:** `configs/labelling/grounding-dino.yaml`, `vm-server/server/adapters/grounding_dino.py` (DEFAULT_PROMPTS mirror)
+- **Commit:** pending
+- **Supersedes:** —
+
+### D-031 (session note, not a decision): v3 still over-detects after D-026 + D-030
+
+- **Timestamp:** 2026-05-16 18:00 (local)
+- **Task:** Post-fix verification.
+- **Trigger:** After D-026 (matcher fix) + D-030 (prompt rewrite), AC #6 + AC #7 re-ran. Detection counts on the same 20-photo batch_00: v3 hit duct 19/20, ruler 19/20, whitepaper 20/20, sitetag 13/20; v2 baseline was duct 12/20, ruler 11/20, 0/0 of the new classes. Class-presence agreement is 0% (vs 5% pre-fix). mean IoU per class barely changed (duct 0.30 from 0.32; ruler unchanged).
+- **Spec anchors:** §12 AC #7 (compare output), §14 (whitepaper recall risk)
+- **Options considered:** (this entry is a verified-by-observation note, not a decision)
+- **Chosen:** No further code change this session.
+- **Reasoning:** The remaining over-detection is a model+threshold tuning problem, not a harness bug. Grounding DINO Base is recall-first; per-class thresholds of 0.25/0.20/0.30/0.25 admit too many low-confidence detections on the new whitepaper / sitetag classes that have no v2 baseline to learn from. Three concrete next-session moves (in order of expected lift):
+  1. Tune per-class thresholds upward — try duct 0.35, ruler 0.30, whitepaper 0.50, sitetag 0.45.
+  2. Use T-Rex2 image-prompt for sitetag specifically (a handful of `Beispiele/`-style F-tag exemplars; spec §14 already flags this as the next-session route).
+  3. Hybrid mode (per spec §4.1) — Claude arbitration on the difficult subset.
+- **Out-of-scope alternatives deferred:** Implementing those three in this session. The spec's §2 non-goal "running all 500 photos through any new model in this session" plus the user's explicit "show me the diff before any larger run" guidance scope this work to validation, not tuning.
+- **Affected files:** none (note only).
+- **Commit:** pending
+- **Supersedes:** —

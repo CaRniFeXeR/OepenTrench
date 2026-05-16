@@ -34,10 +34,25 @@ class _Bbox:
 
 
 def _load_class_names(data_yaml: Path) -> List[str]:
-    raw = yaml.safe_load(data_yaml.read_text())
+    """Load class names from an Ultralytics ``data.yaml``.
+
+    Accepts both dict form (``{0: duct, 1: ruler, ...}``) and list form.
+    For dict form, coerces keys to ``int`` before sorting so string-keyed
+    yamls (``"0"``, ``"10"``, …) order numerically rather than lexically.
+    """
+    try:
+        raw = yaml.safe_load(data_yaml.read_text())
+    except yaml.YAMLError as e:
+        raise ValueError(f"YAML parse error in {data_yaml}: {e}") from e
+    if not isinstance(raw, dict) or "names" not in raw:
+        raise ValueError(f"{data_yaml}: missing top-level 'names' mapping")
     names = raw["names"]
     if isinstance(names, dict):
-        return [names[i] for i in sorted(names.keys())]
+        try:
+            sorted_keys = sorted(names.keys(), key=lambda k: int(k))
+        except (TypeError, ValueError) as e:
+            raise ValueError(f"{data_yaml}: 'names' keys must be ints, got {list(names)!r}") from e
+        return [names[k] for k in sorted_keys]
     if isinstance(names, list):
         return list(names)
     raise ValueError(f"unrecognised 'names' shape in {data_yaml}: {type(names).__name__}")

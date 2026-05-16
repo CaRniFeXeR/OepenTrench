@@ -23,13 +23,15 @@ DEFAULT_PROMPTS = {
         "folding rule . Zollstock . Meterstab . tape measure . levelling rod . "
         "painted ruler stake"
     ),
+    # whitepaper / sitetag prompts authored to share no salient tokens
+    # so _match_label_to_class can disambiguate by longest-substring score.
     "whitepaper": (
-        "paper or card held in frame showing a printed or handwritten address . "
-        "postal address slip . coordinates on paper"
+        "handwritten address note . printed address sheet . "
+        "postal address with street and city . typed coordinates lat lon"
     ),
     "sitetag": (
-        "small paper card with F-number site code . DataMatrix barcode slip . "
-        "contractor site identifier"
+        "F-number contractor code . DataMatrix barcode label . "
+        "site identifier marker . contractor reference number"
     ),
 }
 DEFAULT_THRESHOLDS = {"duct": 0.25, "ruler": 0.20, "whitepaper": 0.30, "sitetag": 0.25}
@@ -163,18 +165,35 @@ class GroundingDinoAdapter(Adapter):
 
     @staticmethod
     def _match_label_to_class(label: str, class_phrases: dict) -> "str | None":
-        """Greedy substring match: pick the class whose prompt contains the label text."""
+        """Match a detected label to a class by longest-substring score.
+
+        For each class, compute (a) whether ``label`` appears in full inside
+        the class's prompt, and (b) the longest single token of ``label`` that
+        appears in the class's prompt. Pick the class with the highest score
+        ``(full_match_len, longest_token_match_len)``.
+
+        Avoids the pre-fix bug where overlapping prompts (e.g. ``whitepaper``
+        and ``sitetag`` both mentioning "paper" / "card") got assigned by dict
+        iteration order rather than by specificity.
+        """
         lab = label.lower().strip(" .").strip()
         if not lab:
             return None
+
+        scores: list = []  # (full_match_len, longest_token_match_len, cls)
         for cls, phrase in class_phrases.items():
-            if lab in phrase:
-                return cls
-        # Fall back to per-token match: any token of the label in the phrase.
-        for cls, phrase in class_phrases.items():
-            if any(tok and tok in phrase for tok in lab.split()):
-                return cls
-        return None
+            full = len(lab) if lab in phrase else 0
+            best_tok = max(
+                (len(tok) for tok in lab.split() if tok and tok in phrase),
+                default=0,
+            )
+            scores.append((full, best_tok, cls))
+
+        scores.sort(key=lambda t: (-t[0], -t[1]))
+        full, best_tok, cls = scores[0]
+        if full == 0 and best_tok == 0:
+            return None
+        return cls
 
     @staticmethod
     def _iou_norm(a, b) -> float:
