@@ -1,44 +1,6 @@
-import type { PhotoAnalysisRead, ProjectAssetRead } from '../../api/client';
+import type { ProjectAssetRead } from '../../api/client';
+import { AnalysisTagRow, qualityBadge } from '../project-images/analysisDisplay';
 import { projectImageContentUrl } from './imageContentUrl';
-import { effectiveCategory } from './mapPhotoUtils';
-
-function qualityBadge(analysis: PhotoAnalysisRead | null | undefined): {
-  label: string;
-  className: string;
-} {
-  const cat = analysis
-    ? effectiveCategory(
-        analysis.reviewer_override_category ?? analysis.category ?? null,
-      )
-    : 'unknown';
-  if (cat === 'green') {
-    return { label: 'Good', className: 'bg-emerald-100 text-emerald-800' };
-  }
-  if (cat === 'yellow') {
-    return { label: 'Poor', className: 'bg-amber-100 text-amber-900' };
-  }
-  return { label: 'Missing', className: 'bg-red-100 text-red-800' };
-}
-
-function AnalysisTag({
-  label,
-  ok,
-}: {
-  label: string;
-  ok: boolean;
-}) {
-  return (
-    <span
-      className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs ${
-        ok
-          ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
-          : 'border-red-200 bg-red-50 text-red-800'
-      }`}
-    >
-      {ok ? '✓' : '✗'} {label}
-    </span>
-  );
-}
 
 export function TrenchImageDetailPanel({
   projectId,
@@ -104,14 +66,8 @@ export function TrenchImageDetailPanel({
       </p>
 
       {analysis && (
-        <div className="mt-4 flex flex-wrap gap-2">
-          <AnalysisTag label="Duct visible" ok={analysis.has_duct} />
-          <AnalysisTag label="Sand bedding" ok={analysis.has_sand_bedding} />
-          <AnalysisTag label="Burial depth / ruler" ok={analysis.has_ruler} />
-          <AnalysisTag label="Pipe end seal" ok={analysis.has_pipe_end_seal} />
-          <AnalysisTag label="GPS match" ok={analysis.gps_matches_route} />
-          <AnalysisTag label="Date valid" ok={analysis.date_valid} />
-          <AnalysisTag label="Privacy clear" ok={!analysis.has_gdpr_problems} />
+        <div className="mt-4">
+          <AnalysisTagRow analysis={analysis} />
         </div>
       )}
 

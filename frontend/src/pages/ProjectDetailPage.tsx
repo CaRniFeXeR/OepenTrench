@@ -5,6 +5,7 @@ import {
   readProjectProjectsProjectIdGet,
   type ProjectDetailRead,
 } from '../api/client';
+import { ProjectImagesPanel } from '../components/project-images/ProjectImagesPanel';
 import { ProjectUploadPanel } from '../components/project-upload/ProjectUploadPanel';
 
 export function ProjectDetailPage() {
@@ -79,11 +80,14 @@ export function ProjectDetailPage() {
           </div>
         )}
         {!loading && !error && project && (
-          <ProjectUploadPanel
-            project={project}
-            onRefresh={refreshProject}
-            onUploadsBusyChange={setUploadsBusy}
-          />
+          <>
+            <ProjectUploadPanel
+              project={project}
+              onRefresh={refreshProject}
+              onUploadsBusyChange={setUploadsBusy}
+            />
+            <ProjectImagesPanel projectId={project.id} assets={project.assets} />
+          </>
         )}
       </main>
     </div>

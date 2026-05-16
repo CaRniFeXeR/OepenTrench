@@ -13,6 +13,8 @@ The page is divided into two main columns once an upload begins:
 
 On smaller screens, the two columns stack vertically (upload controls on top, map preview below).
 
+Below the two-column layout, a full-width **Project Images** panel lists all uploaded photos with analysis results. See [02.3 — Project Images Panel](./02.3-Project-Images-Panel.md).
+
 ## 2. Section Details & Interactions
 
 ### 2.1 Project Header

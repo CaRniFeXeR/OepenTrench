@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import random
 
 from shapely.geometry import shape
@@ -25,4 +26,5 @@ def random_point_in_geojson_bounds(geojson: dict) -> dict:
     minx, miny, maxx, maxy = combined.bounds
     lon = random.uniform(minx, maxx)
     lat = random.uniform(miny, maxy)
+    logging.info(f"Random point in geojson bounds: {lon}, {lat}")
     return {"type": "Point", "coordinates": [lon, lat]}
