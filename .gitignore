@@ -219,3 +219,8 @@ __marimo__/
 .idea/
 project-resources/
 daa/
+
+# Local Claude state + macOS noise + downloaded model checkpoints
+.DS_Store
+.claude/
+/*.pt
