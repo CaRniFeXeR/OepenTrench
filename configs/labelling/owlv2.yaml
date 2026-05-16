@@ -1,0 +1,38 @@
+# Labelling profile — OWLv2 Large served from the VM on :8000.
+#
+# Mode is decided per-class by the adapter:
+#   - duct, ruler   → image-query (exemplars in vm-server/server/adapters/owlv2.py)
+#   - whitepaper    → text-prompt fallback (no exemplars yet)
+#
+# Spec: docs/superpowers/specs/2026-05-15-labelling-harness-v3-design.md §6.5.
+
+name: owlv2
+mode: remote-vlm
+endpoint: http://localhost:8000
+model: owlv2-large-patch14-ensemble
+
+remote_image_root: /home/user/data
+local_image_root: ./project-resources
+
+classes: [duct, ruler, whitepaper]
+
+prompts:
+  # duct + ruler use image-query; this prompt is ignored by the adapter
+  # but kept for /info coverage and as a sanity fallback if the exemplar
+  # files go missing on disk.
+  duct: "HDPE conduit . fibre cable in trench"
+  ruler: "folding rule . tape measure . levelling rod"
+  # whitepaper goes through text-prompt mode in the adapter.
+  whitepaper: "white paper held in frame with handwritten or printed address . paper note with coordinates . white sheet with text"
+
+per_class_threshold:
+  # OWLv2 image-guided scores skew lower than text-prompted scores; tune
+  # conservatively here and revisit after the first batch_0 diff.
+  duct: 0.20
+  ruler: 0.15
+  whitepaper: 0.10
+
+iou_nms: 0.5
+max_detections_per_class: 5
+timeout_seconds: 60.0
+retries: 2

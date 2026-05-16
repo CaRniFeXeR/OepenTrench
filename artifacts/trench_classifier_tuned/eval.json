@@ -1,0 +1,107 @@
+{
+  "test_size": 20,
+  "pr_auc": 0.9024281274281275,
+  "threshold_calibrated": 0.663965946917793,
+  "scores": [
+    {
+      "path": "project-resources/custom-datasets/duct-and-ruler/classification/test/no-trench/WhatsApp Image 2024-09-04 at 10_58_12.jpeg",
+      "true": "no-trench",
+      "score": 0.7254837514041353
+    },
+    {
+      "path": "project-resources/custom-datasets/duct-and-ruler/classification/test/no-trench/WhatsApp Image 2024-10-10 at 18_06_06.jpeg",
+      "true": "no-trench",
+      "score": 0.0962183186404464
+    },
+    {
+      "path": "project-resources/custom-datasets/duct-and-ruler/classification/test/no-trench/WhatsApp Image 2024-10-10 at 18_06_10 (2).jpeg",
+      "true": "no-trench",
+      "score": 0.9345188913276541
+    },
+    {
+      "path": "project-resources/custom-datasets/duct-and-ruler/classification/test/no-trench/WhatsApp Image 2024-10-29 at 19_38_13 (4).jpeg",
+      "true": "no-trench",
+      "score": 0.03580641902764538
+    },
+    {
+      "path": "project-resources/custom-datasets/duct-and-ruler/classification/test/no-trench/WhatsApp Image 2024-11-04 at 19_38_16 (1).jpeg",
+      "true": "no-trench",
+      "score": 0.011804701487304673
+    },
+    {
+      "path": "project-resources/custom-datasets/duct-and-ruler/classification/test/no-trench/WhatsApp Image 2024-11-06 at 20_15_05 (1).jpeg",
+      "true": "no-trench",
+      "score": 0.005324072128157843
+    },
+    {
+      "path": "project-resources/custom-datasets/duct-and-ruler/classification/test/no-trench/WhatsApp Image 2024-11-15 at 21_58_05 (1).jpeg",
+      "true": "no-trench",
+      "score": 0.9066001540388929
+    },
+    {
+      "path": "project-resources/custom-datasets/duct-and-ruler/classification/test/no-trench/WhatsApp Image 2024-12-10 at 22_49_20 (2).jpeg",
+      "true": "no-trench",
+      "score": 0.03540475026736884
+    },
+    {
+      "path": "project-resources/custom-datasets/duct-and-ruler/classification/test/no-trench/WhatsApp Image 2024-12-12 at 10_33_55.jpeg",
+      "true": "no-trench",
+      "score": 0.12353461212199635
+    },
+    {
+      "path": "project-resources/custom-datasets/duct-and-ruler/classification/test/no-trench/WhatsApp Image 2024-12-13 at 06_16_12.jpeg",
+      "true": "no-trench",
+      "score": 0.07009391926372935
+    },
+    {
+      "path": "project-resources/custom-datasets/duct-and-ruler/classification/test/trench/1_WhatsApp Image 2024-09-10 at 17_27_33 (1).jpeg",
+      "true": "trench",
+      "score": 0.9783359618668477
+    },
+    {
+      "path": "project-resources/custom-datasets/duct-and-ruler/classification/test/trench/IMG-20240813-WA0043.jpg",
+      "true": "trench",
+      "score": 0.9864316981094365
+    },
+    {
+      "path": "project-resources/custom-datasets/duct-and-ruler/classification/test/trench/WhatsApp Image  (117).jpg",
+      "true": "trench",
+      "score": 0.9894236249853109
+    },
+    {
+      "path": "project-resources/custom-datasets/duct-and-ruler/classification/test/trench/WhatsApp Image  (69).jpg",
+      "true": "trench",
+      "score": 0.5889070267457043
+    },
+    {
+      "path": "project-resources/custom-datasets/duct-and-ruler/classification/test/trench/WhatsApp Image 2024-08-23 at 18_50_54 (2).jpeg",
+      "true": "trench",
+      "score": 0.9822899607307684
+    },
+    {
+      "path": "project-resources/custom-datasets/duct-and-ruler/classification/test/trench/WhatsApp Image 2024-08-27 at 18_01_32.jpeg",
+      "true": "trench",
+      "score": 0.9992756357955666
+    },
+    {
+      "path": "project-resources/custom-datasets/duct-and-ruler/classification/test/trench/WhatsApp Image 2024-09-06 at 21_22_01.jpeg",
+      "true": "trench",
+      "score": 0.6934434139991562
+    },
+    {
+      "path": "project-resources/custom-datasets/duct-and-ruler/classification/test/trench/WhatsApp Image 2024-09-14 at 15_03_48.jpeg",
+      "true": "trench",
+      "score": 0.6604360591936372
+    },
+    {
+      "path": "project-resources/custom-datasets/duct-and-ruler/classification/test/trench/WhatsApp Image 2024-11-07 at 19_30_17 (1).jpeg",
+      "true": "trench",
+      "score": 0.9985047835816651
+    },
+    {
+      "path": "project-resources/custom-datasets/duct-and-ruler/classification/test/trench/WhatsApp Image 2024-11-14 at 18_57_38 (1).jpeg",
+      "true": "trench",
+      "score": 0.8408630609162314
+    }
+  ]
+}

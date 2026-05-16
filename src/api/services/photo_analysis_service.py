@@ -190,6 +190,22 @@ def analyze_image_asset(
             image_path,
         )
     else:
+        # Stage 1: trench gate. If not a trench, hard-zero the in-domain flags
+        # and skip the YOLO detector entirely.
+        from src.api.services.trench_classifier_service import is_trench
+
+        if is_trench(image_path):
+            fields["is_in_domain"] = True
+            # Stage 2: YOLO presence check for duct / ruler / whitepaper.
+            from src.api.services.yolo_detection_service import detect_target_classes
+
+            fields.update(detect_target_classes(image_path))
+        else:
+            fields["is_in_domain"] = False
+            fields["has_duct"] = False
+            fields["has_ruler"] = False
+            fields["has_white_paper"] = False
+
         face_started = time.perf_counter()
         try:
             fields["has_gdpr_problems"] = image_path_has_detected_face(image_path)
