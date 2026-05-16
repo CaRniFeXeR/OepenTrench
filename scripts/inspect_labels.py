@@ -167,14 +167,17 @@ def build_samples(
     return samples
 
 
-def pick_layout(run_dir: Path | None = None) -> tuple[Path, Path | None, Path]:
+def pick_layout(
+    run_dir: Path | None = None, dataset_root: Path | None = None
+) -> tuple[Path, Path | None, Path]:
     """Return (labels_dir, meta_dir_or_None, images_root) based on what exists on disk.
 
     Resolution order:
       1. --run <dir>  → <dir>/labels/ + sibling <dir>/meta/
-      2. verified `labels/train/` layout (non-empty)
-      3. in-progress `labelling/labels/` + `labelling/meta/`
+      2. verified `labels/train/` layout (non-empty) under ``dataset_root``
+      3. in-progress `labelling/labels/` + `labelling/meta/` under ``dataset_root``
     """
+    root = dataset_root if dataset_root is not None else DATASET_ROOT
     if run_dir is not None:
         labels_dir = run_dir / "labels"
         if not labels_dir.exists():
@@ -182,20 +185,20 @@ def pick_layout(run_dir: Path | None = None) -> tuple[Path, Path | None, Path]:
         meta_dir = run_dir / "meta"
         return labels_dir, (meta_dir if meta_dir.exists() else None), FOTOS_ROOT
 
-    verified_labels_train = DATASET_ROOT / "labels" / "train"
+    verified_labels_train = root / "labels" / "train"
     if verified_labels_train.exists() and any(verified_labels_train.iterdir()):
         labels_dir = verified_labels_train
-        images_root = DATASET_ROOT / "images" / "train"
+        images_root = root / "images" / "train"
         if not images_root.exists():
             sys.exit(f"error: {labels_dir} exists but {images_root} does not")
         return labels_dir, None, images_root
 
-    bootstrap_labels = DATASET_ROOT / "labelling" / "labels"
-    bootstrap_meta = DATASET_ROOT / "labelling" / "meta"
+    bootstrap_labels = root / "labelling" / "labels"
+    bootstrap_meta = root / "labelling" / "meta"
     if bootstrap_labels.exists() and any(bootstrap_labels.iterdir()):
         return bootstrap_labels, (bootstrap_meta if bootstrap_meta.exists() else None), FOTOS_ROOT
 
-    sys.exit(f"error: no labels found under {DATASET_ROOT}. Have the labelling agents run?")
+    sys.exit(f"error: no labels found under {root}. Have the labelling agents run?")
 
 
 def main() -> None:
@@ -239,8 +242,11 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    data_yaml_path = Path(args.data_yaml) if args.data_yaml else _DEFAULT_DATA_YAML
+    data_yaml_path = Path(args.data_yaml).resolve() if args.data_yaml else _DEFAULT_DATA_YAML
     class_names = load_class_names(data_yaml_path)
+    # When --data-yaml is given, use its parent dir as the dataset root so the
+    # mirror dataset (duct-and-ruler-manual/) resolves images/labels correctly.
+    dataset_root = data_yaml_path.parent if args.data_yaml else DATASET_ROOT
 
     run_dir = Path(args.run).resolve() if args.run else None
 
@@ -251,7 +257,7 @@ def main() -> None:
         dataset = fo.load_dataset(args.name)
         print(f"loaded existing dataset '{args.name}' with {len(dataset)} samples")
     else:
-        labels_dir, meta_dir, images_root = pick_layout(run_dir)
+        labels_dir, meta_dir, images_root = pick_layout(run_dir, dataset_root)
         print(f"building from labels={labels_dir} meta={meta_dir} images={images_root}")
         samples = build_samples(labels_dir, meta_dir, images_root, class_names)
         if not samples:
