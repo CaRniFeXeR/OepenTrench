@@ -8,6 +8,7 @@ export { client };
 export {
   calculateProjectFcpCoverageProjectsProjectIdFcpCoveragePost,
   createProjectProjectsPost,
+  listDisagreementsOnlineLearningDisagreementsGet,
   listProjectsRouteProjectsGet,
   readProjectGeojsonProjectsProjectIdGeojsonGet,
   readProjectMapPhotosProjectsProjectIdMapPhotosGet,
@@ -23,6 +24,9 @@ export type {
   FcpCoverageSummaryRead,
   GeojsonStatus,
   MapPhotoMarkerRead,
+  OnlineLearningDisagreementsPage,
+  OnlineLearningMismatchItemRead,
+  OnlineLearningStatsRead,
   PhotoAnalysisRead,
   PhotoAnalysisReviewUpdate,
   PhotoDocumentationCategory,

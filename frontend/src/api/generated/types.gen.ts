@@ -476,6 +476,86 @@ export type ProjectUpdate = {
 };
 
 /**
+ * OnlineLearningDisagreementsPage
+ */
+export type OnlineLearningDisagreementsPage = {
+    /**
+     * Items
+     */
+    items: Array<OnlineLearningMismatchItemRead>;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Limit
+     */
+    limit: number;
+    /**
+     * Offset
+     */
+    offset: number;
+    stats: OnlineLearningStatsRead;
+};
+
+/**
+ * OnlineLearningMismatchItemRead
+ */
+export type OnlineLearningMismatchItemRead = {
+    /**
+     * Asset Id
+     */
+    asset_id: string;
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Project Name
+     */
+    project_name: string;
+    /**
+     * Original Label
+     */
+    original_label: string;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Reviewed At
+     */
+    reviewed_at: string;
+    analysis: PhotoAnalysisRead;
+    /**
+     * Mismatch Fields
+     */
+    mismatch_fields: Array<string>;
+};
+
+/**
+ * OnlineLearningStatsRead
+ */
+export type OnlineLearningStatsRead = {
+    /**
+     * Total Reviewed
+     */
+    total_reviewed: number;
+    /**
+     * Total Mismatch
+     */
+    total_mismatch: number;
+    /**
+     * Mismatch Rate
+     */
+    mismatch_rate: number;
+    /**
+     * Projects With Mismatch
+     */
+    projects_with_mismatch: number;
+};
+
+/**
  * ValidationError
  */
 export type ValidationError = {
@@ -522,6 +602,40 @@ export type HealthHealthGetResponses = {
 };
 
 export type HealthHealthGetResponse = HealthHealthGetResponses[keyof HealthHealthGetResponses];
+
+export type ListDisagreementsOnlineLearningDisagreementsGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Offset
+         */
+        offset?: number;
+    };
+    url: '/online-learning/disagreements';
+};
+
+export type ListDisagreementsOnlineLearningDisagreementsGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListDisagreementsOnlineLearningDisagreementsGetError = ListDisagreementsOnlineLearningDisagreementsGetErrors[keyof ListDisagreementsOnlineLearningDisagreementsGetErrors];
+
+export type ListDisagreementsOnlineLearningDisagreementsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: OnlineLearningDisagreementsPage;
+};
+
+export type ListDisagreementsOnlineLearningDisagreementsGetResponse = ListDisagreementsOnlineLearningDisagreementsGetResponses[keyof ListDisagreementsOnlineLearningDisagreementsGetResponses];
 
 export type ListProjectsRouteProjectsGetData = {
     body?: never;

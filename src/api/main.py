@@ -13,6 +13,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 
 from src.api.routes.health import router as health_router
+from src.api.routes.online_learning import router as online_learning_router
 from src.api.routes.projects import router as projects_router
 
 logger = logging.getLogger("oepentrench.api")
@@ -103,3 +104,4 @@ app.add_middleware(RequestLoggingMiddleware)
 
 app.include_router(health_router)
 app.include_router(projects_router)
+app.include_router(online_learning_router)

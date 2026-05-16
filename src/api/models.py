@@ -222,3 +222,31 @@ class FcpCoverageSummaryRead(BaseModel):
 class FcpCoverageRead(BaseModel):
     compartments: list[FcpCoverageCompartmentRead]
     summaries: list[FcpCoverageSummaryRead]
+
+
+class OnlineLearningStatsRead(BaseModel):
+    total_reviewed: int
+    total_mismatch: int
+    mismatch_rate: float
+    projects_with_mismatch: int
+
+
+class OnlineLearningMismatchItemRead(BaseModel):
+    model_config = ConfigDict(use_enum_values=True)
+
+    asset_id: str
+    project_id: str
+    project_name: str
+    original_label: str
+    created_at: datetime
+    reviewed_at: datetime
+    analysis: PhotoAnalysisRead
+    mismatch_fields: list[str]
+
+
+class OnlineLearningDisagreementsPage(BaseModel):
+    items: list[OnlineLearningMismatchItemRead]
+    total: int
+    limit: int
+    offset: int
+    stats: OnlineLearningStatsRead
