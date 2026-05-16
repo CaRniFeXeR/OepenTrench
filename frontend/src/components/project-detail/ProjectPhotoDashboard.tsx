@@ -1,12 +1,23 @@
 import { useMemo, useState } from 'react';
+import type { FeatureCollection } from 'geojson';
 
-import type { PhotoDocumentationCategory, ProjectDetailRead } from '../../api/client';
+import type {
+  MapPhotoMarkerRead,
+  PhotoDocumentationCategory,
+  ProjectDetailRead,
+} from '../../api/client';
 import { imageAssets } from '../project-images/projectImageListUtils';
 import {
   categoryCountsFromAssets,
   filterAssetsForDashboard,
 } from '../project-images/photoDocumentationUtils';
 import { CATEGORY_COLORS } from '../project-map/photoMarkerPaint';
+import { FcpPhotoTable } from './FcpPhotoTable';
+import {
+  assetIdToFcpId,
+  buildFcpPhotoRows,
+  fcpCodeForId,
+} from './fcpPhotoTableUtils';
 import { PhotoReviewCard } from './PhotoReviewCard';
 
 const CATEGORY_BANNERS: {
@@ -54,20 +65,30 @@ function warningApprovalLabel(needsReview: number, yellowTotal: number): string 
 function emptyMessage(
   category: PhotoDocumentationCategory,
   unreviewedOnly: boolean,
+  fcpCode: string | null,
 ): string {
   const label =
     category === 'green' ? 'good' : category === 'yellow' ? 'warning' : 'failed';
+  const fcpPart = fcpCode ? ` in ${fcpCode}` : '';
   if (unreviewedOnly) {
-    return `No unreviewed ${label} photos.`;
+    return `No unreviewed ${label} photos${fcpPart}.`;
   }
-  return `No ${label} photos.`;
+  return `No ${label} photos${fcpPart}.`;
 }
 
 export function ProjectPhotoDashboard({
   project,
+  mapData,
+  mapPhotos,
+  selectedFcpId,
+  onSelectedFcpIdChange,
   onRefresh,
 }: {
   project: ProjectDetailRead;
+  mapData: FeatureCollection | null;
+  mapPhotos: MapPhotoMarkerRead[];
+  selectedFcpId: string | null;
+  onSelectedFcpIdChange: (fcpId: string | null) => void;
   onRefresh: () => Promise<void>;
 }) {
   const [selectedCategory, setSelectedCategory] =
@@ -76,14 +97,25 @@ export function ProjectPhotoDashboard({
 
   const images = useMemo(() => imageAssets(project.assets), [project.assets]);
   const counts = useMemo(() => categoryCountsFromAssets(project.assets), [project.assets]);
+  const assetFcpMap = useMemo(() => assetIdToFcpId(mapPhotos), [mapPhotos]);
+  const fcpRows = useMemo(
+    () => buildFcpPhotoRows({ assets: project.assets, mapPhotos, mapData }),
+    [project.assets, mapPhotos, mapData],
+  );
+  const selectedFcpCode = useMemo(
+    () => fcpCodeForId(fcpRows, selectedFcpId),
+    [fcpRows, selectedFcpId],
+  );
 
   const filteredAssets = useMemo(
     () =>
       filterAssetsForDashboard(images, {
         category: selectedCategory,
         unreviewedOnly,
+        fcpId: selectedFcpId,
+        assetFcpMap,
       }),
-    [images, selectedCategory, unreviewedOnly],
+    [images, selectedCategory, unreviewedOnly, selectedFcpId, assetFcpMap],
   );
 
   const handleReviewSaved = async () => {
@@ -137,6 +169,12 @@ export function ProjectPhotoDashboard({
           })}
         </div>
 
+        <FcpPhotoTable
+          rows={fcpRows}
+          selectedFcpId={selectedFcpId}
+          onSelectFcp={onSelectedFcpIdChange}
+        />
+
         {counts.pending > 0 && (
           <p className="mt-3 text-xs text-slate-500">
             {counts.pending} photo{counts.pending === 1 ? '' : 's'} pending analysis.
@@ -160,7 +198,7 @@ export function ProjectPhotoDashboard({
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6">
         {filteredAssets.length === 0 ? (
           <p className="py-12 text-center text-sm text-slate-500">
-            {emptyMessage(selectedCategory, unreviewedOnly)}
+            {emptyMessage(selectedCategory, unreviewedOnly, selectedFcpCode)}
           </p>
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

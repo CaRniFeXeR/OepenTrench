@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import type { ProjectDetailRead } from '../../api/client';
+import { useProjectMapData } from '../project-map/useProjectMapData';
 import { ProjectMapView } from '../project-map/ProjectMapView';
 import { UploadMapPreview } from '../project-upload/UploadMapPreview';
 import { ProjectPhotoDashboard } from './ProjectPhotoDashboard';
@@ -21,8 +22,21 @@ export function ProjectDetailLayout({
   onUploadsBusyChange: (busy: boolean) => void;
 }) {
   const [uploadDrawerOpen, setUploadDrawerOpen] = useState(true);
+  const [selectedFcpId, setSelectedFcpId] = useState<string | null>(null);
+  const [mapPhotosRefreshKey, setMapPhotosRefreshKey] = useState(0);
   const routeReady = project.geojson_status === 'ready';
   const { mapData, mergeMapData } = useProjectMapGeojson(project.id, project.geojson_status);
+  const imageCount = project.assets.filter((a) => a.kind === 'image').length;
+  const { mapPhotos, loading: mapPhotosLoading } = useProjectMapData(
+    project.id,
+    imageCount,
+    mapPhotosRefreshKey,
+  );
+
+  const handleRefresh = useCallback(async () => {
+    await onRefresh();
+    setMapPhotosRefreshKey((k) => k + 1);
+  }, [onRefresh]);
 
   return (
     <>
@@ -31,7 +45,7 @@ export function ProjectDetailLayout({
         uploadDrawerOpen={uploadDrawerOpen}
         onToggleUploadDrawer={() => setUploadDrawerOpen((o) => !o)}
         uploadsBusy={uploadsBusy}
-        onNameSaved={onRefresh}
+        onNameSaved={handleRefresh}
       />
 
       <div className="flex min-h-[calc(100vh-8rem)] flex-1 flex-col lg:min-h-[calc(100vh-10rem)]">
@@ -39,13 +53,20 @@ export function ProjectDetailLayout({
           <UploadDrawer
             open={uploadDrawerOpen}
             project={project}
-            onRefresh={onRefresh}
+            onRefresh={handleRefresh}
             onUploadsBusyChange={onUploadsBusyChange}
             onMergeMapData={mergeMapData}
           />
 
           <div className="flex min-h-0 min-w-0 flex-[2] flex-col border-b border-slate-200 lg:border-b-0 lg:border-r">
-            <ProjectPhotoDashboard project={project} onRefresh={onRefresh} />
+            <ProjectPhotoDashboard
+              project={project}
+              mapData={mapData}
+              mapPhotos={mapPhotos}
+              selectedFcpId={selectedFcpId}
+              onSelectedFcpIdChange={setSelectedFcpId}
+              onRefresh={handleRefresh}
+            />
           </div>
 
           <div className="flex min-h-[480px] min-w-0 flex-1 flex-col">
@@ -54,7 +75,11 @@ export function ProjectDetailLayout({
                 embedded
                 project={project}
                 mapData={mapData}
-                onProjectRefresh={onRefresh}
+                mapPhotos={mapPhotos}
+                mapPhotosLoading={mapPhotosLoading}
+                selectedFcpId={selectedFcpId}
+                onSelectedFcpIdChange={setSelectedFcpId}
+                onProjectRefresh={handleRefresh}
               />
             ) : (
               <div className="h-full min-h-[480px] p-3">

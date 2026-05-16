@@ -49,12 +49,17 @@ export function filterAssetsForDashboard(
   options: {
     category: PhotoDocumentationCategory;
     unreviewedOnly: boolean;
+    fcpId?: string | null;
+    assetFcpMap?: Map<string, string>;
   },
 ): ProjectAssetRead[] {
   return assets.filter((asset) => {
     if (asset.kind !== 'image' || !asset.analysis) return false;
     if (analysisEffectiveCategory(asset.analysis) !== options.category) return false;
     if (options.unreviewedOnly && !isUnreviewed(asset.analysis)) return false;
+    if (options.fcpId != null && options.assetFcpMap) {
+      if (options.assetFcpMap.get(asset.id) !== options.fcpId) return false;
+    }
     return true;
   });
 }
