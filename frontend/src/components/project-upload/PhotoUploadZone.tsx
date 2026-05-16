@@ -9,7 +9,6 @@ import {
   MAX_PHOTOS_PER_BATCH,
   isAllowedImageFile,
 } from './constants';
-import { fileHasExifGps } from './exifGps';
 
 const UPLOAD_CONCURRENCY = 4;
 
@@ -63,10 +62,6 @@ export function PhotoUploadZone({
   const [batchStartMs, setBatchStartMs] = useState<number | null>(null);
   const [nowTick, setNowTick] = useState(() => Date.now());
 
-  const [gpsOk, setGpsOk] = useState(0);
-  const [gpsMissing, setGpsMissing] = useState(0);
-  const [gpsMissingNames, setGpsMissingNames] = useState<string[]>([]);
-
   const [uploadFailures, setUploadFailures] = useState<FileErrorRow[]>([]);
   const [friendlyIndex, setFriendlyIndex] = useState(0);
 
@@ -110,18 +105,6 @@ export function PhotoUploadZone({
     }
   };
 
-  const recordGpsResult = useCallback((file: File, hasGps: boolean) => {
-    if (hasGps) {
-      setGpsOk((n) => n + 1);
-      return;
-    }
-    setGpsMissing((n) => n + 1);
-    setGpsMissingNames((prev) => {
-      if (prev.length >= 80) return prev;
-      return [...prev, file.name];
-    });
-  }, []);
-
   const runUpload = useCallback(
     async (files: File[]) => {
       cancelledRef.current = false;
@@ -133,21 +116,11 @@ export function PhotoUploadZone({
       setBatchStartMs(Date.now());
       setActiveNames([]);
       setUploadFailures([]);
-      setGpsOk(0);
-      setGpsMissing(0);
-      setGpsMissingNames([]);
       setFriendlyIndex(0);
 
       const uploadOneFile = async (file: File) => {
         setActiveNames((prev) => [...prev, file.name]);
         try {
-          try {
-            const has = await fileHasExifGps(file);
-            recordGpsResult(file, has);
-          } catch {
-            recordGpsResult(file, false);
-          }
-
           if (cancelledRef.current) return;
 
           const ac = new AbortController();
@@ -212,7 +185,7 @@ export function PhotoUploadZone({
       setPaused(false);
       pausedRef.current = false;
     },
-    [projectId, onRefresh, onUploadingChange, recordGpsResult],
+    [projectId, onRefresh, onUploadingChange],
   );
 
   const classifyAndSetFiles = useCallback(
@@ -292,9 +265,6 @@ export function PhotoUploadZone({
     setProgressTotal(0);
     setActiveNames([]);
     setUploadFailures([]);
-    setGpsOk(0);
-    setGpsMissing(0);
-    setGpsMissingNames([]);
     setBatchStartMs(null);
   };
 
@@ -445,11 +415,6 @@ export function PhotoUploadZone({
               Cancel
             </button>
           </div>
-          <div className="text-xs">
-            <span className="font-medium text-emerald-700">GPS data found: {gpsOk}</span>
-            <span className="mx-2 text-slate-300">|</span>
-            <span className="font-medium text-orange-700">Missing GPS: {gpsMissing}</span>
-          </div>
           {showFriendlyWait && (
             <p
               className="text-xs text-slate-600 transition-opacity duration-500"
@@ -466,24 +431,8 @@ export function PhotoUploadZone({
           <p className="text-sm font-semibold text-slate-900">Upload summary</p>
           <p className="text-xs text-slate-600">
             Finished: {progressDone} of {progressTotal} in this run. Successful
-            uploads: {progressDone - uploadFailures.length}. GPS ok: {gpsOk},
-            missing GPS: {gpsMissing}.
+            uploads: {progressDone - uploadFailures.length}.
           </p>
-          {gpsMissing > 0 && (
-            <details className="text-xs text-slate-700">
-              <summary className="cursor-pointer font-medium text-orange-900">
-                {gpsMissing} photo{gpsMissing === 1 ? '' : 's'} without GPS (not
-                shown on route until mapped another way)
-              </summary>
-              <ul className="mt-2 max-h-28 list-inside list-disc overflow-y-auto">
-                {gpsMissingNames.map((n) => (
-                  <li key={n} className="font-mono">
-                    {n}
-                  </li>
-                ))}
-              </ul>
-            </details>
-          )}
           {uploadFailures.length > 0 && (
             <ul className="max-h-24 space-y-1 overflow-y-auto text-xs text-red-700">
               {uploadFailures.map((f) => (

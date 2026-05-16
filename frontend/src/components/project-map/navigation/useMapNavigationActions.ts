@@ -7,6 +7,7 @@ import type { MapPhotoMarkerRead, ProjectAssetRead } from '../../../api/client';
 import { photoNeedsReview } from '../../project-images/photoDocumentationUtils';
 import { fitMapToFeatureCollection } from '../../map/geoBounds';
 import { LAYER_FCP_FILL, LAYER_PHOTOS } from '../ProjectMapLayers';
+import { isUnassociatedFcpId } from '../../project-detail/fcpPhotoTableUtils';
 import { photosForFcp, type MapLevel } from '../mapPhotoUtils';
 
 export function useMapNavigationActions({
@@ -94,7 +95,9 @@ export function useMapNavigationActions({
       updateSelectedFcpId(fcpId);
       const inFcp = photosForFcp(mapPhotos, fcpId);
       setHighlightedPhotoId(inFcp[0]?.asset_id ?? null);
-      fitToFcp(fcpId);
+      if (!isUnassociatedFcpId(fcpId)) {
+        fitToFcp(fcpId);
+      }
     },
     [mapPhotos, fitToFcp, updateSelectedFcpId, setLevel, setHighlightedPhotoId],
   );
@@ -129,7 +132,9 @@ export function useMapNavigationActions({
     setLevel('fcp');
     const inFcp = photosForFcp(mapPhotos, fcpId);
     setHighlightedPhotoId(inFcp[0]?.asset_id ?? null);
-    fitToFcp(fcpId);
+    if (!isUnassociatedFcpId(fcpId)) {
+      fitToFcp(fcpId);
+    }
   }, [
     isControlled,
     controlledSelectedFcpId,
@@ -143,7 +148,7 @@ export function useMapNavigationActions({
   ]);
 
   useEffect(() => {
-    if (level === 'fcp' && selectedFcpId) {
+    if (level === 'fcp' && selectedFcpId && !isUnassociatedFcpId(selectedFcpId)) {
       fitToFcp(selectedFcpId);
     }
   }, [level, selectedFcpId, fitToFcp]);

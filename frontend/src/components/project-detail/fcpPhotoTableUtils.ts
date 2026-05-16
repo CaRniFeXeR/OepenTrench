@@ -1,7 +1,13 @@
 import type { FeatureCollection } from 'geojson';
 
 import type { MapPhotoMarkerRead, ProjectAssetRead } from '../../api/client';
-import { analysisEffectiveCategory } from '../project-images/photoDocumentationUtils';
+import {
+  analysisEffectiveCategory,
+  UNASSOCIATED_FCP_ID,
+  isUnassociatedFcpId,
+} from '../project-images/photoDocumentationUtils';
+
+export { UNASSOCIATED_FCP_ID, isUnassociatedFcpId };
 import {
   fcpCodeFromProperties,
   fcpIdFromProperties,
@@ -91,10 +97,42 @@ export function buildFcpPhotoRows({
   );
 }
 
+export function buildUnassociatedPhotoRow(
+  assets: ProjectAssetRead[],
+  assetFcpMap: Map<string, string>,
+): FcpPhotoRow | null {
+  let yellow = 0;
+  let red = 0;
+  let green = 0;
+  let total = 0;
+
+  for (const asset of assets) {
+    if (asset.kind !== 'image' || !asset.analysis) continue;
+    if (assetFcpMap.has(asset.id)) continue;
+    total += 1;
+    const cat = analysisEffectiveCategory(asset.analysis);
+    if (cat === 'green') green += 1;
+    else if (cat === 'yellow') yellow += 1;
+    else if (cat === 'red') red += 1;
+  }
+
+  if (total === 0) return null;
+
+  return {
+    fcpId: UNASSOCIATED_FCP_ID,
+    fcpCode: 'No FCP',
+    fcpLabel: 'No GPS or not inside an FCP polygon',
+    green,
+    yellow,
+    red,
+  };
+}
+
 export function fcpCodeForId(
   rows: FcpPhotoRow[],
   fcpId: string | null,
 ): string | null {
   if (!fcpId) return null;
+  if (isUnassociatedFcpId(fcpId)) return 'No FCP';
   return rows.find((r) => r.fcpId === fcpId)?.fcpCode ?? null;
 }

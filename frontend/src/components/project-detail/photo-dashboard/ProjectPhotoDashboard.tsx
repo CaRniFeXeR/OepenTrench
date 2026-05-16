@@ -27,8 +27,15 @@ export function ProjectPhotoDashboard({
     setSelectedCategory,
     unreviewedOnly,
     setUnreviewedOnly,
+    ductVisible,
+    setDuctVisible,
+    rulerVisible,
+    setRulerVisible,
+    privacyClear,
+    setPrivacyClear,
     counts,
     fcpRows,
+    unassociatedRow,
     selectedFcpCode,
     filteredAssets,
   } = usePhotoDashboard({ project, mapData, mapPhotos, selectedFcpId });
@@ -42,6 +49,7 @@ export function ProjectPhotoDashboard({
       <FcpSidePanel
         projectName={project.name}
         rows={fcpRows}
+        unassociatedRow={unassociatedRow}
         selectedFcpId={selectedFcpId}
         onSelectFcp={onSelectedFcpIdChange}
         onClearFcpFilter={() => onSelectedFcpIdChange(null)}
@@ -54,12 +62,22 @@ export function ProjectPhotoDashboard({
           onSelectCategory={setSelectedCategory}
           unreviewedOnly={unreviewedOnly}
           onUnreviewedOnlyChange={setUnreviewedOnly}
+          ductVisible={ductVisible}
+          onDuctVisibleChange={setDuctVisible}
+          rulerVisible={rulerVisible}
+          onRulerVisibleChange={setRulerVisible}
+          privacyClear={privacyClear}
+          onPrivacyClearChange={setPrivacyClear}
         />
 
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6">
           {filteredAssets.length === 0 ? (
             <p className="py-12 text-center text-sm text-slate-500">
-              {emptyMessage(selectedCategory, unreviewedOnly, selectedFcpCode)}
+              {emptyMessage(selectedCategory, unreviewedOnly, selectedFcpCode, {
+                ductVisible,
+                rulerVisible,
+                privacyClear,
+              })}
             </p>
           ) : (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

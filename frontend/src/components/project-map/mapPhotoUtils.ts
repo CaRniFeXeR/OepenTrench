@@ -1,6 +1,7 @@
 import type { Feature, FeatureCollection } from 'geojson';
 
 import type { MapPhotoMarkerRead, PhotoDocumentationCategory } from '../../api/client';
+import { isUnassociatedFcpId } from '../project-detail/fcpPhotoTableUtils';
 
 export type MapLevel = 'project' | 'fcp' | 'photo';
 
@@ -14,6 +15,9 @@ export function photosForFcp(
   photos: MapPhotoMarkerRead[],
   fcpId: string,
 ): MapPhotoMarkerRead[] {
+  if (isUnassociatedFcpId(fcpId)) {
+    return photos.filter((p) => p.fcp_id == null);
+  }
   return photos.filter((p) => p.fcp_id === fcpId);
 }
 
@@ -24,6 +28,9 @@ export function visiblePhotos(
 ): MapPhotoMarkerRead[] {
   if (level === 'project') return photos;
   if (!selectedFcpId) return [];
+  if (isUnassociatedFcpId(selectedFcpId)) {
+    return photos.filter((p) => p.fcp_id == null);
+  }
   return photosForFcp(photos, selectedFcpId);
 }
 

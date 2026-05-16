@@ -11,10 +11,12 @@ import {
   categoryCountsFromAssets,
   categoryCountsFromAssetsForFcp,
   filterAssetsForDashboard,
+  type TriStateFilter,
 } from '../../project-images/photoDocumentationUtils';
 import {
   assetIdToFcpId,
   buildFcpPhotoRows,
+  buildUnassociatedPhotoRow,
   fcpCodeForId,
 } from '../fcpPhotoTableUtils';
 
@@ -32,6 +34,9 @@ export function usePhotoDashboard({
   const [selectedCategory, setSelectedCategory] =
     useState<PhotoDocumentationCategory>('yellow');
   const [unreviewedOnly, setUnreviewedOnly] = useState(false);
+  const [ductVisible, setDuctVisible] = useState<TriStateFilter>('all');
+  const [rulerVisible, setRulerVisible] = useState<TriStateFilter>('all');
+  const [privacyClear, setPrivacyClear] = useState<TriStateFilter>('all');
 
   const images = useMemo(() => imageAssets(project.assets), [project.assets]);
   const assetFcpMap = useMemo(() => assetIdToFcpId(mapPhotos), [mapPhotos]);
@@ -45,6 +50,10 @@ export function usePhotoDashboard({
     () => buildFcpPhotoRows({ assets: project.assets, mapPhotos, mapData }),
     [project.assets, mapPhotos, mapData],
   );
+  const unassociatedRow = useMemo(
+    () => buildUnassociatedPhotoRow(project.assets, assetFcpMap),
+    [project.assets, assetFcpMap],
+  );
   const selectedFcpCode = useMemo(
     () => fcpCodeForId(fcpRows, selectedFcpId),
     [fcpRows, selectedFcpId],
@@ -57,8 +66,20 @@ export function usePhotoDashboard({
         unreviewedOnly,
         fcpId: selectedFcpId,
         assetFcpMap,
+        ductVisible,
+        rulerVisible,
+        privacyClear,
       }),
-    [images, selectedCategory, unreviewedOnly, selectedFcpId, assetFcpMap],
+    [
+      images,
+      selectedCategory,
+      unreviewedOnly,
+      selectedFcpId,
+      assetFcpMap,
+      ductVisible,
+      rulerVisible,
+      privacyClear,
+    ],
   );
 
   return {
@@ -66,8 +87,15 @@ export function usePhotoDashboard({
     setSelectedCategory,
     unreviewedOnly,
     setUnreviewedOnly,
+    ductVisible,
+    setDuctVisible,
+    rulerVisible,
+    setRulerVisible,
+    privacyClear,
+    setPrivacyClear,
     counts,
     fcpRows,
+    unassociatedRow,
     selectedFcpCode,
     filteredAssets,
   };

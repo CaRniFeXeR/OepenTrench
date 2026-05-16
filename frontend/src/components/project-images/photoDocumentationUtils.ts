@@ -4,6 +4,14 @@ import type {
   ProjectAssetRead,
 } from '../../api/client';
 
+export const UNASSOCIATED_FCP_ID = '__unassociated__';
+
+export function isUnassociatedFcpId(id: string | null): boolean {
+  return id === UNASSOCIATED_FCP_ID;
+}
+
+export type TriStateFilter = 'all' | 'yes' | 'no';
+
 export function analysisEffectiveCategory(
   analysis: PhotoAnalysisRead | null | undefined,
 ): PhotoDocumentationCategory | 'unknown' {
@@ -57,10 +65,49 @@ export function categoryCountsFromAssetsForFcp(
   fcpId: string,
   assetFcpMap: Map<string, string>,
 ): PhotoDocumentationCounts {
-  const filtered = assets.filter(
-    (asset) => asset.kind === 'image' && assetFcpMap.get(asset.id) === fcpId,
-  );
+  const filtered = assets.filter((asset) => {
+    if (asset.kind !== 'image') return false;
+    if (isUnassociatedFcpId(fcpId)) {
+      return !assetFcpMap.has(asset.id);
+    }
+    return assetFcpMap.get(asset.id) === fcpId;
+  });
   return categoryCountsFromAssets(filtered);
+}
+
+function matchesTriState(value: boolean, filter: TriStateFilter): boolean {
+  if (filter === 'all') return true;
+  if (filter === 'yes') return value;
+  return !value;
+}
+
+function matchesCriteriaFilters(
+  analysis: PhotoAnalysisRead,
+  options: {
+    ductVisible?: TriStateFilter;
+    rulerVisible?: TriStateFilter;
+    privacyClear?: TriStateFilter;
+  },
+): boolean {
+  if (
+    !matchesTriState(analysis.effective_has_duct, options.ductVisible ?? 'all')
+  ) {
+    return false;
+  }
+  if (
+    !matchesTriState(analysis.effective_has_ruler, options.rulerVisible ?? 'all')
+  ) {
+    return false;
+  }
+  if (
+    !matchesTriState(
+      !analysis.effective_has_gdpr_problems,
+      options.privacyClear ?? 'all',
+    )
+  ) {
+    return false;
+  }
+  return true;
 }
 
 export function filterAssetsForDashboard(
@@ -70,15 +117,38 @@ export function filterAssetsForDashboard(
     unreviewedOnly: boolean;
     fcpId?: string | null;
     assetFcpMap?: Map<string, string>;
+    ductVisible?: TriStateFilter;
+    rulerVisible?: TriStateFilter;
+    privacyClear?: TriStateFilter;
   },
 ): ProjectAssetRead[] {
   return assets.filter((asset) => {
     if (asset.kind !== 'image' || !asset.analysis) return false;
     if (analysisEffectiveCategory(asset.analysis) !== options.category) return false;
     if (options.unreviewedOnly && !isUnreviewed(asset.analysis)) return false;
+    if (!matchesCriteriaFilters(asset.analysis, options)) return false;
     if (options.fcpId != null && options.assetFcpMap) {
-      if (options.assetFcpMap.get(asset.id) !== options.fcpId) return false;
+      if (isUnassociatedFcpId(options.fcpId)) {
+        if (options.assetFcpMap.has(asset.id)) return false;
+      } else if (options.assetFcpMap.get(asset.id) !== options.fcpId) {
+        return false;
+      }
     }
     return true;
   });
+}
+
+export function activeCriteriaFilterLabels(options: {
+  ductVisible?: TriStateFilter;
+  rulerVisible?: TriStateFilter;
+  privacyClear?: TriStateFilter;
+}): string[] {
+  const labels: string[] = [];
+  if (options.ductVisible === 'yes') labels.push('duct visible');
+  else if (options.ductVisible === 'no') labels.push('duct not visible');
+  if (options.rulerVisible === 'yes') labels.push('ruler visible');
+  else if (options.rulerVisible === 'no') labels.push('ruler not visible');
+  if (options.privacyClear === 'yes') labels.push('privacy clear');
+  else if (options.privacyClear === 'no') labels.push('privacy issues');
+  return labels;
 }
