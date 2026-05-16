@@ -224,3 +224,4 @@ daa/
 .DS_Store
 .claude/
 /*.pt
+data/uploads/**
