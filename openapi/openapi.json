@@ -356,6 +356,64 @@
         }
       }
     },
+    "/projects/{project_id}/fcp-coverage": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Calculate Project Fcp Coverage",
+        "operationId": "calculate_project_fcp_coverage_projects__project_id__fcp_coverage_post",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "fcp_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Fcp Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FcpCoverageRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/projects/{project_id}/images/{asset_id}/content": {
       "get": {
         "tags": [
@@ -629,6 +687,131 @@
           "file"
         ],
         "title": "Body_upload_project_image_projects__project_id__images_post"
+      },
+      "FcpCoverageCompartmentRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "fcp_id": {
+            "type": "string",
+            "title": "Fcp Id"
+          },
+          "covered": {
+            "type": "boolean",
+            "title": "Covered"
+          },
+          "length_m": {
+            "type": "number",
+            "title": "Length M"
+          },
+          "center": {
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Center"
+          },
+          "geometry": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Geometry"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "fcp_id",
+          "covered",
+          "length_m",
+          "center",
+          "geometry"
+        ],
+        "title": "FcpCoverageCompartmentRead"
+      },
+      "FcpCoverageRead": {
+        "properties": {
+          "compartments": {
+            "items": {
+              "$ref": "#/components/schemas/FcpCoverageCompartmentRead"
+            },
+            "type": "array",
+            "title": "Compartments"
+          },
+          "summaries": {
+            "items": {
+              "$ref": "#/components/schemas/FcpCoverageSummaryRead"
+            },
+            "type": "array",
+            "title": "Summaries"
+          }
+        },
+        "type": "object",
+        "required": [
+          "compartments",
+          "summaries"
+        ],
+        "title": "FcpCoverageRead"
+      },
+      "FcpCoverageSummaryRead": {
+        "properties": {
+          "fcp_id": {
+            "type": "string",
+            "title": "Fcp Id"
+          },
+          "fcp_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fcp Code"
+          },
+          "fcp_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fcp Label"
+          },
+          "compartment_count": {
+            "type": "integer",
+            "title": "Compartment Count"
+          },
+          "covered_count": {
+            "type": "integer",
+            "title": "Covered Count"
+          },
+          "coverage_ratio": {
+            "type": "number",
+            "title": "Coverage Ratio"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fcp_id",
+          "fcp_code",
+          "fcp_label",
+          "compartment_count",
+          "covered_count",
+          "coverage_ratio"
+        ],
+        "title": "FcpCoverageSummaryRead"
       },
       "GeojsonStatus": {
         "type": "string",

@@ -38,6 +38,85 @@ export type BodyUploadProjectImageProjectsProjectIdImagesPost = {
 };
 
 /**
+ * FcpCoverageCompartmentRead
+ */
+export type FcpCoverageCompartmentRead = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Fcp Id
+     */
+    fcp_id: string;
+    /**
+     * Covered
+     */
+    covered: boolean;
+    /**
+     * Length M
+     */
+    length_m: number;
+    /**
+     * Center
+     */
+    center: [
+        number,
+        number
+    ];
+    /**
+     * Geometry
+     */
+    geometry: {
+        [key: string]: unknown;
+    };
+};
+
+/**
+ * FcpCoverageRead
+ */
+export type FcpCoverageRead = {
+    /**
+     * Compartments
+     */
+    compartments: Array<FcpCoverageCompartmentRead>;
+    /**
+     * Summaries
+     */
+    summaries: Array<FcpCoverageSummaryRead>;
+};
+
+/**
+ * FcpCoverageSummaryRead
+ */
+export type FcpCoverageSummaryRead = {
+    /**
+     * Fcp Id
+     */
+    fcp_id: string;
+    /**
+     * Fcp Code
+     */
+    fcp_code: string | null;
+    /**
+     * Fcp Label
+     */
+    fcp_label: string | null;
+    /**
+     * Compartment Count
+     */
+    compartment_count: number;
+    /**
+     * Covered Count
+     */
+    covered_count: number;
+    /**
+     * Coverage Ratio
+     */
+    coverage_ratio: number;
+};
+
+/**
  * GeojsonStatus
  */
 export type GeojsonStatus = 'missing' | 'ready';
@@ -658,6 +737,41 @@ export type ReadProjectMapPhotosProjectsProjectIdMapPhotosGetResponses = {
 };
 
 export type ReadProjectMapPhotosProjectsProjectIdMapPhotosGetResponse = ReadProjectMapPhotosProjectsProjectIdMapPhotosGetResponses[keyof ReadProjectMapPhotosProjectsProjectIdMapPhotosGetResponses];
+
+export type CalculateProjectFcpCoverageProjectsProjectIdFcpCoveragePostData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: {
+        /**
+         * Fcp Id
+         */
+        fcp_id?: string | null;
+    };
+    url: '/projects/{project_id}/fcp-coverage';
+};
+
+export type CalculateProjectFcpCoverageProjectsProjectIdFcpCoveragePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CalculateProjectFcpCoverageProjectsProjectIdFcpCoveragePostError = CalculateProjectFcpCoverageProjectsProjectIdFcpCoveragePostErrors[keyof CalculateProjectFcpCoverageProjectsProjectIdFcpCoveragePostErrors];
+
+export type CalculateProjectFcpCoverageProjectsProjectIdFcpCoveragePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: FcpCoverageRead;
+};
+
+export type CalculateProjectFcpCoverageProjectsProjectIdFcpCoveragePostResponse = CalculateProjectFcpCoverageProjectsProjectIdFcpCoveragePostResponses[keyof CalculateProjectFcpCoverageProjectsProjectIdFcpCoveragePostResponses];
 
 export type ReadProjectImageContentProjectsProjectIdImagesAssetIdContentGetData = {
     body?: never;

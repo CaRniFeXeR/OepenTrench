@@ -68,6 +68,7 @@ export function ProjectDetailLayout({
                 mapData={mapData}
                 mapPhotos={mapPhotos}
                 mapPhotosLoading={mapPhotosLoading}
+                mapPhotosRefreshKey={mapPhotosRefreshKey}
                 selectedFcpId={selectedFcpId}
                 onSelectedFcpIdChange={setSelectedFcpId}
                 onProjectRefresh={handleRefresh}

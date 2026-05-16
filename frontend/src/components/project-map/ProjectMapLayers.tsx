@@ -11,6 +11,7 @@ import { photoCirclePaint } from './photoMarkerPaint';
 export const LAYER_FCP_FILL = 'project-fcp-fill';
 export const LAYER_FCP_OUTLINE = 'project-fcp-outline';
 export const LAYER_TRENCHES = 'project-trenches-line';
+export const LAYER_COVERAGE = 'project-coverage-compartments-line';
 export const LAYER_PHOTOS = 'project-photos-circle';
 
 const FILTER_POLYGON: FilterSpecification = [
@@ -28,6 +29,16 @@ const FILTER_LINE: FilterSpecification = [
 const trenchPaint = {
   'line-color': '#64748b',
   'line-width': 2,
+} as NonNullable<LineLayerSpecification['paint']>;
+
+const coveragePaint = {
+  'line-color': [
+    'case',
+    ['==', ['get', 'covered'], true],
+    '#22c55e',
+    '#ef4444',
+  ],
+  'line-width': 5,
 } as NonNullable<LineLayerSpecification['paint']>;
 
 const fcpFillPaint = {
@@ -61,11 +72,13 @@ export function ProjectMapLayers({
   trenches,
   fcpPolygons,
   photoMarkers,
+  coverageCompartments,
   selectedFcpId,
 }: {
   trenches: FeatureCollection;
   fcpPolygons: FeatureCollection;
   photoMarkers: FeatureCollection;
+  coverageCompartments?: FeatureCollection | null;
   selectedFcpId: string | null;
 }) {
   const fcpWithSelection: FeatureCollection = {
@@ -97,6 +110,16 @@ export function ProjectMapLayers({
           filter={FILTER_LINE}
         />
       </Source>
+      {coverageCompartments && coverageCompartments.features.length > 0 && (
+        <Source id="project-coverage" type="geojson" data={coverageCompartments}>
+          <Layer
+            id={LAYER_COVERAGE}
+            type="line"
+            paint={coveragePaint}
+            filter={FILTER_LINE}
+          />
+        </Source>
+      )}
       <Source id="project-fcp" type="geojson" data={fcpWithSelection}>
         <Layer
           id={LAYER_FCP_FILL}

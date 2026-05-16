@@ -32,7 +32,7 @@ def _dummy_analysis_fields() -> dict:
         "estimate_number_of_ducts": 1,
         "has_gdpr_problems": False,
         "is_duplicated": False,
-        "gps_matches_route": True,
+        "gps_matches_route": False,
         "date_valid": True,
         "is_false_call": False,
     }
@@ -89,9 +89,24 @@ def analyze_image_asset(
         session, project_id=project_id, asset_id=asset_id
     )
     fields = _dummy_analysis_fields()
-    fields["gps_coordinates"] = _resolve_gps_coordinates(
+    gps_coordinates = _resolve_gps_coordinates(
         session, project=project, extracted=extracted
     )
+    fields["gps_coordinates"] = gps_coordinates
+    if gps_coordinates is not None:
+        coords = gps_coordinates.get("coordinates")
+        if isinstance(coords, (list, tuple)) and len(coords) >= 2:
+            try:
+                lon = float(coords[0])
+                lat = float(coords[1])
+                if project.geojson_status == GeojsonStatus.ready:
+                    from src.api.services.compartment_service import photo_matches_route
+
+                    fields["gps_matches_route"] = photo_matches_route(
+                        session, project.id, lon, lat
+                    )
+            except (TypeError, ValueError):
+                pass
     row = _upsert_analysis(session, asset_id=asset_id, fields=fields, reanalyze=True)
     row.category = automated_category(row)
     session.add(row)

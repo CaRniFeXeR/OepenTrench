@@ -6,6 +6,7 @@ client.setConfig({
 
 export { client };
 export {
+  calculateProjectFcpCoverageProjectsProjectIdFcpCoveragePost,
   createProjectProjectsPost,
   listProjectsRouteProjectsGet,
   readProjectGeojsonProjectsProjectIdGeojsonGet,
@@ -17,6 +18,8 @@ export {
   uploadProjectImageProjectsProjectIdImagesPost,
 } from './generated/sdk.gen';
 export type {
+  FcpCoverageCompartmentRead,
+  FcpCoverageRead,
   GeojsonStatus,
   MapPhotoMarkerRead,
   PhotoAnalysisRead,

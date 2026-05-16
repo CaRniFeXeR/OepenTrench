@@ -199,3 +199,26 @@ class MapPhotoMarkerRead(BaseModel):
 
 class MapPhotosRead(BaseModel):
     photos: list[MapPhotoMarkerRead]
+
+
+class FcpCoverageCompartmentRead(BaseModel):
+    id: str
+    fcp_id: str
+    covered: bool
+    length_m: float
+    center: tuple[float, float]
+    geometry: dict
+
+
+class FcpCoverageSummaryRead(BaseModel):
+    fcp_id: str
+    fcp_code: str | None
+    fcp_label: str | None
+    compartment_count: int
+    covered_count: int
+    coverage_ratio: float
+
+
+class FcpCoverageRead(BaseModel):
+    compartments: list[FcpCoverageCompartmentRead]
+    summaries: list[FcpCoverageSummaryRead]
