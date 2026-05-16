@@ -1,13 +1,15 @@
 import type { FeatureCollection } from 'geojson';
 
-import type { MapPhotoMarkerRead, ProjectDetailRead } from '../../api/client';
+import type { FcpCoverageRead, MapPhotoMarkerRead, ProjectDetailRead } from '../../api/client';
 import type { DetailWorkspaceTab } from './layout/useProjectDetailLayoutState';
 import { FilesTabPanel } from './FilesTabPanel';
 import { ProjectPhotoDashboard } from './photo-dashboard/ProjectPhotoDashboard';
+import { ProjectReportTab } from './report/ProjectReportTab';
 
 const TABS: { id: DetailWorkspaceTab; label: string }[] = [
   { id: 'files', label: 'Files' },
   { id: 'analysis', label: 'Analysis' },
+  { id: 'report', label: 'Report' },
 ];
 
 export function DetailWorkspaceTabs({
@@ -21,6 +23,9 @@ export function DetailWorkspaceTabs({
   onRefresh,
   onUploadsBusyChange,
   onMergeMapData,
+  routeReady,
+  coverage,
+  coverageLoading,
 }: {
   project: ProjectDetailRead;
   activeTab: DetailWorkspaceTab;
@@ -32,6 +37,9 @@ export function DetailWorkspaceTabs({
   onRefresh: () => Promise<void>;
   onUploadsBusyChange: (busy: boolean) => void;
   onMergeMapData: (added: FeatureCollection) => void;
+  routeReady: boolean;
+  coverage: FcpCoverageRead | null;
+  coverageLoading: boolean;
 }) {
   return (
     <aside className="flex min-h-0 min-w-0 flex-[2] flex-col border-b border-slate-200 bg-slate-50 lg:border-b-0 lg:border-r">
@@ -69,7 +77,7 @@ export function DetailWorkspaceTabs({
             onUploadsBusyChange={onUploadsBusyChange}
             onMergeMapData={onMergeMapData}
           />
-        ) : (
+        ) : activeTab === 'analysis' ? (
           <ProjectPhotoDashboard
             project={project}
             mapData={mapData}
@@ -77,6 +85,14 @@ export function DetailWorkspaceTabs({
             selectedFcpId={selectedFcpId}
             onSelectedFcpIdChange={onSelectedFcpIdChange}
             onRefresh={onRefresh}
+          />
+        ) : (
+          <ProjectReportTab
+            project={project}
+            mapData={mapData}
+            mapPhotos={mapPhotos}
+            coverage={routeReady ? coverage : null}
+            coverageLoading={routeReady && coverageLoading}
           />
         )}
       </div>

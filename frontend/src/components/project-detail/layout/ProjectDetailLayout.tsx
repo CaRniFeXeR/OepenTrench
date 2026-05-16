@@ -67,6 +67,9 @@ export function ProjectDetailLayout({
             onRefresh={handleRefresh}
             onUploadsBusyChange={onUploadsBusyChange}
             onMergeMapData={mergeMapData}
+            routeReady={routeReady}
+            coverage={coverage}
+            coverageLoading={coverageLoading}
           />
 
           <div className="flex min-h-[480px] min-w-0 flex-1 flex-col">

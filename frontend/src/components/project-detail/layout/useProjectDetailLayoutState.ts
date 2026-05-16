@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 
-export type DetailWorkspaceTab = 'files' | 'analysis';
+export type DetailWorkspaceTab = 'files' | 'analysis' | 'report';
 
 export function useProjectDetailLayoutState(onRefresh: () => Promise<void>) {
   const [activeTab, setActiveTab] = useState<DetailWorkspaceTab>('files');
