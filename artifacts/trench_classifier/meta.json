@@ -1,0 +1,17 @@
+{
+  "model_id": "facebook/dinov2-small",
+  "threshold": 0.5368588466134078,
+  "embed_dim": 384,
+  "image_size": 224,
+  "train_counts": {
+    "no-trench": 562,
+    "trench": 3341
+  },
+  "cv_metrics": {
+    "precision_at_threshold": 0.9702271332105586,
+    "recall_at_threshold": 0.9461239149955103,
+    "pr_auc": 0.993279921978892,
+    "target_precision": 0.97
+  },
+  "notes": "Augmented minority class with factor=8. Threshold picked on real-only OOF PR curve, target precision = 0.97."
+}
