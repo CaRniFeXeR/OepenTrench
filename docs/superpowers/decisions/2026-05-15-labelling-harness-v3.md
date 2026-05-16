@@ -464,3 +464,73 @@ Minimum bar: 2 options, 1 chosen, explicit reasoning.
 - **Affected files:** `src/labelling/remote_labeller.py` (extracted `_backoff_seconds`), `tests/labelling/test_remote_integration.py`
 - **Commit:** pending
 - **Supersedes:** —
+
+---
+
+### D-022: VM scaffold mirrored at `vm-server/` in the local repo
+
+- **Timestamp:** 2026-05-16 16:00 (local)
+- **Task:** Task 8 — VM scaffold + Grounding DINO adapter
+- **Trigger:** Spec §11 lists `~/repos/vision/` files under "VM" only. The local repo has no link to them, making post-hoc audit of what got deployed difficult and leaving the VM code without version control.
+- **Spec anchors:** §4.4, §4.5, §11 ("VM (~/repos/vision/)" section)
+- **Options considered:**
+  1. Files live on the VM only (literal spec interpretation). No local audit trail; the VM is a black box for the auditor.
+  2. Mirror the VM files at `vm-server/` in the local repo. Deploy via `tar -C vm-server -cf - . | ssh threenicorn 'cd ~/repos/vision && tar xf -'`. Local repo is source-of-truth; the VM is a deployment target. Adds a small directory to the local repo's diff.
+  3. Make the VM its own separate git repo with its own history. Cleanest separation; biggest operational overhead for a hackathon (two repos to keep in sync, two PR cycles, etc.).
+- **Chosen:** Option 2 (mirror at `vm-server/`).
+- **Reasoning:** The local repo already contains the spec, ledger, harness, configs, and tests. Mirroring the VM code keeps the entire feature reviewable in one diff and gives the auditor concrete files to inspect against §4.4 / §4.5. Deployment is one tar-over-ssh away. The audit-visibility benefit outweighs the small diff cost.
+- **Out-of-scope alternatives deferred:** Setting up a separate git repo on the VM and a CI deployment pipeline — overkill at hackathon scale.
+- **Affected files:** `vm-server/*` (all of it), plus a brief mention in the runbook (T9).
+- **Commit:** pending
+- **Supersedes:** —
+
+### D-023: Grounding DINO adapter — fp32 weights + bf16 autocast (not bf16 weights)
+
+- **Timestamp:** 2026-05-16 16:15 (local)
+- **Task:** Task 8 — VM scaffold + Grounding DINO adapter
+- **Trigger:** Loading the model with `torch_dtype=torch.bfloat16` failed at inference with cascading dtype mismatches — first in the Swin patch-embed conv (`Float vs BFloat16` on `pixel_values`), then in the text-enhancer cross-attention (`mat1 and mat2 must have the same dtype` on the BERT query projection). The processor emits fp32 tensors for both image and text; manually casting one path leaves the other broken.
+- **Spec anchors:** §4.5 (adapter responsibility), §8 (OOM row)
+- **Options considered:**
+  1. Hunt down every fp32 → bf16 cast site in the processor output (`pixel_values`, `input_ids`, `attention_mask`, `pixel_mask`, `token_type_ids`, etc.) and cast each before forward. Brittle, breaks on minor Transformers version bumps that add/rename fields.
+  2. Load the model in fp32 and run forward under `torch.autocast(device_type="cuda", dtype=torch.bfloat16)`. PyTorch's autocast handles the up/down-casts at each op-call site as needed; speed is comparable to manual bf16 in practice; no manual cast plumbing.
+  3. Keep the model in fp32 with no autocast. Slowest (about 2× the bf16 throughput on a 5090) but simplest. ~80–120 ms/image vs ~40–60 ms — still well under the spec's hackathon-scale target.
+- **Chosen:** Option 2 (fp32 weights + autocast).
+- **Reasoning:** Option 1 lost two debug cycles already during T8; the dtype surface is too wide. Option 2 is the canonical PyTorch recommendation for inference at lower precision when the model isn't natively trained at that precision. Autocast keeps the forward pass mixed-precision (matmuls and convs in bf16, layer-norms and softmaxes in fp32) which matches the trained-precision the weights expect. Verified by a successful end-to-end /detect call on a Beispiele/duct image returning 3 detections in 801 ms (first call, includes JIT compile).
+- **Out-of-scope alternatives deferred:** ONNX export with bf16 quantisation — out of scope; the harness uses HF inference directly.
+- **Affected files:** `vm-server/server/adapters/grounding_dino.py`
+- **Commit:** pending
+- **Supersedes:** —
+
+### D-024: `post_process_grounded_object_detection(threshold=)`, not `box_threshold=`
+
+- **Timestamp:** 2026-05-16 16:25 (local)
+- **Task:** Task 8 — VM scaffold + Grounding DINO adapter
+- **Trigger:** First call to `post_process_grounded_object_detection(box_threshold=…)` failed with `TypeError: ... got an unexpected keyword argument 'box_threshold'`. The Transformers API renamed it to `threshold` somewhere between 4.45 and 4.57.
+- **Spec anchors:** §4.5 (adapter)
+- **Options considered:**
+  1. Pin Transformers to a pre-rename version (e.g. 4.45) that accepts `box_threshold`. Locks the deployment to a stale version.
+  2. Use the current name (`threshold=`). Tracks upstream; subject to future renames.
+  3. Try-import a probe at adapter load and pick the parameter name at runtime. Defensive but over-engineered for one keyword.
+- **Chosen:** Option 2 (use `threshold=`).
+- **Reasoning:** The deployed Transformers (4.57.6 via uv sync) settled on `threshold=`. Pinning to 4.45 would block bug fixes and new model adapters; a runtime probe doesn't earn its keep for a one-line keyword. The breakage from a future rename would be loud (TypeError at first /detect call) and easy to fix — log it in the ledger when it happens.
+- **Out-of-scope alternatives deferred:** Wrapping the post-processor in a compatibility shim.
+- **Affected files:** `vm-server/server/adapters/grounding_dino.py`
+- **Commit:** pending
+- **Supersedes:** —
+
+### D-025: Single-pass concatenated prompt + substring-match for label→class
+
+- **Timestamp:** 2026-05-16 16:30 (local)
+- **Task:** Task 8 — VM scaffold + Grounding DINO adapter
+- **Trigger:** Grounding DINO accepts multi-class queries via a single text prompt with class boundaries marked by `.`. Detections come back tagged with the matched text span — not with the operator-facing class name. Need a mapping from span → class.
+- **Spec anchors:** §4.5, §5.1, §5.2
+- **Options considered:**
+  1. Per-class forward pass — run inference 4× per image, once per class, with that class's prompt only. Simplest mapping (output is naturally tagged), but 4× the inference cost (~200 ms per image instead of ~50 ms).
+  2. Single-pass concatenated prompt; map each detected span back to a class by substring-matching the span text against each class's prompt. Cheap, one forward pass; mapping is heuristic — a span could in principle match multiple classes' prompts if their wording overlaps (e.g. `paper` appears in both `whitepaper` and `sitetag`).
+  3. Single-pass with per-class boundary-token tracking via char offsets through the concatenated prompt. More precise mapping; requires reproducing the tokenizer's offset behaviour. Complex.
+- **Chosen:** Option 2 (single-pass + substring match).
+- **Reasoning:** 4× speedup matters for a 500-image labelling run (50 ms × 500 = 25 s vs 200 ms × 500 = 100 s). Substring ambiguity is bounded by prompt authoring — the harness operator should keep per-class prompts non-overlapping. Falls back to a token-level match if the full label isn't found in any prompt, so partial matches still resolve. Edge cases (a label that overlaps two prompts) get assigned to the first matching class, which makes the failure mode predictable.
+- **Out-of-scope alternatives deferred:** Option 3's offset-tracking — revisit if substring matching produces frequent miscategorisations on real data.
+- **Affected files:** `vm-server/server/adapters/grounding_dino.py`
+- **Commit:** pending
+- **Supersedes:** —

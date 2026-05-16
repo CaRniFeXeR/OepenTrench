@@ -1,0 +1,32 @@
+[project]
+name = "vision-server"
+version = "0.1.0"
+description = "Single-model detection server for ÖpenTrench labelling harness."
+requires-python = ">=3.10,<3.13"
+
+dependencies = [
+    # PyTorch for Blackwell (RTX 5090) — cu128 wheels.
+    "torch>=2.6,<3",
+    "torchvision>=0.21,<1",
+    # HF Transformers + accelerate for model loading.
+    "transformers>=4.45,<5",
+    "accelerate>=0.30,<2",
+    # Web stack.
+    "fastapi>=0.110,<1",
+    "uvicorn[standard]>=0.30,<1",
+    "pydantic>=2.6,<3",
+    # I/O.
+    "pillow>=11,<12",
+]
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu128" }
+torchvision = { index = "pytorch-cu128" }
+
+[tool.setuptools.packages.find]
+include = ["server*"]
