@@ -36,8 +36,9 @@ def compute_category(
     is_in_domain: bool,
     has_gdpr_problems: bool,
     gps_matches_route: bool,
+    is_duplicated: bool = False,
 ) -> PhotoDocumentationCategory:
-    if not gps_matches_route or not is_in_domain:
+    if is_duplicated or not gps_matches_route or not is_in_domain:
         return PhotoDocumentationCategory.red
     if (
         has_duct
@@ -50,6 +51,12 @@ def compute_category(
     return PhotoDocumentationCategory.yellow
 
 
+def effective_is_duplicated(analysis: PhotoAnalysis) -> bool:
+    if analysis.reviewer_is_duplicated is not None:
+        return bool(analysis.reviewer_is_duplicated)
+    return bool(analysis.is_duplicated)
+
+
 def effective_bool(analysis: PhotoAnalysis, field: CategoryField) -> bool:
     reviewer_val = getattr(analysis, _REVIEWER_ATTR[field])
     if reviewer_val is not None:
@@ -60,6 +67,8 @@ def effective_bool(analysis: PhotoAnalysis, field: CategoryField) -> bool:
 def effective_category(analysis: PhotoAnalysis) -> PhotoDocumentationCategory | None:
     if analysis.reviewer_override_category is not None:
         return analysis.reviewer_override_category
+    if effective_is_duplicated(analysis):
+        return PhotoDocumentationCategory.red
     return compute_category(
         has_duct=effective_bool(analysis, "has_duct"),
         has_ruler=effective_bool(analysis, "has_ruler"),
@@ -76,6 +85,7 @@ def automated_category(analysis: PhotoAnalysis) -> PhotoDocumentationCategory:
         is_in_domain=analysis.is_in_domain,
         has_gdpr_problems=analysis.has_gdpr_problems,
         gps_matches_route=analysis.gps_matches_route,
+        is_duplicated=analysis.is_duplicated,
     )
 
 
@@ -136,6 +146,7 @@ def photo_analysis_to_read(row: PhotoAnalysis) -> PhotoAnalysisRead:
         reviewer_is_in_domain=row.reviewer_is_in_domain,
         reviewer_has_gdpr_problems=row.reviewer_has_gdpr_problems,
         reviewer_gps_matches_route=row.reviewer_gps_matches_route,
+        reviewer_is_duplicated=row.reviewer_is_duplicated,
         reviewed_at=row.reviewed_at,
         gps_coordinates=row.gps_coordinates,
         created_at=row.created_at,
@@ -145,6 +156,7 @@ def photo_analysis_to_read(row: PhotoAnalysis) -> PhotoAnalysisRead:
         effective_is_in_domain=effective_bool(row, "is_in_domain"),
         effective_has_gdpr_problems=effective_bool(row, "has_gdpr_problems"),
         effective_gps_matches_route=effective_bool(row, "gps_matches_route"),
+        effective_is_duplicated=effective_is_duplicated(row),
         effective_category=effective_category(row),
     )
 
@@ -155,6 +167,7 @@ REVIEWER_CLEAR_ATTRS = (
     "reviewer_is_in_domain",
     "reviewer_has_gdpr_problems",
     "reviewer_gps_matches_route",
+    "reviewer_is_duplicated",
     "reviewer_override_category",
     "reviewed_at",
 )

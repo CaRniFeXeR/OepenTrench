@@ -1,13 +1,15 @@
 import type { FeatureCollection } from 'geojson';
 
-import type { MapPhotoMarkerRead, ProjectDetailRead } from '../../api/client';
+import type { FcpCoverageRead, MapPhotoMarkerRead, ProjectDetailRead } from '../../api/client';
 import type { DetailWorkspaceTab } from './layout/useProjectDetailLayoutState';
 import { FilesTabPanel } from './FilesTabPanel';
 import { ProjectPhotoDashboard } from './photo-dashboard/ProjectPhotoDashboard';
+import { ProjectReportTab } from './report/ProjectReportTab';
 
 const TABS: { id: DetailWorkspaceTab; label: string }[] = [
   { id: 'files', label: 'Files' },
-  { id: 'analysis', label: 'Analysis' },
+  { id: 'review', label: 'Review' },
+  { id: 'report', label: 'Report' },
 ];
 
 export function DetailWorkspaceTabs({
@@ -21,6 +23,9 @@ export function DetailWorkspaceTabs({
   onRefresh,
   onUploadsBusyChange,
   onMergeMapData,
+  routeReady,
+  coverage,
+  coverageLoading,
 }: {
   project: ProjectDetailRead;
   activeTab: DetailWorkspaceTab;
@@ -32,13 +37,16 @@ export function DetailWorkspaceTabs({
   onRefresh: () => Promise<void>;
   onUploadsBusyChange: (busy: boolean) => void;
   onMergeMapData: (added: FeatureCollection) => void;
+  routeReady: boolean;
+  coverage: FcpCoverageRead | null;
+  coverageLoading: boolean;
 }) {
   return (
-    <aside className="flex min-h-0 min-w-0 flex-[2] flex-col border-b border-slate-200 bg-slate-50 lg:border-b-0 lg:border-r">
+    <aside className="flex min-h-0 min-w-0 flex-[2] flex-col border-b border-slate-200 bg-slate-50 print:w-full print:max-w-none print:flex-none print:border-0 lg:border-b-0 lg:border-r">
       <nav
         role="tablist"
         aria-label="Project workspace"
-        className="flex shrink-0 border-b border-slate-200 bg-white"
+        className="print:hidden flex shrink-0 border-b border-slate-200 bg-white"
       >
         {TABS.map((tab) => {
           const selected = activeTab === tab.id;
@@ -61,15 +69,27 @@ export function DetailWorkspaceTabs({
         })}
       </nav>
 
-      <div className="min-h-0 flex-1 overflow-hidden" role="tabpanel">
-        {activeTab === 'files' ? (
+      <div
+        className="min-h-0 flex-1 overflow-hidden print:overflow-visible print:h-auto"
+        role="tabpanel"
+      >
+        <div
+          className={
+            activeTab === 'files' ? 'h-full min-h-0' : 'hidden print:hidden'
+          }
+        >
           <FilesTabPanel
             project={project}
             onRefresh={onRefresh}
             onUploadsBusyChange={onUploadsBusyChange}
             onMergeMapData={onMergeMapData}
           />
-        ) : (
+        </div>
+        <div
+          className={
+            activeTab === 'review' ? 'h-full min-h-0' : 'hidden print:hidden'
+          }
+        >
           <ProjectPhotoDashboard
             project={project}
             mapData={mapData}
@@ -78,7 +98,22 @@ export function DetailWorkspaceTabs({
             onSelectedFcpIdChange={onSelectedFcpIdChange}
             onRefresh={onRefresh}
           />
-        )}
+        </div>
+        <div
+          className={
+            activeTab === 'report'
+              ? 'h-full min-h-0'
+              : 'hidden print:block print:h-auto'
+          }
+        >
+          <ProjectReportTab
+            project={project}
+            mapData={mapData}
+            mapPhotos={mapPhotos}
+            coverage={routeReady ? coverage : null}
+            coverageLoading={routeReady && coverageLoading}
+          />
+        </div>
       </div>
     </aside>
   );

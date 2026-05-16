@@ -5,6 +5,8 @@ import { ProjectMapView } from '../../project-map/ProjectMapView';
 import { UploadMapPreview } from '../../project-upload/UploadMapPreview';
 import { DetailWorkspaceTabs } from '../DetailWorkspaceTabs';
 import { ProjectSummaryBar } from '../ProjectSummaryBar';
+import { TrenchCoverageOverview } from '../TrenchCoverageOverview';
+import { useProjectFcpCoverage } from '../useProjectFcpCoverage';
 import { useProjectMapGeojson } from '../useProjectMapGeojson';
 import { useProjectDetailLayoutState } from './useProjectDetailLayoutState';
 
@@ -36,6 +38,13 @@ export function ProjectDetailLayout({
     imageCount,
     mapPhotosRefreshKey,
   );
+  const {
+    coverage,
+    loading: coverageLoading,
+    calculating: coverageCalculating,
+    error: coverageError,
+    calculateCoverage,
+  } = useProjectFcpCoverage(project.id, routeReady, mapPhotosRefreshKey);
 
   return (
     <>
@@ -58,21 +67,37 @@ export function ProjectDetailLayout({
             onRefresh={handleRefresh}
             onUploadsBusyChange={onUploadsBusyChange}
             onMergeMapData={mergeMapData}
+            routeReady={routeReady}
+            coverage={coverage}
+            coverageLoading={coverageLoading}
           />
 
-          <div className="flex min-h-[480px] min-w-0 flex-1 flex-col">
+          <div className="print:hidden flex min-h-[480px] min-w-0 flex-1 flex-col">
             {routeReady && mapData ? (
-              <ProjectMapView
-                embedded
-                project={project}
-                mapData={mapData}
-                mapPhotos={mapPhotos}
-                mapPhotosLoading={mapPhotosLoading}
-                mapPhotosRefreshKey={mapPhotosRefreshKey}
-                selectedFcpId={selectedFcpId}
-                onSelectedFcpIdChange={setSelectedFcpId}
-                onProjectRefresh={handleRefresh}
-              />
+              <>
+                <ProjectMapView
+                  embedded
+                  className="min-h-0 flex-1"
+                  project={project}
+                  mapData={mapData}
+                  mapPhotos={mapPhotos}
+                  mapPhotosLoading={mapPhotosLoading}
+                  selectedFcpId={selectedFcpId}
+                  onSelectedFcpIdChange={setSelectedFcpId}
+                  onProjectRefresh={handleRefresh}
+                  coverage={coverage}
+                  coverageLoading={coverageCalculating}
+                />
+                <TrenchCoverageOverview
+                  routeReady={routeReady}
+                  coverage={coverage}
+                  loading={coverageLoading}
+                  calculating={coverageCalculating}
+                  error={coverageError}
+                  selectedFcpId={selectedFcpId}
+                  onCalculate={calculateCoverage}
+                />
+              </>
             ) : (
               <div className="h-full min-h-[480px] p-3">
                 <UploadMapPreview featureCollection={mapData} height={480} />

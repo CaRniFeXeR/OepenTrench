@@ -57,6 +57,7 @@ cover/
 
 # Django stuff:
 *.log
+logs/online-learning/
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
@@ -225,3 +226,4 @@ daa/
 .claude/
 /*.pt
 data/uploads/**
+data/oepentrench_api.db

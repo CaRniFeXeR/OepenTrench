@@ -39,6 +39,7 @@ dependencies = [
     "nanoid>=2.0,<3",
     "python-multipart>=0.0.18,<1",
     "easyocr>=1.7.2",
+    "opencv-python-headless>=4.10,<5",
     # YAML parsing (data.yaml, labeller configs)
     "pyyaml>=6.0,<7",
     # labelling harness — HTTP client + config validation

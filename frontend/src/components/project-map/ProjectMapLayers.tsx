@@ -6,7 +6,7 @@ import type {
   LineLayerSpecification,
 } from '@maplibre/maplibre-gl-style-spec';
 
-import { photoCirclePaint } from './photoMarkerPaint';
+import { photoCircleLayout, photoCirclePaint } from './photoMarkerPaint';
 
 export const LAYER_FCP_FILL = 'project-fcp-fill';
 export const LAYER_FCP_OUTLINE = 'project-fcp-outline';
@@ -138,6 +138,7 @@ export function ProjectMapLayers({
         <Layer
           id={LAYER_PHOTOS}
           type="circle"
+          layout={photoCircleLayout}
           paint={photoCirclePaint}
         />
       </Source>

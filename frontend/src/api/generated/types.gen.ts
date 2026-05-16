@@ -76,6 +76,7 @@ export type FcpCoverageCompartmentRead = {
  * FcpCoverageRead
  */
 export type FcpCoverageRead = {
+    project: ProjectCoverageSummaryRead;
     /**
      * Compartments
      */
@@ -189,6 +190,144 @@ export type MapPhotosRead = {
 };
 
 /**
+ * OnlineLearningDisagreementsPage
+ */
+export type OnlineLearningDisagreementsPage = {
+    /**
+     * Items
+     */
+    items: Array<OnlineLearningMismatchItemRead>;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Limit
+     */
+    limit: number;
+    /**
+     * Offset
+     */
+    offset: number;
+    stats: OnlineLearningStatsRead;
+};
+
+/**
+ * OnlineLearningMismatchItemRead
+ */
+export type OnlineLearningMismatchItemRead = {
+    /**
+     * Asset Id
+     */
+    asset_id: string;
+    /**
+     * Project Id
+     */
+    project_id: string;
+    /**
+     * Project Name
+     */
+    project_name: string;
+    /**
+     * Original Label
+     */
+    original_label: string;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Reviewed At
+     */
+    reviewed_at: string;
+    analysis: PhotoAnalysisRead;
+    /**
+     * Mismatch Fields
+     */
+    mismatch_fields: Array<string>;
+};
+
+/**
+ * OnlineLearningStatsRead
+ */
+export type OnlineLearningStatsRead = {
+    /**
+     * Total Reviewed
+     */
+    total_reviewed: number;
+    /**
+     * Total Mismatch
+     */
+    total_mismatch: number;
+    /**
+     * Mismatch Rate
+     */
+    mismatch_rate: number;
+    /**
+     * Projects With Mismatch
+     */
+    projects_with_mismatch: number;
+};
+
+/**
+ * OnlineLearningTrainingRunRead
+ */
+export type OnlineLearningTrainingRunRead = {
+    /**
+     * Id
+     */
+    id: string;
+    status: OnlineLearningTrainingStatus;
+    /**
+     * Photo Count
+     */
+    photo_count: number;
+    /**
+     * Started At
+     */
+    started_at: string;
+    /**
+     * Finished At
+     */
+    finished_at: string | null;
+    /**
+     * Duration Sec
+     */
+    duration_sec: number | null;
+    /**
+     * Error Message
+     */
+    error_message: string | null;
+};
+
+/**
+ * OnlineLearningTrainingRunsPage
+ */
+export type OnlineLearningTrainingRunsPage = {
+    /**
+     * Items
+     */
+    items: Array<OnlineLearningTrainingRunRead>;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Limit
+     */
+    limit: number;
+    /**
+     * Offset
+     */
+    offset: number;
+};
+
+/**
+ * OnlineLearningTrainingStatus
+ */
+export type OnlineLearningTrainingStatus = 'pending' | 'running' | 'completed' | 'failed';
+
+/**
  * PhotoAnalysisRead
  */
 export type PhotoAnalysisRead = {
@@ -263,6 +402,10 @@ export type PhotoAnalysisRead = {
      */
     reviewer_gps_matches_route: boolean | null;
     /**
+     * Reviewer Is Duplicated
+     */
+    reviewer_is_duplicated: boolean | null;
+    /**
      * Reviewed At
      */
     reviewed_at: string | null;
@@ -295,6 +438,10 @@ export type PhotoAnalysisRead = {
      * Effective Gps Matches Route
      */
     effective_gps_matches_route: boolean;
+    /**
+     * Effective Is Duplicated
+     */
+    effective_is_duplicated: boolean;
     effective_category: PhotoDocumentationCategory | null;
 };
 
@@ -322,6 +469,10 @@ export type PhotoAnalysisReviewUpdate = {
      * Reviewer Gps Matches Route
      */
     reviewer_gps_matches_route?: boolean | null;
+    /**
+     * Reviewer Is Duplicated
+     */
+    reviewer_is_duplicated?: boolean | null;
     reviewer_override_category?: PhotoDocumentationCategory | null;
     /**
      * Mark Reviewed
@@ -364,6 +515,32 @@ export type ProjectAssetRead = {
      */
     created_at: string;
     analysis?: PhotoAnalysisRead | null;
+};
+
+/**
+ * ProjectCoverageSummaryRead
+ */
+export type ProjectCoverageSummaryRead = {
+    /**
+     * Compartment Count
+     */
+    compartment_count: number;
+    /**
+     * Covered Count
+     */
+    covered_count: number;
+    /**
+     * Coverage Ratio
+     */
+    coverage_ratio: number;
+    /**
+     * Fcp Count
+     */
+    fcp_count: number;
+    /**
+     * Computed At
+     */
+    computed_at: string | null;
 };
 
 /**
@@ -476,86 +653,6 @@ export type ProjectUpdate = {
 };
 
 /**
- * OnlineLearningDisagreementsPage
- */
-export type OnlineLearningDisagreementsPage = {
-    /**
-     * Items
-     */
-    items: Array<OnlineLearningMismatchItemRead>;
-    /**
-     * Total
-     */
-    total: number;
-    /**
-     * Limit
-     */
-    limit: number;
-    /**
-     * Offset
-     */
-    offset: number;
-    stats: OnlineLearningStatsRead;
-};
-
-/**
- * OnlineLearningMismatchItemRead
- */
-export type OnlineLearningMismatchItemRead = {
-    /**
-     * Asset Id
-     */
-    asset_id: string;
-    /**
-     * Project Id
-     */
-    project_id: string;
-    /**
-     * Project Name
-     */
-    project_name: string;
-    /**
-     * Original Label
-     */
-    original_label: string;
-    /**
-     * Created At
-     */
-    created_at: string;
-    /**
-     * Reviewed At
-     */
-    reviewed_at: string;
-    analysis: PhotoAnalysisRead;
-    /**
-     * Mismatch Fields
-     */
-    mismatch_fields: Array<string>;
-};
-
-/**
- * OnlineLearningStatsRead
- */
-export type OnlineLearningStatsRead = {
-    /**
-     * Total Reviewed
-     */
-    total_reviewed: number;
-    /**
-     * Total Mismatch
-     */
-    total_mismatch: number;
-    /**
-     * Mismatch Rate
-     */
-    mismatch_rate: number;
-    /**
-     * Projects With Mismatch
-     */
-    projects_with_mismatch: number;
-};
-
-/**
  * ValidationError
  */
 export type ValidationError = {
@@ -602,40 +699,6 @@ export type HealthHealthGetResponses = {
 };
 
 export type HealthHealthGetResponse = HealthHealthGetResponses[keyof HealthHealthGetResponses];
-
-export type ListDisagreementsOnlineLearningDisagreementsGetData = {
-    body?: never;
-    path?: never;
-    query?: {
-        /**
-         * Limit
-         */
-        limit?: number;
-        /**
-         * Offset
-         */
-        offset?: number;
-    };
-    url: '/online-learning/disagreements';
-};
-
-export type ListDisagreementsOnlineLearningDisagreementsGetErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type ListDisagreementsOnlineLearningDisagreementsGetError = ListDisagreementsOnlineLearningDisagreementsGetErrors[keyof ListDisagreementsOnlineLearningDisagreementsGetErrors];
-
-export type ListDisagreementsOnlineLearningDisagreementsGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: OnlineLearningDisagreementsPage;
-};
-
-export type ListDisagreementsOnlineLearningDisagreementsGetResponse = ListDisagreementsOnlineLearningDisagreementsGetResponses[keyof ListDisagreementsOnlineLearningDisagreementsGetResponses];
 
 export type ListProjectsRouteProjectsGetData = {
     body?: never;
@@ -852,6 +915,36 @@ export type ReadProjectMapPhotosProjectsProjectIdMapPhotosGetResponses = {
 
 export type ReadProjectMapPhotosProjectsProjectIdMapPhotosGetResponse = ReadProjectMapPhotosProjectsProjectIdMapPhotosGetResponses[keyof ReadProjectMapPhotosProjectsProjectIdMapPhotosGetResponses];
 
+export type ReadProjectFcpCoverageProjectsProjectIdFcpCoverageGetData = {
+    body?: never;
+    path: {
+        /**
+         * Project Id
+         */
+        project_id: string;
+    };
+    query?: never;
+    url: '/projects/{project_id}/fcp-coverage';
+};
+
+export type ReadProjectFcpCoverageProjectsProjectIdFcpCoverageGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ReadProjectFcpCoverageProjectsProjectIdFcpCoverageGetError = ReadProjectFcpCoverageProjectsProjectIdFcpCoverageGetErrors[keyof ReadProjectFcpCoverageProjectsProjectIdFcpCoverageGetErrors];
+
+export type ReadProjectFcpCoverageProjectsProjectIdFcpCoverageGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: FcpCoverageRead;
+};
+
+export type ReadProjectFcpCoverageProjectsProjectIdFcpCoverageGetResponse = ReadProjectFcpCoverageProjectsProjectIdFcpCoverageGetResponses[keyof ReadProjectFcpCoverageProjectsProjectIdFcpCoverageGetResponses];
+
 export type CalculateProjectFcpCoverageProjectsProjectIdFcpCoveragePostData = {
     body?: never;
     path: {
@@ -860,12 +953,7 @@ export type CalculateProjectFcpCoverageProjectsProjectIdFcpCoveragePostData = {
          */
         project_id: string;
     };
-    query?: {
-        /**
-         * Fcp Id
-         */
-        fcp_id?: string | null;
-    };
+    query?: never;
     url: '/projects/{project_id}/fcp-coverage';
 };
 
@@ -1016,3 +1104,87 @@ export type ReviewProjectImageAnalysisProjectsProjectIdImagesAssetIdAnalysisPatc
 };
 
 export type ReviewProjectImageAnalysisProjectsProjectIdImagesAssetIdAnalysisPatchResponse = ReviewProjectImageAnalysisProjectsProjectIdImagesAssetIdAnalysisPatchResponses[keyof ReviewProjectImageAnalysisProjectsProjectIdImagesAssetIdAnalysisPatchResponses];
+
+export type ListDisagreementsOnlineLearningDisagreementsGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Offset
+         */
+        offset?: number;
+    };
+    url: '/online-learning/disagreements';
+};
+
+export type ListDisagreementsOnlineLearningDisagreementsGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListDisagreementsOnlineLearningDisagreementsGetError = ListDisagreementsOnlineLearningDisagreementsGetErrors[keyof ListDisagreementsOnlineLearningDisagreementsGetErrors];
+
+export type ListDisagreementsOnlineLearningDisagreementsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: OnlineLearningDisagreementsPage;
+};
+
+export type ListDisagreementsOnlineLearningDisagreementsGetResponse = ListDisagreementsOnlineLearningDisagreementsGetResponses[keyof ListDisagreementsOnlineLearningDisagreementsGetResponses];
+
+export type ListTrainingsOnlineLearningTrainingsGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Offset
+         */
+        offset?: number;
+    };
+    url: '/online-learning/trainings';
+};
+
+export type ListTrainingsOnlineLearningTrainingsGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListTrainingsOnlineLearningTrainingsGetError = ListTrainingsOnlineLearningTrainingsGetErrors[keyof ListTrainingsOnlineLearningTrainingsGetErrors];
+
+export type ListTrainingsOnlineLearningTrainingsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: OnlineLearningTrainingRunsPage;
+};
+
+export type ListTrainingsOnlineLearningTrainingsGetResponse = ListTrainingsOnlineLearningTrainingsGetResponses[keyof ListTrainingsOnlineLearningTrainingsGetResponses];
+
+export type StartTrainingOnlineLearningTrainingsPostData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/online-learning/trainings';
+};
+
+export type StartTrainingOnlineLearningTrainingsPostResponses = {
+    /**
+     * Successful Response
+     */
+    201: OnlineLearningTrainingRunRead;
+};
+
+export type StartTrainingOnlineLearningTrainingsPostResponse = StartTrainingOnlineLearningTrainingsPostResponses[keyof StartTrainingOnlineLearningTrainingsPostResponses];

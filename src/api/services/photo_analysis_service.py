@@ -4,7 +4,7 @@ import logging
 import time
 from typing import Any
 
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from src.api.helpers.face_detection import image_path_has_detected_face
 from src.api.helpers.geojson_sampling import random_point_in_geojson_bounds
@@ -28,6 +28,8 @@ from src.api.services.project_asset_service import load_merged_project_geojson
 from src.api.uploads import get_upload_root, project_asset_abs_path
 
 logger = logging.getLogger("oepentrench.api.photo_analysis")
+
+SENTINEL_HASH_SHA256 = "0" * 64
 
 
 def _dummy_analysis_fields() -> dict:
@@ -96,6 +98,28 @@ def _resolve_gps_coordinates(
 
     logger.info("gps_resolve asset_id=%s source=extracted none", asset_id)
     return None
+
+
+def _is_duplicate_image(
+    session: Session,
+    *,
+    project_id: str,
+    asset: ProjectAsset,
+) -> bool:
+    if asset.hash_sha256 == SENTINEL_HASH_SHA256:
+        return False
+    stmt = (
+        select(ProjectAsset)
+        .where(
+            ProjectAsset.project_id == project_id,
+            ProjectAsset.kind == AssetKind.image,
+            ProjectAsset.hash_sha256 == asset.hash_sha256,
+            ProjectAsset.id != asset.id,
+            ProjectAsset.created_at < asset.created_at,
+        )
+        .limit(1)
+    )
+    return session.exec(stmt).first() is not None
 
 
 def _validate_image_asset(
@@ -182,6 +206,9 @@ def analyze_image_asset(
     )
 
     fields = _dummy_analysis_fields()
+    fields["is_duplicated"] = _is_duplicate_image(
+        session, project_id=project_id, asset=asset
+    )
     if not image_path.is_file():
         logger.warning(
             "analyze_image_missing project_id=%s asset_id=%s path=%s using_dummy_fields_only",

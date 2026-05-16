@@ -1,0 +1,20 @@
+@page {
+  size: A4;
+  margin: 12mm 14mm;
+}
+
+@media print {
+  body {
+    background: white;
+  }
+
+  #project-report-print,
+  #project-report-print * {
+    overflow: visible !important;
+  }
+
+  #project-report-print {
+    max-height: none !important;
+    min-height: 0 !important;
+  }
+}

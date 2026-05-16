@@ -22,7 +22,7 @@ export function ProjectSummaryBar({
   const routeReady = project.geojson_status === 'ready';
 
   return (
-    <div className="border-b border-slate-200 bg-white px-4 py-3 sm:px-6">
+    <div className="print:hidden border-b border-slate-200 bg-white px-4 py-3 sm:px-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <EditableProjectName

@@ -2,7 +2,7 @@
 
 import { type Client, formDataBodySerializer, type Options as Options2, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AnalyzeProjectImageProjectsProjectIdImagesAssetIdAnalyzePostData, AnalyzeProjectImageProjectsProjectIdImagesAssetIdAnalyzePostErrors, AnalyzeProjectImageProjectsProjectIdImagesAssetIdAnalyzePostResponses, CalculateProjectFcpCoverageProjectsProjectIdFcpCoveragePostData, CalculateProjectFcpCoverageProjectsProjectIdFcpCoveragePostErrors, CalculateProjectFcpCoverageProjectsProjectIdFcpCoveragePostResponses, CreateProjectProjectsPostData, CreateProjectProjectsPostErrors, CreateProjectProjectsPostResponses, HealthHealthGetData, HealthHealthGetResponses, ListDisagreementsOnlineLearningDisagreementsGetData, ListDisagreementsOnlineLearningDisagreementsGetErrors, ListDisagreementsOnlineLearningDisagreementsGetResponses, ListProjectsRouteProjectsGetData, ListProjectsRouteProjectsGetErrors, ListProjectsRouteProjectsGetResponses, ReadProjectGeojsonProjectsProjectIdGeojsonGetData, ReadProjectGeojsonProjectsProjectIdGeojsonGetErrors, ReadProjectGeojsonProjectsProjectIdGeojsonGetResponses, ReadProjectImageContentProjectsProjectIdImagesAssetIdContentGetData, ReadProjectImageContentProjectsProjectIdImagesAssetIdContentGetErrors, ReadProjectImageContentProjectsProjectIdImagesAssetIdContentGetResponses, ReadProjectMapPhotosProjectsProjectIdMapPhotosGetData, ReadProjectMapPhotosProjectsProjectIdMapPhotosGetErrors, ReadProjectMapPhotosProjectsProjectIdMapPhotosGetResponses, ReadProjectProjectsProjectIdGetData, ReadProjectProjectsProjectIdGetErrors, ReadProjectProjectsProjectIdGetResponses, ReviewProjectImageAnalysisProjectsProjectIdImagesAssetIdAnalysisPatchData, ReviewProjectImageAnalysisProjectsProjectIdImagesAssetIdAnalysisPatchErrors, ReviewProjectImageAnalysisProjectsProjectIdImagesAssetIdAnalysisPatchResponses, UpdateProjectRouteProjectsProjectIdPatchData, UpdateProjectRouteProjectsProjectIdPatchErrors, UpdateProjectRouteProjectsProjectIdPatchResponses, UploadProjectGeojsonProjectsProjectIdGeojsonPostData, UploadProjectGeojsonProjectsProjectIdGeojsonPostErrors, UploadProjectGeojsonProjectsProjectIdGeojsonPostResponses, UploadProjectImageProjectsProjectIdImagesPostData, UploadProjectImageProjectsProjectIdImagesPostErrors, UploadProjectImageProjectsProjectIdImagesPostResponses } from './types.gen';
+import type { AnalyzeProjectImageProjectsProjectIdImagesAssetIdAnalyzePostData, AnalyzeProjectImageProjectsProjectIdImagesAssetIdAnalyzePostErrors, AnalyzeProjectImageProjectsProjectIdImagesAssetIdAnalyzePostResponses, CalculateProjectFcpCoverageProjectsProjectIdFcpCoveragePostData, CalculateProjectFcpCoverageProjectsProjectIdFcpCoveragePostErrors, CalculateProjectFcpCoverageProjectsProjectIdFcpCoveragePostResponses, CreateProjectProjectsPostData, CreateProjectProjectsPostErrors, CreateProjectProjectsPostResponses, HealthHealthGetData, HealthHealthGetResponses, ListDisagreementsOnlineLearningDisagreementsGetData, ListDisagreementsOnlineLearningDisagreementsGetErrors, ListDisagreementsOnlineLearningDisagreementsGetResponses, ListProjectsRouteProjectsGetData, ListProjectsRouteProjectsGetErrors, ListProjectsRouteProjectsGetResponses, ListTrainingsOnlineLearningTrainingsGetData, ListTrainingsOnlineLearningTrainingsGetErrors, ListTrainingsOnlineLearningTrainingsGetResponses, ReadProjectFcpCoverageProjectsProjectIdFcpCoverageGetData, ReadProjectFcpCoverageProjectsProjectIdFcpCoverageGetErrors, ReadProjectFcpCoverageProjectsProjectIdFcpCoverageGetResponses, ReadProjectGeojsonProjectsProjectIdGeojsonGetData, ReadProjectGeojsonProjectsProjectIdGeojsonGetErrors, ReadProjectGeojsonProjectsProjectIdGeojsonGetResponses, ReadProjectImageContentProjectsProjectIdImagesAssetIdContentGetData, ReadProjectImageContentProjectsProjectIdImagesAssetIdContentGetErrors, ReadProjectImageContentProjectsProjectIdImagesAssetIdContentGetResponses, ReadProjectMapPhotosProjectsProjectIdMapPhotosGetData, ReadProjectMapPhotosProjectsProjectIdMapPhotosGetErrors, ReadProjectMapPhotosProjectsProjectIdMapPhotosGetResponses, ReadProjectProjectsProjectIdGetData, ReadProjectProjectsProjectIdGetErrors, ReadProjectProjectsProjectIdGetResponses, ReviewProjectImageAnalysisProjectsProjectIdImagesAssetIdAnalysisPatchData, ReviewProjectImageAnalysisProjectsProjectIdImagesAssetIdAnalysisPatchErrors, ReviewProjectImageAnalysisProjectsProjectIdImagesAssetIdAnalysisPatchResponses, StartTrainingOnlineLearningTrainingsPostData, StartTrainingOnlineLearningTrainingsPostResponses, UpdateProjectRouteProjectsProjectIdPatchData, UpdateProjectRouteProjectsProjectIdPatchErrors, UpdateProjectRouteProjectsProjectIdPatchResponses, UploadProjectGeojsonProjectsProjectIdGeojsonPostData, UploadProjectGeojsonProjectsProjectIdGeojsonPostErrors, UploadProjectGeojsonProjectsProjectIdGeojsonPostResponses, UploadProjectImageProjectsProjectIdImagesPostData, UploadProjectImageProjectsProjectIdImagesPostErrors, UploadProjectImageProjectsProjectIdImagesPostResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -24,16 +24,6 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 export const healthHealthGet = <ThrowOnError extends boolean = false>(options?: Options<HealthHealthGetData, ThrowOnError>) => {
     return (options?.client ?? client).get<HealthHealthGetResponses, unknown, ThrowOnError>({
         url: '/health',
-        ...options
-    });
-};
-
-/**
- * List Disagreements
- */
-export const listDisagreementsOnlineLearningDisagreementsGet = <ThrowOnError extends boolean = false>(options?: Options<ListDisagreementsOnlineLearningDisagreementsGetData, ThrowOnError>) => {
-    return (options?.client ?? client).get<ListDisagreementsOnlineLearningDisagreementsGetResponses, ListDisagreementsOnlineLearningDisagreementsGetErrors, ThrowOnError>({
-        url: '/online-learning/disagreements',
         ...options
     });
 };
@@ -122,6 +112,16 @@ export const readProjectMapPhotosProjectsProjectIdMapPhotosGet = <ThrowOnError e
 };
 
 /**
+ * Read Project Fcp Coverage
+ */
+export const readProjectFcpCoverageProjectsProjectIdFcpCoverageGet = <ThrowOnError extends boolean = false>(options: Options<ReadProjectFcpCoverageProjectsProjectIdFcpCoverageGetData, ThrowOnError>) => {
+    return (options.client ?? client).get<ReadProjectFcpCoverageProjectsProjectIdFcpCoverageGetResponses, ReadProjectFcpCoverageProjectsProjectIdFcpCoverageGetErrors, ThrowOnError>({
+        url: '/projects/{project_id}/fcp-coverage',
+        ...options
+    });
+};
+
+/**
  * Calculate Project Fcp Coverage
  */
 export const calculateProjectFcpCoverageProjectsProjectIdFcpCoveragePost = <ThrowOnError extends boolean = false>(options: Options<CalculateProjectFcpCoverageProjectsProjectIdFcpCoveragePostData, ThrowOnError>) => {
@@ -177,5 +177,35 @@ export const reviewProjectImageAnalysisProjectsProjectIdImagesAssetIdAnalysisPat
             'Content-Type': 'application/json',
             ...options.headers
         }
+    });
+};
+
+/**
+ * List Disagreements
+ */
+export const listDisagreementsOnlineLearningDisagreementsGet = <ThrowOnError extends boolean = false>(options?: Options<ListDisagreementsOnlineLearningDisagreementsGetData, ThrowOnError>) => {
+    return (options?.client ?? client).get<ListDisagreementsOnlineLearningDisagreementsGetResponses, ListDisagreementsOnlineLearningDisagreementsGetErrors, ThrowOnError>({
+        url: '/online-learning/disagreements',
+        ...options
+    });
+};
+
+/**
+ * List Trainings
+ */
+export const listTrainingsOnlineLearningTrainingsGet = <ThrowOnError extends boolean = false>(options?: Options<ListTrainingsOnlineLearningTrainingsGetData, ThrowOnError>) => {
+    return (options?.client ?? client).get<ListTrainingsOnlineLearningTrainingsGetResponses, ListTrainingsOnlineLearningTrainingsGetErrors, ThrowOnError>({
+        url: '/online-learning/trainings',
+        ...options
+    });
+};
+
+/**
+ * Start Training
+ */
+export const startTrainingOnlineLearningTrainingsPost = <ThrowOnError extends boolean = false>(options?: Options<StartTrainingOnlineLearningTrainingsPostData, ThrowOnError>) => {
+    return (options?.client ?? client).post<StartTrainingOnlineLearningTrainingsPostResponses, unknown, ThrowOnError>({
+        url: '/online-learning/trainings',
+        ...options
     });
 };

@@ -30,61 +30,6 @@
         }
       }
     },
-    "/online-learning/disagreements": {
-      "get": {
-        "tags": [
-          "online-learning"
-        ],
-        "summary": "List Disagreements",
-        "operationId": "list_disagreements_online_learning_disagreements_get",
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "default": 25,
-              "title": "Limit"
-            }
-          },
-          {
-            "name": "offset",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "default": 0,
-              "title": "Offset"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OnlineLearningDisagreementsPage"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/projects": {
       "post": {
         "tags": [
@@ -412,6 +357,46 @@
       }
     },
     "/projects/{project_id}/fcp-coverage": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Read Project Fcp Coverage",
+        "operationId": "read_project_fcp_coverage_projects__project_id__fcp_coverage_get",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FcpCoverageRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "tags": [
           "projects"
@@ -426,22 +411,6 @@
             "schema": {
               "type": "string",
               "title": "Project Id"
-            }
-          },
-          {
-            "name": "fcp_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Fcp Id"
             }
           }
         ],
@@ -681,6 +650,135 @@
           }
         }
       }
+    },
+    "/online-learning/disagreements": {
+      "get": {
+        "tags": [
+          "online-learning"
+        ],
+        "summary": "List Disagreements",
+        "operationId": "list_disagreements_online_learning_disagreements_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 25,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnlineLearningDisagreementsPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/online-learning/trainings": {
+      "get": {
+        "tags": [
+          "online-learning"
+        ],
+        "summary": "List Trainings",
+        "operationId": "list_trainings_online_learning_trainings_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 25,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnlineLearningTrainingRunsPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "online-learning"
+        ],
+        "summary": "Start Training",
+        "operationId": "start_training_online_learning_trainings_post",
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnlineLearningTrainingRunRead"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -794,6 +892,9 @@
       },
       "FcpCoverageRead": {
         "properties": {
+          "project": {
+            "$ref": "#/components/schemas/ProjectCoverageSummaryRead"
+          },
           "compartments": {
             "items": {
               "$ref": "#/components/schemas/FcpCoverageCompartmentRead"
@@ -811,6 +912,7 @@
         },
         "type": "object",
         "required": [
+          "project",
           "compartments",
           "summaries"
         ],
@@ -1009,6 +1111,227 @@
         ],
         "title": "MapPhotosRead"
       },
+      "OnlineLearningDisagreementsPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OnlineLearningMismatchItemRead"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          },
+          "stats": {
+            "$ref": "#/components/schemas/OnlineLearningStatsRead"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset",
+          "stats"
+        ],
+        "title": "OnlineLearningDisagreementsPage"
+      },
+      "OnlineLearningMismatchItemRead": {
+        "properties": {
+          "asset_id": {
+            "type": "string",
+            "title": "Asset Id"
+          },
+          "project_id": {
+            "type": "string",
+            "title": "Project Id"
+          },
+          "project_name": {
+            "type": "string",
+            "title": "Project Name"
+          },
+          "original_label": {
+            "type": "string",
+            "title": "Original Label"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "reviewed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Reviewed At"
+          },
+          "analysis": {
+            "$ref": "#/components/schemas/PhotoAnalysisRead"
+          },
+          "mismatch_fields": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Mismatch Fields"
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset_id",
+          "project_id",
+          "project_name",
+          "original_label",
+          "created_at",
+          "reviewed_at",
+          "analysis",
+          "mismatch_fields"
+        ],
+        "title": "OnlineLearningMismatchItemRead"
+      },
+      "OnlineLearningStatsRead": {
+        "properties": {
+          "total_reviewed": {
+            "type": "integer",
+            "title": "Total Reviewed"
+          },
+          "total_mismatch": {
+            "type": "integer",
+            "title": "Total Mismatch"
+          },
+          "mismatch_rate": {
+            "type": "number",
+            "title": "Mismatch Rate"
+          },
+          "projects_with_mismatch": {
+            "type": "integer",
+            "title": "Projects With Mismatch"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_reviewed",
+          "total_mismatch",
+          "mismatch_rate",
+          "projects_with_mismatch"
+        ],
+        "title": "OnlineLearningStatsRead"
+      },
+      "OnlineLearningTrainingRunRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OnlineLearningTrainingStatus"
+          },
+          "photo_count": {
+            "type": "integer",
+            "title": "Photo Count"
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Started At"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "duration_sec": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Sec"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "photo_count",
+          "started_at",
+          "finished_at",
+          "duration_sec",
+          "error_message"
+        ],
+        "title": "OnlineLearningTrainingRunRead"
+      },
+      "OnlineLearningTrainingRunsPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OnlineLearningTrainingRunRead"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "OnlineLearningTrainingRunsPage"
+      },
+      "OnlineLearningTrainingStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "running",
+          "completed",
+          "failed"
+        ],
+        "title": "OnlineLearningTrainingStatus"
+      },
       "PhotoAnalysisRead": {
         "properties": {
           "asset_id": {
@@ -1148,6 +1471,17 @@
             ],
             "title": "Reviewer Gps Matches Route"
           },
+          "reviewer_is_duplicated": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewer Is Duplicated"
+          },
           "reviewed_at": {
             "anyOf": [
               {
@@ -1200,6 +1534,10 @@
             "type": "boolean",
             "title": "Effective Gps Matches Route"
           },
+          "effective_is_duplicated": {
+            "type": "boolean",
+            "title": "Effective Is Duplicated"
+          },
           "effective_category": {
             "anyOf": [
               {
@@ -1232,6 +1570,7 @@
           "reviewer_is_in_domain",
           "reviewer_has_gdpr_problems",
           "reviewer_gps_matches_route",
+          "reviewer_is_duplicated",
           "reviewed_at",
           "gps_coordinates",
           "created_at",
@@ -1241,6 +1580,7 @@
           "effective_is_in_domain",
           "effective_has_gdpr_problems",
           "effective_gps_matches_route",
+          "effective_is_duplicated",
           "effective_category"
         ],
         "title": "PhotoAnalysisRead"
@@ -1301,6 +1641,17 @@
               }
             ],
             "title": "Reviewer Gps Matches Route"
+          },
+          "reviewer_is_duplicated": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewer Is Duplicated"
           },
           "reviewer_override_category": {
             "anyOf": [
@@ -1378,6 +1729,47 @@
           "created_at"
         ],
         "title": "ProjectAssetRead"
+      },
+      "ProjectCoverageSummaryRead": {
+        "properties": {
+          "compartment_count": {
+            "type": "integer",
+            "title": "Compartment Count"
+          },
+          "covered_count": {
+            "type": "integer",
+            "title": "Covered Count"
+          },
+          "coverage_ratio": {
+            "type": "number",
+            "title": "Coverage Ratio"
+          },
+          "fcp_count": {
+            "type": "integer",
+            "title": "Fcp Count"
+          },
+          "computed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Computed At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "compartment_count",
+          "covered_count",
+          "coverage_ratio",
+          "fcp_count",
+          "computed_at"
+        ],
+        "title": "ProjectCoverageSummaryRead"
       },
       "ProjectCreate": {
         "properties": {
@@ -1613,121 +2005,6 @@
           "name"
         ],
         "title": "ProjectUpdate"
-      },
-      "OnlineLearningDisagreementsPage": {
-        "properties": {
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/OnlineLearningMismatchItemRead"
-            },
-            "type": "array",
-            "title": "Items"
-          },
-          "total": {
-            "type": "integer",
-            "title": "Total"
-          },
-          "limit": {
-            "type": "integer",
-            "title": "Limit"
-          },
-          "offset": {
-            "type": "integer",
-            "title": "Offset"
-          },
-          "stats": {
-            "$ref": "#/components/schemas/OnlineLearningStatsRead"
-          }
-        },
-        "type": "object",
-        "required": [
-          "items",
-          "total",
-          "limit",
-          "offset",
-          "stats"
-        ],
-        "title": "OnlineLearningDisagreementsPage"
-      },
-      "OnlineLearningMismatchItemRead": {
-        "properties": {
-          "asset_id": {
-            "type": "string",
-            "title": "Asset Id"
-          },
-          "project_id": {
-            "type": "string",
-            "title": "Project Id"
-          },
-          "project_name": {
-            "type": "string",
-            "title": "Project Name"
-          },
-          "original_label": {
-            "type": "string",
-            "title": "Original Label"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "reviewed_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Reviewed At"
-          },
-          "analysis": {
-            "$ref": "#/components/schemas/PhotoAnalysisRead"
-          },
-          "mismatch_fields": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Mismatch Fields"
-          }
-        },
-        "type": "object",
-        "required": [
-          "asset_id",
-          "project_id",
-          "project_name",
-          "original_label",
-          "created_at",
-          "reviewed_at",
-          "analysis",
-          "mismatch_fields"
-        ],
-        "title": "OnlineLearningMismatchItemRead"
-      },
-      "OnlineLearningStatsRead": {
-        "properties": {
-          "total_reviewed": {
-            "type": "integer",
-            "title": "Total Reviewed"
-          },
-          "total_mismatch": {
-            "type": "integer",
-            "title": "Total Mismatch"
-          },
-          "mismatch_rate": {
-            "type": "number",
-            "title": "Mismatch Rate"
-          },
-          "projects_with_mismatch": {
-            "type": "integer",
-            "title": "Projects With Mismatch"
-          }
-        },
-        "type": "object",
-        "required": [
-          "total_reviewed",
-          "total_mismatch",
-          "mismatch_rate",
-          "projects_with_mismatch"
-        ],
-        "title": "OnlineLearningStatsRead"
       },
       "ValidationError": {
         "properties": {

@@ -7,7 +7,7 @@ Canonical rules for per-photo documentation quality (`PhotoDocumentationCategory
 | API value | User label | Rule |
 |-----------|------------|------|
 | `green` | Good | **All** of: `has_duct`, `has_ruler`, `is_in_domain`, `gps_matches_route` are true **and** `has_gdpr_problems` is false |
-| `red` | Failed | **Any** of: `gps_matches_route` is false **or** `is_in_domain` is false |
+| `red` | Failed | **Any** of: `is_duplicated` is true, `gps_matches_route` is false, **or** `is_in_domain` is false |
 | `yellow` | Warning | Everything else (partial documentation, privacy flags, missing duct/ruler, etc.) |
 
 Evaluation order: **Failed** first, then **Good**, else **Warning**.

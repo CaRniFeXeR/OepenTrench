@@ -12,6 +12,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 
+from sqlmodel import Session, col, select
+
+from src.api.database import engine
+from src.api.helpers.time import utc_now
+from src.api.models import OnlineLearningTrainingRun, OnlineLearningTrainingStatus
 from src.api.routes.health import router as health_router
 from src.api.routes.online_learning import router as online_learning_router
 from src.api.routes.projects import router as projects_router
@@ -78,11 +83,36 @@ def _upgrade_db() -> None:
     command.upgrade(alembic_cfg, "head")
 
 
+def _fail_stale_training_runs() -> None:
+    with Session(engine) as session:
+        rows = session.exec(
+            select(OnlineLearningTrainingRun).where(
+                col(OnlineLearningTrainingRun.status) == OnlineLearningTrainingStatus.running,
+            )
+        ).all()
+        if not rows:
+            return
+        now = utc_now()
+        for row in rows:
+            row.status = OnlineLearningTrainingStatus.failed
+            row.finished_at = now
+            if row.started_at.tzinfo is None:
+                started = row.started_at.replace(tzinfo=now.tzinfo)
+            else:
+                started = row.started_at
+            row.duration_sec = max(0, int((now - started).total_seconds()))
+            row.error_message = "interrupted by server restart"
+            session.add(row)
+        session.commit()
+        logger.info("marked %d stale training run(s) as failed", len(rows))
+
+
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     logger.info("API starting")
     _upgrade_db()
     logger.info("Database migrations applied")
+    _fail_stale_training_runs()
     yield
     logger.info("API shutting down")
 
