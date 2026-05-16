@@ -17,6 +17,7 @@ type ReviewerField =
   | 'reviewer_has_gdpr_problems';
 
 type CriterionRow = {
+  emoji: string;
   label: string;
   reviewerField: ReviewerField;
   automated: (a: PhotoAnalysisRead) => boolean;
@@ -25,32 +26,43 @@ type CriterionRow = {
 
 const CRITERIA: CriterionRow[] = [
   {
+    emoji: '🧵',
     label: 'Duct visible',
     reviewerField: 'reviewer_has_duct',
     automated: (a) => a.has_duct,
   },
   {
+    emoji: '📏',
     label: 'Ruler visible',
     reviewerField: 'reviewer_has_ruler',
     automated: (a) => a.has_ruler,
   },
   {
+    emoji: '🏗️',
     label: 'In domain',
     reviewerField: 'reviewer_is_in_domain',
     automated: (a) => a.is_in_domain,
   },
   {
+    emoji: '📍',
     label: 'GPS matches route',
     reviewerField: 'reviewer_gps_matches_route',
     automated: (a) => a.gps_matches_route,
   },
   {
+    emoji: '🔒',
     label: 'Privacy clear',
     reviewerField: 'reviewer_has_gdpr_problems',
     automated: (a) => !a.has_gdpr_problems,
     invertPrivacy: true,
   },
 ];
+
+const CATEGORY_LABELS: Record<PhotoDocumentationCategory, string> = {
+  green: 'Good',
+  yellow: 'Warning',
+  red: 'Failed',
+};
 
 function choiceFromReviewerValue(
   value: boolean | null | undefined,
@@ -89,7 +101,6 @@ function initialChoices(analysis: PhotoAnalysisRead): Record<ReviewerField, Over
 
 function buildReviewPayload(
   choices: Record<ReviewerField, OverrideChoice>,
-  options?: { categoryOverride?: PhotoDocumentationCategory | null },
 ): PhotoAnalysisReviewUpdate {
   const payload: PhotoAnalysisReviewUpdate = { mark_reviewed: true };
   for (const row of CRITERIA) {
@@ -98,41 +109,92 @@ function buildReviewPayload(
       row.invertPrivacy,
     );
   }
-  if (options && 'categoryOverride' in options) {
-    payload.reviewer_override_category = options.categoryOverride ?? null;
-  }
   return payload;
 }
 
-function OverrideToggle({
-  value,
-  onChange,
+function toggleOverride(choice: OverrideChoice, aiOk: boolean): OverrideChoice {
+  if (choice === 'ai') {
+    return aiOk ? 'no' : 'yes';
+  }
+  return 'ai';
+}
+
+function effectivePass(choice: OverrideChoice, aiOk: boolean): boolean {
+  if (choice === 'ai') return aiOk;
+  return choice === 'yes';
+}
+
+function aiChip(ok: boolean): { label: string; className: string } {
+  return ok
+    ? { label: 'Pass', className: 'border-emerald-200 bg-emerald-50 text-emerald-800' }
+    : { label: 'Fail', className: 'border-red-200 bg-red-50 text-red-800' };
+}
+
+function CriterionReviewRow({
+  row,
+  analysis,
+  choice,
+  compact,
+  onToggle,
 }: {
-  value: OverrideChoice;
-  onChange: (v: OverrideChoice) => void;
+  row: CriterionRow;
+  analysis: PhotoAnalysisRead;
+  choice: OverrideChoice;
+  compact?: boolean;
+  onToggle: () => void;
 }) {
-  const options: { id: OverrideChoice; label: string }[] = [
-    { id: 'ai', label: 'AI' },
-    { id: 'yes', label: 'Yes' },
-    { id: 'no', label: 'No' },
-  ];
+  const aiOk = row.automated(analysis);
+  const overridden = choice !== 'ai';
+  const chip = aiChip(aiOk);
+  const reviewerPass = effectivePass(choice, aiOk);
+  const reviewerChip = aiChip(reviewerPass);
+
   return (
-    <div className="inline-flex rounded-md border border-slate-200 bg-slate-50 p-0.5 text-xs">
-      {options.map((opt) => (
-        <button
-          key={opt.id}
-          type="button"
-          onClick={() => onChange(opt.id)}
-          className={`rounded px-2 py-1 ${
-            value === opt.id
-              ? 'bg-white font-medium text-slate-900 shadow-sm'
-              : 'text-slate-600 hover:text-slate-900'
+    <li>
+      <button
+        type="button"
+        onClick={onToggle}
+        className={`flex w-full items-center gap-2 rounded-lg border px-2 py-2 text-left transition-colors ${
+          compact ? 'py-1.5' : 'py-2'
+        } ${
+          overridden
+            ? 'border-violet-300 bg-violet-50/60 ring-1 ring-violet-300'
+            : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+        }`}
+        title={
+          overridden
+            ? 'Click to reset and agree with AI'
+            : 'Click to override AI prediction'
+        }
+      >
+        <span className={compact ? 'text-base' : 'text-lg'} aria-hidden>
+          {row.emoji}
+        </span>
+        <span
+          className={`min-w-0 flex-1 font-medium text-slate-800 ${
+            compact ? 'text-xs' : 'text-sm'
           }`}
         >
-          {opt.label}
-        </button>
-      ))}
-    </div>
+          {row.label}
+        </span>
+        <span
+          className={`shrink-0 rounded-md border px-1.5 py-0.5 font-medium ${
+            compact ? 'text-[10px]' : 'text-xs'
+          } ${chip.className}`}
+        >
+          AI: {chip.label}
+        </span>
+        {overridden && (
+          <span
+            className={`shrink-0 rounded-md border px-1.5 py-0.5 font-medium ${
+              compact ? 'text-[10px]' : 'text-xs'
+            } ${reviewerChip.className}`}
+          >
+            You: {reviewerChip.label}
+          </span>
+        )}
+      </button>
+    </li>
   );
 }
 
@@ -141,11 +203,13 @@ export function PhotoReviewSection({
   assetId,
   analysis,
   onSaved,
+  compact = false,
 }: {
   projectId: string;
   assetId: string;
   analysis: PhotoAnalysisRead;
   onSaved: () => Promise<void>;
+  compact?: boolean;
 }) {
   const [choices, setChoices] = useState(() => initialChoices(analysis));
   const [saving, setSaving] = useState(false);
@@ -156,13 +220,13 @@ export function PhotoReviewSection({
     setError(null);
   }, [analysis.asset_id, analysis.updated_at]);
 
-  const submit = async (options?: { categoryOverride?: PhotoDocumentationCategory | null }) => {
+  const submit = async () => {
     setSaving(true);
     setError(null);
     const { error: apiError } =
       await reviewProjectImageAnalysisProjectsProjectIdImagesAssetIdAnalysisPatch({
         path: { project_id: projectId, asset_id: assetId },
-        body: buildReviewPayload(choices, options),
+        body: buildReviewPayload(choices),
       });
     setSaving(false);
     if (apiError) {
@@ -172,76 +236,62 @@ export function PhotoReviewSection({
     await onSaved();
   };
 
-  const showWarningWorkflow =
-    analysis.effective_category === 'yellow' || analysis.category === 'yellow';
+  const aiCategoryLabel = analysis.category
+    ? CATEGORY_LABELS[analysis.category]
+    : '—';
 
   return (
-    <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
-      <p className="text-sm font-semibold text-slate-900">Review documentation</p>
-      <p className="mt-1 text-xs text-slate-600">
-        Automated category: <span className="font-medium">{analysis.category ?? '—'}</span>
+    <div className="mt-3">
+      <p className={`font-semibold text-slate-900 ${compact ? 'text-xs' : 'text-sm'}`}>
+        Review
+      </p>
+      <p className={`mt-0.5 text-slate-600 ${compact ? 'text-[10px]' : 'text-xs'}`}>
+        AI category: <span className="font-medium">{aiCategoryLabel}</span>
         {analysis.reviewed_at && (
           <span className="ml-2 text-slate-500">
-            Reviewed {new Date(analysis.reviewed_at).toLocaleString()}
+            · Reviewed {new Date(analysis.reviewed_at).toLocaleString()}
           </span>
         )}
       </p>
+      <p className={`mt-1 text-slate-500 ${compact ? 'text-[10px]' : 'text-xs'}`}>
+        Tap a row to disagree with AI; tap again to reset.
+      </p>
 
-      <ul className="mt-3 space-y-2">
+      <ul className={`mt-2 space-y-1.5 ${compact ? 'space-y-1' : ''}`}>
         {CRITERIA.map((row) => {
           const aiOk = row.automated(analysis);
+          const choice = choices[row.reviewerField];
           return (
-            <li
+            <CriterionReviewRow
               key={row.reviewerField}
-              className="flex flex-col gap-1 rounded-md bg-white px-2 py-2 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div className="min-w-0">
-                <span className="text-sm text-slate-800">{row.label}</span>
-                <span className="ml-2 text-xs text-slate-500">
-                  AI: {aiOk ? 'yes' : 'no'}
-                </span>
-              </div>
-              <OverrideToggle
-                value={choices[row.reviewerField]}
-                onChange={(v) =>
-                  setChoices((prev) => ({ ...prev, [row.reviewerField]: v }))
-                }
-              />
-            </li>
+              row={row}
+              analysis={analysis}
+              choice={choice}
+              compact={compact}
+              onToggle={() =>
+                setChoices((prev) => ({
+                  ...prev,
+                  [row.reviewerField]: toggleOverride(choice, aiOk),
+                }))
+              }
+            />
           );
         })}
       </ul>
 
       {error && <p className="mt-2 text-xs text-red-700">{error}</p>}
 
-      <div className="mt-3 flex flex-col gap-2">
-        <button
-          type="button"
-          disabled={saving}
-          onClick={() => submit()}
-          className="w-full rounded-lg bg-violet-700 px-3 py-2 text-sm font-medium text-white hover:bg-violet-800 disabled:opacity-60"
-        >
-          {saving ? 'Saving…' : showWarningWorkflow ? 'Approve' : 'Save review'}
-        </button>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            disabled={saving}
-            onClick={() => submit({ categoryOverride: 'green' })}
-            className="flex-1 rounded-lg border border-emerald-300 bg-emerald-50 px-2 py-1.5 text-xs font-medium text-emerald-900 hover:bg-emerald-100 disabled:opacity-60"
-          >
-            Approve as Good
-          </button>
-          <button
-            type="button"
-            disabled={saving}
-            onClick={() => submit({ categoryOverride: 'red' })}
-            className="flex-1 rounded-lg border border-red-300 bg-red-50 px-2 py-1.5 text-xs font-medium text-red-900 hover:bg-red-100 disabled:opacity-60"
-          >
-            Mark Failed
-          </button>
-        </div>
-      </div>
+      <button
+        type="button"
+        disabled={saving}
+        onClick={() => submit()}
+        className={`mt-3 w-full rounded-lg bg-violet-700 font-medium text-white hover:bg-violet-800 disabled:opacity-60 ${
+          compact ? 'px-3 py-1.5 text-xs' : 'px-3 py-2 text-sm'
+        }`}
+      >
+        {saving ? 'Saving…' : 'Approve'}
+      </button>
     </div>
   );
 }
+

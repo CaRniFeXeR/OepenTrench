@@ -1,5 +1,5 @@
 import type { ProjectAssetRead } from '../../api/client';
-import { AnalysisTagRow, qualityBadge } from '../project-images/analysisDisplay';
+import { qualityBadge } from '../project-images/analysisDisplay';
 import { PanelBackLink } from '../ui/PanelBackLink';
 import { PhotoStepper } from '../ui/PhotoStepper';
 import { projectImageContentUrl } from './imageContentUrl';
@@ -71,12 +71,6 @@ export function TrenchImageDetailPanel({
       >
         {badge.label}
       </p>
-
-      {analysis && (
-        <div className="mt-4">
-          <AnalysisTagRow analysis={analysis} />
-        </div>
-      )}
 
       {analysis && (
         <PhotoReviewSection
