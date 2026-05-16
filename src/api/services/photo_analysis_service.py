@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from sqlmodel import Session
 
+from src.api.helpers.face_detection import image_path_has_detected_face
 from src.api.helpers.geojson_sampling import random_point_in_geojson_bounds
 from src.api.helpers.photo_documentation_category import (
     REVIEWER_CLEAR_ATTRS,
@@ -20,6 +21,7 @@ from src.api.models import (
 )
 from src.api.services.extract_img_metadata_service import extract_img_metadata
 from src.api.services.project_asset_service import load_merged_project_geojson
+from src.api.uploads import get_upload_root, project_asset_abs_path
 
 
 def _dummy_analysis_fields() -> dict:
@@ -82,31 +84,29 @@ def analyze_image_asset(
     project_id: str,
     asset_id: str,
 ) -> PhotoAnalysis:
-    _asset, project = _validate_image_asset(
-        session, project_id=project_id, asset_id=asset_id
-    )
-    extracted = extract_img_metadata(
-        session, project_id=project_id, asset_id=asset_id
+    _asset, project = _validate_image_asset(session, project_id=project_id, asset_id=asset_id)
+    upload_root = get_upload_root()
+    image_path = project_asset_abs_path(
+        upload_root=upload_root, stored_relpath=_asset.stored_relpath
     )
     fields = _dummy_analysis_fields()
-    gps_coordinates = _resolve_gps_coordinates(
-        session, project=project, extracted=extracted
-    )
-    fields["gps_coordinates"] = gps_coordinates
-    if gps_coordinates is not None:
-        coords = gps_coordinates.get("coordinates")
-        if isinstance(coords, (list, tuple)) and len(coords) >= 2:
-            try:
-                lon = float(coords[0])
-                lat = float(coords[1])
-                if project.geojson_status == GeojsonStatus.ready:
-                    from src.api.services.compartment_service import photo_matches_route
+    if image_path.is_file():
+        fields["has_gdpr_problems"] = image_path_has_detected_face(image_path)
+        extracted = extract_img_metadata(image_path)
+        gps_coordinates = _resolve_gps_coordinates(session, project=project, extracted=extracted)
+        fields["gps_coordinates"] = gps_coordinates
+        if gps_coordinates is not None:
+            coords = gps_coordinates.get("coordinates")
+            if isinstance(coords, (list, tuple)) and len(coords) >= 2:
+                try:
+                    lon = float(coords[0])
+                    lat = float(coords[1])
+                    if project.geojson_status == GeojsonStatus.ready:
+                        from src.api.services.compartment_service import photo_matches_route
 
-                    fields["gps_matches_route"] = photo_matches_route(
-                        session, project.id, lon, lat
-                    )
-            except (TypeError, ValueError):
-                pass
+                        fields["gps_matches_route"] = photo_matches_route(session, project.id, lon, lat)
+                except (TypeError, ValueError):
+                    pass
     row = _upsert_analysis(session, asset_id=asset_id, fields=fields, reanalyze=True)
     row.category = automated_category(row)
     session.add(row)

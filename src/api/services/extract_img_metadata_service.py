@@ -5,10 +5,8 @@ import threading
 from pathlib import Path
 
 import easyocr
-from sqlmodel import Session
 
-from src.api.models import AssetKind, GpsCoordinates, Project, ProjectAsset
-from src.api.uploads import get_upload_root, project_asset_abs_path
+from src.api.models import GpsCoordinates
 
 _INCOMPLETE_MSG = "Geoinformation is not complete (could not read latitude/longitude with N/S and E/W from the image)."
 
@@ -124,12 +122,12 @@ def _read_ocr_lines(path: Path) -> list[str] | None:
         return None
 
 
-def gps_coordinates_from_image_path(
+def extract_img_metadata(
     image_path: str | Path,
     *,
     print_incomplete: bool = True,
 ) -> GpsCoordinates | None:
-    """Run EasyOCR on a local image and parse GPS as GeoJSON Point (lon, lat)."""
+    """OCR a local image stamp and return parsed GPS as a GeoJSON Point, or None if missing/unreadable."""
     path = Path(image_path)
     if not path.is_file():
         if print_incomplete:
@@ -155,33 +153,3 @@ def gps_coordinates_from_image_path(
             print(_INCOMPLETE_MSG)
         return None
     return GpsCoordinates(coordinates=(lon, lat))
-
-
-def extract_img_metadata(
-    session: Session,
-    *,
-    project_id: str,
-    asset_id: str,
-) -> GpsCoordinates | None:
-    """OCR image stamp and return parsed GPS as a GeoJSON Point model, or None if missing/unreadable."""
-    project = session.get(Project, project_id)
-    if project is None:
-        raise LookupError("project not found")
-    asset = session.get(ProjectAsset, asset_id)
-    if asset is None:
-        raise LookupError("asset not found")
-    if asset.project_id != project_id:
-        raise ValueError("asset does not belong to project")
-    if asset.kind != AssetKind.image:
-        raise ValueError("asset is not an image")
-
-    upload_root = get_upload_root()
-    path = project_asset_abs_path(upload_root=upload_root, stored_relpath=asset.stored_relpath)
-    if not path.is_file():
-        print(_INCOMPLETE_MSG)
-        return None
-
-    return gps_coordinates_from_image_path(path, print_incomplete=True)
-
-if __name__ == "__main__":
-    print(gps_coordinates_from_image_path('project-resources/Fotos/1_WhatsApp Image 2024-11-04 at 19_29_40.jpeg'))
