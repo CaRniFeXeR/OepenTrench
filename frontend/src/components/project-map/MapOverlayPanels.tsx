@@ -1,4 +1,4 @@
-import type { MapPhotoMarkerRead } from '../../api/client';
+import type { FcpCoverageSummaryRead, MapPhotoMarkerRead } from '../../api/client';
 import { PHOTO_DOC_CATEGORIES } from '../project-images/photoDocumentationCategories';
 import {
   categoryPercentages,
@@ -10,14 +10,21 @@ export function MapOverlayPanels({
   projectName,
   fcpCount,
   photos,
+  selectedFcpId = null,
+  coverageSummary = null,
+  coverageLoading = false,
 }: {
   projectName: string;
   fcpCount: number;
   photos: MapPhotoMarkerRead[];
+  selectedFcpId?: string | null;
+  coverageSummary?: FcpCoverageSummaryRead | null;
+  coverageLoading?: boolean;
 }) {
   const counts = categoryCounts(photos);
   const { greenPct, yellowPct, redPct } = categoryPercentages(counts);
   const pctByCategory = { green: greenPct, yellow: yellowPct, red: redPct };
+  const fcpView = selectedFcpId != null;
 
   return (
     <>
@@ -39,16 +46,66 @@ export function MapOverlayPanels({
       </div>
 
       <div className="pointer-events-none absolute right-3 top-3 z-10 w-40 rounded-lg border border-slate-200 bg-white/95 p-3 text-xs shadow-md backdrop-blur-sm">
-        <p className="mb-2 font-semibold text-slate-900">Photo status</p>
-        {PHOTO_DOC_CATEGORIES.map((cat) => (
-          <StatusRow
-            key={cat.id}
-            label={cat.label}
-            pct={pctByCategory[cat.id]}
-            color={cat.color}
+        {fcpView ? (
+          <TrenchCoveragePanel
+            summary={coverageSummary}
+            loading={coverageLoading}
           />
-        ))}
+        ) : (
+          <>
+            <p className="mb-2 font-semibold text-slate-900">Photo status</p>
+            {PHOTO_DOC_CATEGORIES.map((cat) => (
+              <StatusRow
+                key={cat.id}
+                label={cat.label}
+                pct={pctByCategory[cat.id]}
+                color={cat.color}
+              />
+            ))}
+          </>
+        )}
       </div>
+    </>
+  );
+}
+
+function TrenchCoveragePanel({
+  summary,
+  loading,
+}: {
+  summary: FcpCoverageSummaryRead | null;
+  loading: boolean;
+}) {
+  if (loading) {
+    return (
+      <>
+        <p className="mb-2 font-semibold text-slate-900">Trench coverage</p>
+        <p className="text-slate-500">Calculating…</p>
+      </>
+    );
+  }
+
+  if (!summary || summary.compartment_count === 0) {
+    return (
+      <>
+        <p className="mb-2 font-semibold text-slate-900">Trench coverage</p>
+        <p className="text-2xl font-semibold text-slate-800">—</p>
+        <p className="mt-1 text-slate-500">No segments</p>
+      </>
+    );
+  }
+
+  const pct = Math.round(summary.coverage_ratio * 100);
+  const segmentLabel =
+    summary.compartment_count === 1 ? 'segment' : 'segments';
+
+  return (
+    <>
+      <p className="mb-2 font-semibold text-slate-900">Trench coverage</p>
+      <p className="text-2xl font-semibold text-slate-800">{pct}%</p>
+      <p className="mt-1 text-slate-600">
+        {summary.covered_count}/{summary.compartment_count} {segmentLabel} covered
+      </p>
     </>
   );
 }

@@ -96,6 +96,13 @@ export function ProjectMapView({
     warningReviewCount,
   } = navigation;
 
+  const coverageSummary = useMemo(() => {
+    if (!coverage || !resolvedSelectedFcpId) return null;
+    return (
+      coverage.summaries.find((s) => s.fcp_id === resolvedSelectedFcpId) ?? null
+    );
+  }, [coverage, resolvedSelectedFcpId]);
+
   const handleReviewSaved = async () => {
     await onProjectRefresh();
   };
@@ -129,6 +136,9 @@ export function ProjectMapView({
             projectName={project.name}
             fcpCount={fcpPolygons.features.length}
             photos={mapPhotos}
+            selectedFcpId={resolvedSelectedFcpId}
+            coverageSummary={coverageSummary}
+            coverageLoading={coverageLoading}
           />
         )}
 

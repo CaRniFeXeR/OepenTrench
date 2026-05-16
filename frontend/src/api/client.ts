@@ -20,6 +20,7 @@ export {
 export type {
   FcpCoverageCompartmentRead,
   FcpCoverageRead,
+  FcpCoverageSummaryRead,
   GeojsonStatus,
   MapPhotoMarkerRead,
   PhotoAnalysisRead,
