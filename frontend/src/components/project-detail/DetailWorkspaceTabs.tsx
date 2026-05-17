@@ -42,7 +42,7 @@ export function DetailWorkspaceTabs({
   coverageLoading: boolean;
 }) {
   return (
-    <aside className="flex min-h-0 min-w-0 flex-[2] flex-col border-b border-slate-200 bg-slate-50 print:w-full print:max-w-none print:flex-none print:border-0 lg:border-b-0 lg:border-r">
+    <aside className="flex min-h-0 min-w-0 flex-[2] flex-col border-b border-slate-200 bg-slate-50 print:w-full print:max-w-none print:flex-none print:border-0 lg:min-h-[calc(100vh-10rem)] lg:border-b-0 lg:border-r">
       <nav
         role="tablist"
         aria-label="Project workspace"

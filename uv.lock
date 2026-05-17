@@ -3973,6 +3973,18 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+api = [
+    { name = "joblib" },
+    { name = "scikit-learn", version = "1.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "scikit-learn", version = "1.7.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.10.*'" },
+    { name = "scikit-learn", version = "1.8.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "torch", version = "2.8.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "torch", version = "2.12.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+    { name = "torchvision", version = "0.23.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "torchvision", version = "0.27.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+    { name = "transformers" },
+    { name = "ultralytics" },
+]
 classifier = [
     { name = "joblib" },
     { name = "scikit-learn", version = "1.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
@@ -4016,6 +4028,7 @@ requires-dist = [
     { name = "imagehash", specifier = ">=4.3,<5" },
     { name = "ipykernel", marker = "extra == 'notebooks'", specifier = ">=6.29,<7" },
     { name = "ipywidgets", marker = "extra == 'notebooks'", specifier = ">=8.1,<9" },
+    { name = "joblib", marker = "extra == 'api'", specifier = ">=1.4,<2" },
     { name = "joblib", marker = "extra == 'classifier'", specifier = ">=1.4,<2" },
     { name = "jupyterlab", marker = "extra == 'notebooks'", specifier = ">=4.2,<5" },
     { name = "matplotlib", specifier = ">=3.8,<4" },
@@ -4035,18 +4048,23 @@ requires-dist = [
     { name = "pyyaml", specifier = ">=6.0,<7" },
     { name = "respx", marker = "extra == 'dev'", specifier = ">=0.21,<1" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.5,<1" },
+    { name = "scikit-learn", marker = "extra == 'api'", specifier = ">=1.4,<2" },
     { name = "scikit-learn", marker = "extra == 'classifier'", specifier = ">=1.4,<2" },
     { name = "seaborn", specifier = ">=0.13,<1" },
     { name = "shapely", specifier = ">=2.0,<3" },
     { name = "sqlmodel", specifier = ">=0.0.22,<0.1" },
+    { name = "torch", marker = "extra == 'api'", specifier = ">=2.3,<3" },
     { name = "torch", marker = "extra == 'classifier'", specifier = ">=2.3,<3" },
+    { name = "torchvision", marker = "extra == 'api'", specifier = ">=0.18,<1" },
     { name = "torchvision", marker = "extra == 'classifier'", specifier = ">=0.18,<1" },
     { name = "tqdm", specifier = ">=4.66,<5" },
+    { name = "transformers", marker = "extra == 'api'", specifier = ">=4.44,<5" },
     { name = "transformers", marker = "extra == 'classifier'", specifier = ">=4.44,<5" },
+    { name = "ultralytics", marker = "extra == 'api'", specifier = ">=8.3,<9" },
     { name = "ultralytics", marker = "extra == 'train'", specifier = ">=8.3,<9" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.32,<1" },
 ]
-provides-extras = ["notebooks", "inspect", "train", "classifier", "dev"]
+provides-extras = ["notebooks", "inspect", "train", "classifier", "api", "dev"]
 
 [[package]]
 name = "opencv-python"

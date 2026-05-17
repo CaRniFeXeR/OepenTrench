@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
@@ -33,6 +34,8 @@ from src.api.services.project_asset_service import (
     save_project_image,
 )
 from src.api.services.project_image_service import resolve_project_image_path
+
+logger = logging.getLogger("oepentrench.api.assets")
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -185,6 +188,40 @@ def upload_project_image(
 ) -> ProjectAssetRead:
     filename = file.filename or "upload.bin"
     original_label = ((label if label is not None else filename).strip()) or filename
+    logger.info(
+        "image_upload_request project_id=%s upload_filename=%s content_type=%s",
+        project_id,
+        filename,
+        file.content_type,
+    )
+    # #region agent log
+    try:
+        import json as _json
+        import time as _time
+
+        with open(
+            "/root/git/OepenTrench/.cursor/debug-ebdde5.log", "a", encoding="utf-8"
+        ) as _dbg:
+            _dbg.write(
+                _json.dumps(
+                    {
+                        "sessionId": "ebdde5",
+                        "hypothesisId": "H1",
+                        "location": "projects.py:upload_project_image",
+                        "message": "upload_handler_enter",
+                        "data": {
+                            "project_id": project_id,
+                            "filename": filename,
+                            "label": original_label,
+                        },
+                        "timestamp": int(_time.time() * 1000),
+                    }
+                )
+                + "\n"
+            )
+    except Exception:
+        pass
+    # #endregion
     try:
         asset = save_project_image(
             session,
@@ -194,10 +231,24 @@ def upload_project_image(
             stream=file.file,
         )
     except LookupError:
+        logger.warning(
+            "image_upload_rejected project_id=%s reason=project_not_found",
+            project_id,
+        )
         raise HTTPException(status_code=404, detail="project not found") from None
     except PayloadTooLarge as exc:
+        logger.warning(
+            "image_upload_rejected project_id=%s reason=payload_too_large max_bytes=%d",
+            project_id,
+            exc.max_bytes,
+        )
         raise _payload_too_large_response(exc) from exc
     except ValueError as exc:
+        logger.warning(
+            "image_upload_rejected project_id=%s reason=validation detail=%s",
+            project_id,
+            exc,
+        )
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     return project_service.project_asset_read(session, asset)
 

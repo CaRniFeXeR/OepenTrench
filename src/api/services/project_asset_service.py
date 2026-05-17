@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
+import time
 from pathlib import Path
 from typing import BinaryIO, Optional
 
@@ -18,6 +20,8 @@ from src.api.uploads import (
     project_asset_abs_path,
     stored_relpath_for_project_asset,
 )
+
+logger = logging.getLogger("oepentrench.api.assets")
 
 MAX_IMAGE_BYTES = 50 * 1024 * 1024
 MAX_GEOJSON_BYTES = 10 * 1024 * 1024
@@ -211,13 +215,27 @@ def save_project_image(
     original_label: str,
     stream: BinaryIO,
 ) -> ProjectAsset:
+    started = time.perf_counter()
+    logger.info(
+        "image_upload_start project_id=%s upload_filename=%s original_label=%s",
+        project_id,
+        upload_filename,
+        original_label,
+    )
     project = session.get(Project, project_id)
     if project is None:
         raise LookupError("project not found")
     ext = normalize_image_extension(upload_filename)
     content = _read_body_limited(stream, MAX_IMAGE_BYTES)
     hash_sha256 = hashlib.sha256(content).hexdigest()
-    return _persist_asset(
+    logger.info(
+        "image_upload_read project_id=%s size_bytes=%d ext=%s hash_sha256=%s",
+        project_id,
+        len(content),
+        ext,
+        hash_sha256,
+    )
+    row = _persist_asset(
         session,
         project_id=project_id,
         kind=AssetKind.image,
@@ -226,6 +244,14 @@ def save_project_image(
         content=content,
         hash_sha256=hash_sha256,
     )
+    duration_ms = (time.perf_counter() - started) * 1000
+    logger.info(
+        "image_upload_complete project_id=%s asset_id=%s duration_ms=%.1f",
+        project_id,
+        row.id,
+        duration_ms,
+    )
+    return row
 
 
 def save_project_geojson(
@@ -282,12 +308,29 @@ def _persist_asset(
     asset_id = new_nanoid()
     relpath = stored_relpath_for_project_asset(project_id=project_id, asset_id=asset_id, ext=ext)
     abs_path = upload_root.joinpath(*Path(relpath).parts)
+    log_image = kind == AssetKind.image
+    persist_started = time.perf_counter()
 
     written_path: Optional[Path] = None
     try:
+        if log_image:
+            logger.info(
+                "persist_start project_id=%s asset_id=%s kind=%s relpath=%s size_bytes=%d",
+                project_id,
+                asset_id,
+                kind,
+                relpath,
+                len(content),
+            )
         abs_path.parent.mkdir(parents=True, exist_ok=True)
         abs_path.write_bytes(content)
         written_path = abs_path
+        if log_image:
+            logger.info(
+                "persist_written asset_id=%s path=%s",
+                asset_id,
+                abs_path,
+            )
         row = ProjectAsset(
             id=asset_id,
             project_id=project_id,
@@ -306,8 +349,21 @@ def _persist_asset(
             )
         session.commit()
         session.refresh(row)
+        if log_image:
+            persist_ms = (time.perf_counter() - persist_started) * 1000
+            logger.info(
+                "persist_complete asset_id=%s duration_ms=%.1f",
+                asset_id,
+                persist_ms,
+            )
         return row
     except Exception:
+        if log_image:
+            logger.exception(
+                "persist_failed project_id=%s asset_id=%s",
+                project_id,
+                asset_id,
+            )
         session.rollback()
         if written_path is not None and written_path.is_file():
             written_path.unlink(missing_ok=True)

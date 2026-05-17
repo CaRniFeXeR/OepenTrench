@@ -192,6 +192,7 @@ def analyze_image_asset(
         project.geojson_status,
         asset.stored_relpath,
     )
+    original_label = asset.original_label
 
     upload_root = get_upload_root()
     image_path = project_asset_abs_path(
@@ -219,6 +220,30 @@ def analyze_image_asset(
     else:
         # Stage 1: trench gate. If not a trench, hard-zero the in-domain flags
         # and skip the YOLO detector entirely.
+        # #region agent log
+        try:
+            import json as _json
+            import time as _time
+
+            with open(
+                "/root/git/OepenTrench/.cursor/debug-ebdde5.log", "a", encoding="utf-8"
+            ) as _dbg:
+                _dbg.write(
+                    _json.dumps(
+                        {
+                            "sessionId": "ebdde5",
+                            "hypothesisId": "H1",
+                            "location": "photo_analysis_service.py:analyze_image_asset",
+                            "message": "before_trench_classifier_import",
+                            "data": {"asset_id": asset_id, "image_path": str(image_path)},
+                            "timestamp": int(_time.time() * 1000),
+                        }
+                    )
+                    + "\n"
+                )
+        except Exception:
+            pass
+        # #endregion
         from src.api.services.trench_classifier_service import is_trench
 
         if is_trench(image_path):
@@ -255,7 +280,7 @@ def analyze_image_asset(
 
         metadata_started = time.perf_counter()
         try:
-            extracted = extract_img_metadata(image_path)
+            extracted = extract_img_metadata(image_path, original_label=original_label)
         except Exception:
             logger.exception(
                 "analyze_metadata_extraction_failed project_id=%s asset_id=%s path=%s",

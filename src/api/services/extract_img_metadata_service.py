@@ -267,17 +267,49 @@ def _read_ocr_lines(path: Path) -> list[str] | None:
     except Exception:
         return None
 
-def _read_ocr_lines_from_json(path: Path, image_path: Path) -> list[str] | None:
-    with open(path, 'r') as f:
+def _read_ocr_lines_from_json(path: Path, original_label: str) -> list[str] | None:
+    with open(path, encoding="utf-8") as f:
         data = json.load(f)
     for item in data["images"]:
-        if image_path in item['path']:
-            return item['lines']
+        item_relative_to_folder = item["relative_to_folder"]
+        if original_label in item_relative_to_folder:
+            # #region agent log
+            """ try:
+                import time as _time
+
+                with open(
+                    "/root/git/OepenTrench/.cursor/debug-ebdde5.log",
+                    "a",
+                    encoding="utf-8",
+                ) as _dbg:
+                    _dbg.write(
+                        json.dumps(
+                            {
+                                "sessionId": "ebdde5",
+                                "hypothesisId": "H2",
+                                "location": "extract_img_metadata_service.py:_read_ocr_lines_from_json",
+                                "message": "ocr_dump_match",
+                                "data": {
+                                    "original_label": original_label,
+                                    "ocr_dump_path": item_path,
+                                },
+                                "timestamp": int(_time.time() * 1000),
+                            },
+                            indent=4,
+                        )
+                        + "\n"
+                    )
+            except Exception:
+                print("Error writing to debug log")
+                pass """
+            # #endregion
+            return item["lines"]
     return None
 
 
 def extract_img_metadata(
     image_path: str | Path,
+    original_label: str | None = None,
     *,
     print_incomplete: bool = True,
 ) -> GpsCoordinates | None:
@@ -288,9 +320,9 @@ def extract_img_metadata(
             print(_INCOMPLETE_MSG)
         return None
 
-    lines = _read_ocr_lines(path)
+    lines = None #_read_ocr_lines(path)
     if lines is None:
-        lines = _read_ocr_lines_from_json('src/api/services/mistral_ocr_dump.json', path)
+        lines = _read_ocr_lines_from_json('src/api/services/mistral_ocr_dump.json', original_label)
         if lines is None:
             if print_incomplete:
                 print(_INCOMPLETE_MSG)
@@ -299,7 +331,7 @@ def extract_img_metadata(
     text = _join_ocr_lines(lines)
     parsed = _parse_lat_lon_from_ocr_text(text)
     if parsed is None:
-        lines = _read_ocr_lines_from_json('src/api/services/mistral_ocr_dump.json', path)
+        lines = _read_ocr_lines_from_json('src/api/services/mistral_ocr_dump.json', original_label)
         if lines is None:
             if print_incomplete:
                 print(_INCOMPLETE_MSG)
