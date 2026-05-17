@@ -192,6 +192,7 @@ def analyze_image_asset(
         project.geojson_status,
         asset.stored_relpath,
     )
+    original_label = asset.original_label
 
     upload_root = get_upload_root()
     image_path = project_asset_abs_path(
@@ -279,7 +280,7 @@ def analyze_image_asset(
 
         metadata_started = time.perf_counter()
         try:
-            extracted = extract_img_metadata(image_path)
+            extracted = extract_img_metadata(image_path, original_label=original_label)
         except Exception:
             logger.exception(
                 "analyze_metadata_extraction_failed project_id=%s asset_id=%s path=%s",
