@@ -118,34 +118,41 @@ export function PhotoDashboardHeader({
         </p>
       )}
 
-      <label className="mt-4 flex cursor-pointer items-center gap-2 text-sm text-slate-700">
-        <input
-          type="checkbox"
-          checked={unreviewedOnly}
-          onChange={(e) => onUnreviewedOnlyChange(e.target.checked)}
-          className="h-4 w-4 rounded border-slate-300 text-violet-700 focus:ring-violet-500"
-        />
-        Unreviewed only
-        {selectedCategory === 'yellow' && unreviewedOnly && (
-          <span className="text-xs text-orange-800">(warning review queue)</span>
-        )}
-      </label>
-
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        {DASHBOARD_FILTER_KEYS.map((key) => {
-          const criterion = PHOTO_REVIEW_CRITERIA.find((c) => c.key === key);
-          if (!criterion) return null;
-          return (
-            <CriteriaFilterBadge
-              key={key}
-              emoji={criterion.emoji}
-              name={criterion.shortLabel}
-              label={criterion.label}
-              value={filterValues[key]}
-              onChange={filterOnChange[key]}
+      <div className="mt-4">
+        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+          Filter
+        </p>
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
+            <input
+              type="checkbox"
+              checked={unreviewedOnly}
+              onChange={(e) => onUnreviewedOnlyChange(e.target.checked)}
+              className="h-4 w-4 rounded border-slate-300 text-violet-700 focus:ring-violet-500"
             />
-          );
-        })}
+            Unreviewed only
+            {selectedCategory === 'yellow' && unreviewedOnly && (
+              <span className="text-xs text-orange-800">(warning review queue)</span>
+            )}
+          </label>
+
+          <div className="flex flex-wrap items-center gap-2 border-l border-slate-200 pl-3">
+            {DASHBOARD_FILTER_KEYS.map((key) => {
+              const criterion = PHOTO_REVIEW_CRITERIA.find((c) => c.key === key);
+              if (!criterion) return null;
+              return (
+                <CriteriaFilterBadge
+                  key={key}
+                  emoji={criterion.emoji}
+                  name={criterion.shortLabel}
+                  label={criterion.label}
+                  value={filterValues[key]}
+                  onChange={filterOnChange[key]}
+                />
+              );
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );

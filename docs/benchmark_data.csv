@@ -1,0 +1,15 @@
+model,batch_size,throughput_img_s,batch_latency_ms
+yolo11l-fp16,1,8.69,115.0
+yolo11l-fp16,2,14.55,137.5
+yolo11l-fp16,4,20.90,191.4
+yolo11l-fp16,8,26.79,298.7
+yolo11l-fp16,16,28.06,570.1
+yolo11l-fp16,32,30.40,1052.8
+yolo11l-fp16,64,25.60,2499.7
+dinov2-s-fp16,1,19.56,51.1
+dinov2-s-fp16,2,32.01,62.5
+dinov2-s-fp16,4,43.05,92.9
+dinov2-s-fp16,8,52.15,153.4
+dinov2-s-fp16,16,55.65,287.5
+dinov2-s-fp16,32,62.13,515.1
+dinov2-s-fp16,64,59.90,1068.4
