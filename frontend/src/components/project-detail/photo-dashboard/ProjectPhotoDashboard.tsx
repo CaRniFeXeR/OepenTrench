@@ -1,11 +1,15 @@
+import { useEffect, useMemo, useState } from 'react';
 import type { FeatureCollection } from 'geojson';
 
 import type { MapPhotoMarkerRead, ProjectDetailRead } from '../../../api/client';
 import { FcpSidePanel } from '../FcpSidePanel';
 import { PhotoReviewCard } from '../PhotoReviewCard';
 import { emptyMessage } from './photoDashboardMessages';
+import { paginatePage } from './paginatePage';
 import { PhotoDashboardHeader } from './PhotoDashboardHeader';
 import { usePhotoDashboard } from './usePhotoDashboard';
+
+const PAGE_SIZE = 12;
 
 export function ProjectPhotoDashboard({
   project,
@@ -22,6 +26,8 @@ export function ProjectPhotoDashboard({
   onSelectedFcpIdChange: (fcpId: string | null) => void;
   onRefresh: () => Promise<void>;
 }) {
+  const [page, setPage] = useState(1);
+
   const {
     selectedCategory,
     setSelectedCategory,
@@ -39,6 +45,22 @@ export function ProjectPhotoDashboard({
     selectedFcpCode,
     filteredAssets,
   } = usePhotoDashboard({ project, mapData, mapPhotos, selectedFcpId });
+
+  const { pageItems, totalPages, startIndex, endIndex } = useMemo(
+    () => paginatePage(filteredAssets, page, PAGE_SIZE),
+    [filteredAssets, page],
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [
+    selectedCategory,
+    unreviewedOnly,
+    selectedFcpId,
+    ductVisible,
+    rulerVisible,
+    privacyClear,
+  ]);
 
   const handleReviewSaved = async () => {
     await onRefresh();
@@ -80,17 +102,46 @@ export function ProjectPhotoDashboard({
               })}
             </p>
           ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {filteredAssets.map((asset) => (
-                <PhotoReviewCard
-                  key={asset.id}
-                  projectId={project.id}
-                  asset={asset}
-                  onSaved={handleReviewSaved}
-                  showDuplicateControl={selectedCategory === 'red'}
-                />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {pageItems.map((asset) => (
+                  <PhotoReviewCard
+                    key={asset.id}
+                    projectId={project.id}
+                    asset={asset}
+                    onSaved={handleReviewSaved}
+                    showDuplicateControl={selectedCategory === 'red'}
+                  />
+                ))}
+              </div>
+
+              <footer className="mt-6 flex flex-col gap-3 border-t border-slate-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-slate-600">
+                  Showing {startIndex + 1}–{endIndex} of {filteredAssets.length}
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={page <= 1}
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-45"
+                  >
+                    Previous
+                  </button>
+                  <span className="text-sm text-slate-600">
+                    Page {page} of {totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={page >= totalPages}
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-45"
+                  >
+                    Next
+                  </button>
+                </div>
+              </footer>
+            </>
           )}
         </div>
       </div>

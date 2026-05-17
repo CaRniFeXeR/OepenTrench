@@ -55,7 +55,7 @@ export function ProjectDetailLayout({
       />
 
       <div className="flex min-h-[calc(100vh-8rem)] flex-1 flex-col lg:min-h-[calc(100vh-10rem)]">
-        <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+        <div className="flex min-h-0 flex-1 flex-col lg:flex-row lg:items-start">
           <DetailWorkspaceTabs
             project={project}
             activeTab={activeTab}
@@ -72,12 +72,12 @@ export function ProjectDetailLayout({
             coverageLoading={coverageLoading}
           />
 
-          <div className="print:hidden flex min-h-[480px] min-w-0 flex-1 flex-col">
+          <div className="print:hidden flex min-h-[480px] min-w-0 flex-1 flex-col lg:h-auto lg:self-start">
             {routeReady && mapData ? (
               <>
                 <ProjectMapView
                   embedded
-                  className="min-h-0 flex-1"
+                  className="h-[480px] min-h-[480px] shrink-0 flex-none"
                   project={project}
                   mapData={mapData}
                   mapPhotos={mapPhotos}
