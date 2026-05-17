@@ -320,7 +320,7 @@ def extract_img_metadata(
             print(_INCOMPLETE_MSG)
         return None
 
-    lines = None #_read_ocr_lines(path)
+    lines = _read_ocr_lines(path)
     if lines is None:
         lines = _read_ocr_lines_from_json('src/api/services/mistral_ocr_dump.json', original_label)
         if lines is None:
