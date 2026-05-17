@@ -24,6 +24,10 @@ export function DuplicateOverrideRow({
     toggle,
   } = useDuplicateOverride({ projectId, assetId, analysis, onSaved });
 
+  if (!analysis.effective_is_duplicated) {
+    return null;
+  }
+
   return (
     <div className="mb-3 border-b border-slate-100 pb-3">
       <p className={`font-semibold text-slate-900 ${compact ? 'text-xs' : 'text-sm'}`}>
