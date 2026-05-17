@@ -10,6 +10,7 @@ Fiber trench documentation is high-stakes: wrong survey data, missing photos, or
 
 ---
 
+
 ## The problem
 
 | | |
@@ -33,6 +34,8 @@ An end-to-end **AI-QC workflow** that:
 5. **Reports** results on an interactive map and in a concise summary
 
 The prototype does not need to be production-ready, but the core pipeline must work: **images in → QC logic applied → risk output out**.
+
+<img width="1470" height="867" alt="image" src="https://github.com/user-attachments/assets/a1f49971-0be2-4630-9e98-467c2c45fe6a" />
 
 ### Signals we target
 
